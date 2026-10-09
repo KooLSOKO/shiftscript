@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { z } from "zod";
-import { LocalStore, FirebaseStore } from "./store.js";
+import { LocalStore, FirebaseStore, hydrate } from "./store.js";
 import { firebase } from "./firebase.js";
 import { analyze, sampleTranscript } from "./analyze.js";
 import { transcribe, validateAudio, MAX_AUDIO_BYTES } from "./audio.js";
@@ -10,15 +10,31 @@ import {
   meetingInput,
   meetingId,
   reviewSchema,
+  bulkReviewInput,
   taskPatch,
+  manualTaskInput,
+  projectInput,
+  draftInput,
   noteInput,
   hash,
   resolveDeadline,
 } from "./schema.js";
-const fail = (status, message) => {
-  throw Object.assign(new Error(message), { status });
-};
-const now = () => new Date().toISOString();
+import {
+  fail,
+  now,
+  id,
+  authorize,
+  newWorkspace,
+  checkProject,
+  taskFields,
+} from "./collaboration.js";
+const key = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
+const workspaceInput = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    ownerName: z.string().trim().min(2).max(80),
+  })
+  .strict();
 export function createApp({
   store,
   analyzer = analyze,
@@ -30,10 +46,9 @@ export function createApp({
 } = {}) {
   const app = express(),
     production =
-      process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL),
-    repo =
-      store ||
-      (storage === "firebase" ? new FirebaseStore() : new LocalStore());
+      process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+  const repo =
+    store || (storage === "firebase" ? new FirebaseStore() : new LocalStore());
   app.disable("x-powered-by");
   app.use(express.json({ limit: "3.5mb" }));
   app.use("/api", (_req, res, next) => {
@@ -47,12 +62,13 @@ export function createApp({
       authRequired: storage === "firebase",
       signupEnabled: storage === "firebase" && signupEnabled,
       sampleTranscript,
-      model:process.env.GEMINI_MODEL || defaultModel,
-      maxAudioBytes:MAX_AUDIO_BYTES,
-      aiReady:provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
+      model: process.env.GEMINI_MODEL || defaultModel,
+      maxAudioBytes: MAX_AUDIO_BYTES,
+      aiReady: provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
+      version: "2.0.0",
     }),
   );
-  app.use("/api", async (req, res, next) => {
+  app.use("/api", async (req, _res, next) => {
     try {
       if (production && storage !== "firebase")
         fail(
@@ -60,90 +76,405 @@ export function createApp({
           "Production requires STORAGE_MODE=firebase. Local files are not durable on Vercel.",
         );
       if (storage === "local") {
-        req.uid = "local-demo";
-        return next();
+        req.actor = {
+          uid: "local-demo",
+          email: "demo@example.invalid",
+          name: "ShiftScript demo",
+          emailVerified: true,
+        };
+      } else {
+        const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
+        if (!token) fail(401, "Please sign in to your ShiftScript workspace.");
+        let decoded;
+        try {
+          decoded = await verifyToken(token);
+        } catch (e) {
+          if (e.status === 503) throw e;
+          console.error("Firebase verification:", e.code || e.name);
+          fail(401, "Your session could not be verified. Sign in again.");
+        }
+        const allowed = (process.env.ALLOWED_EMAILS || "")
+          .split(",")
+          .map((v) => v.trim().toLowerCase())
+          .filter(Boolean);
+        if (!signupEnabled && production && !allowed.length)
+          fail(
+            503,
+            "Configure ALLOWED_EMAILS or enable PUBLIC_SIGNUP_ENABLED before using the deployed app.",
+          );
+        if (
+          !signupEnabled &&
+          allowed.length &&
+          !allowed.includes(decoded.email?.toLowerCase())
+        )
+          fail(403, "This account does not have access to this workspace.");
+        req.actor = {
+          uid: decoded.uid,
+          email: (decoded.email || "").toLowerCase(),
+          name: decoded.name || decoded.email || "Workspace member",
+          emailVerified: Boolean(decoded.email_verified),
+        };
       }
-      const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
-      if (!token) fail(401, "Please sign in to your ShiftScript workspace.");
-      let decoded;
-      try {
-        decoded = await verifyToken(token);
-      } catch {
-        fail(401, "Your session could not be verified. Sign in again.");
-      }
-      const allowed = (process.env.ALLOWED_EMAILS || "")
-        .split(",")
-        .map((v) => v.trim().toLowerCase())
-        .filter(Boolean);
-      if (!signupEnabled && production && !allowed.length)
-        fail(503, "Configure ALLOWED_EMAILS before using the deployed app.");
-      if (!signupEnabled && allowed.length && !allowed.includes(decoded.email?.toLowerCase()))
-        fail(403, "This account does not have access to this workspace.");
-      req.uid = decoded.uid;
+      req.uid = req.actor.uid;
+      next();
+    } catch (e) {
+      next(e);
+    }
+  });
+  const read = async (workspaceId) =>
+    hydrate(await repo.list(workspaceId), workspaceId);
+  const mutate = (req, operation, permission = "write") =>
+    repo.mutate(req.workspaceId, (raw) => {
+      // Check permissions again within the transaction so revocation cannot race a write.
+      const s = hydrate(raw, req.workspaceId);
+      authorize(s, req.actor, req.workspaceId, permission);
+      const result = operation(s);
+      Object.assign(raw, s);
+      return result;
+    });
+  async function catalog(actor) {
+    if (repo.catalog) return repo.catalog(actor);
+    const own = await read(actor.uid);
+    return {
+      workspaces: own.workspace ? [{ ...own.workspace, role: "owner" }] : [],
+      invitations: [],
+    };
+  }
+  app.get("/api/workspaces", async (req, res) => {
+    const d = await catalog(req.actor);
+    if (storage === "local" && !d.workspaces.some((w) => w.id === "local-demo"))
+      d.workspaces.unshift({
+        id: "local-demo",
+        name: "Your workspace",
+        role: "owner",
+        ownerName: "ShiftScript demo",
+      });
+    res.json({ ...d, actor: req.actor });
+  });
+  app.post("/api/workspace", async (req, res) => {
+    const input = workspaceInput.parse(req.body);
+    const workspace = await repo.mutate(req.uid, (raw) => {
+      const s = hydrate(raw, req.uid);
+      if (s.workspace)
+        fail(
+          409,
+          "You already have a workspace. Open workspace settings to rename it.",
+        );
+      s.workspace = newWorkspace(req.uid, input, req.actor);
+      Object.assign(raw, s);
+      return s.workspace;
+    });
+    res.status(201).json({ workspace });
+  });
+  app.post("/api/workspaces", async (req, res) => {
+    const input = workspaceInput.parse(req.body),
+      c = await catalog(req.actor);
+    if (c.workspaces.length >= 20)
+      fail(409, "You can belong to at most 20 workspaces.");
+    const workspaceId = id("w_");
+    const workspace = await repo.mutate(workspaceId, (s) => {
+      s.workspace = newWorkspace(workspaceId, input, req.actor);
+      return s.workspace;
+    });
+    res.status(201).json({ workspace });
+  });
+  app.post(
+    "/api/workspaces/:workspaceId/invitations/:inviteId/accept",
+    async (req, res) => {
+      key.parse(req.params.workspaceId);
+      key.parse(req.params.inviteId);
+      if (!req.actor.emailVerified)
+        fail(
+          403,
+          "Verify your email address before accepting a workspace invitation.",
+        );
+      const c = await catalog(req.actor);
+      if (
+        c.workspaces.length >= 20 &&
+        !c.workspaces.some((w) => w.id === req.params.workspaceId)
+      )
+        fail(409, "You can belong to at most 20 workspaces.");
+      const workspace = await repo.mutate(req.params.workspaceId, (raw) => {
+        const s = hydrate(raw, req.params.workspaceId),
+          w = s.workspace;
+        if (!w) fail(404, "Invitation not found or no longer available.");
+        const invitation = w.invites.find(
+          (i) => i.id === req.params.inviteId && i.email === req.actor.email,
+        );
+        if (!invitation)
+          fail(404, "Invitation not found or no longer available.");
+        if (w.members.length >= 20 && !w.members.some((m) => m.uid === req.uid))
+          fail(409, "This workspace has reached its 20-member limit.");
+        if (!w.members.some((m) => m.uid === req.uid))
+          w.members.push({
+            uid: req.uid,
+            name: req.actor.name,
+            email: req.actor.email,
+            role: invitation.role,
+            joinedAt: now(),
+          });
+        w.invites = w.invites.filter((i) => i.id !== invitation.id);
+        w.memberUids = w.members.map((m) => m.uid);
+        w.inviteEmails = w.invites.map((i) => i.email);
+        w.updatedAt = now();
+        Object.assign(raw, s);
+        return {
+          id: w.id,
+          name: w.name,
+          role: w.members.find((m) => m.uid === req.uid).role,
+        };
+      });
+      res.json({ workspace });
+    },
+  );
+  app.use("/api", async (req, _res, next) => {
+    try {
+      req.workspaceId = key.parse(req.get("X-Workspace-Id") || req.uid);
+      const s = await read(req.workspaceId);
+      req.role = authorize(s, req.actor, req.workspaceId);
       next();
     } catch (e) {
       next(e);
     }
   });
   app.get("/api/workspace", async (req, res) => {
-    const d = await repo.list(req.uid);
+    const d = await read(req.workspaceId),
+      role = authorize(d, req.actor, req.workspaceId);
+    const workspace = d.workspace && {
+      ...d.workspace,
+      invites: role === "owner" ? d.workspace.invites : [],
+      inviteEmails: role === "owner" ? d.workspace.inviteEmails : [],
+    };
     res.json({
-      workspace: d.workspace || null,
+      workspace,
+      role,
+      projects: d.projects,
+      draft: d.drafts.find((d) => d.ownerUid === req.uid) || null,
       meetings: d.meetings.sort((a, b) =>
         b.createdAt.localeCompare(a.createdAt),
       ),
       tasks: d.tasks.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     });
   });
-  const workspaceInput = z.object({
-    name: z.string().trim().min(2).max(80),
-    ownerName: z.string().trim().min(2).max(80),
-  }).strict();
-  app.post("/api/workspace", async (req, res) => {
-    const input = workspaceInput.parse(req.body);
-    const workspace = await repo.mutate(req.uid, (s) => {
-      if (s.workspace) fail(409, "You already have a workspace. Open workspace settings to rename it.");
-      s.workspace = { ...input, id: req.uid, ownerUid: req.uid, createdAt: now(), updatedAt: now() };
-      return s.workspace;
-    });
-    res.status(201).json({ workspace });
-  });
   app.patch("/api/workspace", async (req, res) => {
     const input = workspaceInput.parse(req.body);
-    const workspace = await repo.mutate(req.uid, (s) => {
-      if (!s.workspace) fail(404, "Create your workspace first.");
-      Object.assign(s.workspace, input, { updatedAt: now() });
-      return s.workspace;
-    });
+    const workspace = await mutate(
+      req,
+      (s) => {
+        if (!s.workspace) fail(404, "Create your workspace first.");
+        Object.assign(s.workspace, input, { updatedAt: now() });
+        const owner = s.workspace.members.find((m) => m.uid === req.uid);
+        if (owner) owner.name = input.ownerName;
+        return s.workspace;
+      },
+      "owner",
+    );
     res.json({ workspace });
   });
-  async function claimQuota(uid) {
-    await repo.mutate(uid,s=>{
-      const date=now().slice(0,10), count=s.quota.date===date?s.quota.count:0;
-      if(count>=Number(process.env.MAX_ANALYSES_PER_DAY || 20))fail(429,"Daily AI-request limit reached. Try again tomorrow (UTC).");
-      s.quota={date,count:count+1};
+  app.post("/api/members/invitations", async (req, res) => {
+    const input = z
+      .object({
+        email: z.email().trim().toLowerCase().max(254),
+        role: z.enum(["member", "viewer"]),
+      })
+      .strict()
+      .parse(req.body);
+    const invitation = await mutate(
+      req,
+      (s) => {
+        if (!s.workspace)
+          fail(400, "Name your workspace before inviting members.");
+        const w = s.workspace;
+        if (
+          input.email === req.actor.email ||
+          w.members.some((m) => m.email === input.email)
+        )
+          fail(409, "This person is already in the workspace.");
+        if (w.invites.some((i) => i.email === input.email))
+          fail(409, "There is already a pending invitation for this email.");
+        if (w.members.length + w.invites.length >= 20)
+          fail(
+            409,
+            "A workspace can have at most 20 members and pending invitations.",
+          );
+        const invitation = {
+          ...input,
+          id: id("i_"),
+          createdAt: now(),
+          invitedBy: req.uid,
+        };
+        w.invites.push(invitation);
+        w.inviteEmails = w.invites.map((i) => i.email);
+        w.updatedAt = now();
+        return invitation;
+      },
+      "owner",
+    );
+    res.status(201).json({ invitation });
+  });
+  app.delete("/api/members/invitations/:inviteId", async (req, res) => {
+    await mutate(
+      req,
+      (s) => {
+        s.workspace.invites = s.workspace.invites.filter(
+          (i) => i.id !== req.params.inviteId,
+        );
+        s.workspace.inviteEmails = s.workspace.invites.map((i) => i.email);
+      },
+      "owner",
+    );
+    res.json({ removed: true });
+  });
+  app.patch("/api/members/:uid", async (req, res) => {
+    const { role } = z
+      .object({ role: z.enum(["member", "viewer"]) })
+      .strict()
+      .parse(req.body);
+    await mutate(
+      req,
+      (s) => {
+        const w = s.workspace,
+          member = w?.members.find((m) => m.uid === req.params.uid);
+        if (!member) fail(404, "Member not found.");
+        if (member.uid === w.ownerUid)
+          fail(400, "The workspace owner cannot be demoted.");
+        member.role = role;
+        w.updatedAt = now();
+      },
+      "owner",
+    );
+    res.json({ saved: true });
+  });
+  app.delete("/api/members/:uid", async (req, res) => {
+    await mutate(
+      req,
+      (s) => {
+        if (req.params.uid === s.workspace.ownerUid)
+          fail(400, "The workspace owner cannot be removed.");
+        s.workspace.members = s.workspace.members.filter(
+          (m) => m.uid !== req.params.uid,
+        );
+        s.workspace.memberUids = s.workspace.members.map((m) => m.uid);
+        s.drafts = s.drafts.filter((d) => d.ownerUid !== req.params.uid);
+      },
+      "owner",
+    );
+    res.json({ removed: true });
+  });
+  app.post("/api/projects", async (req, res) => {
+    const input = projectInput.parse(req.body);
+    const project = await mutate(req, (s) => {
+      if (s.projects.length >= 50)
+        fail(409, "Workspace project limit reached (50).");
+      const p = {
+        ...input,
+        id: id("p_"),
+        createdBy: req.uid,
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      s.projects.push(p);
+      return p;
+    });
+    res.status(201).json({ project });
+  });
+  app.patch("/api/projects/:id", async (req, res) => {
+    const input = projectInput.parse(req.body);
+    const project = await mutate(req, (s) => {
+      const p = s.projects.find((p) => p.id === req.params.id);
+      if (!p) fail(404, "Project not found.");
+      Object.assign(p, input, { updatedAt: now() });
+      return p;
+    });
+    res.json({ project });
+  });
+  app.put("/api/drafts/current", async (req, res) => {
+    const { expectedVersion, ...input } = draftInput.parse(req.body);
+    const draft = await mutate(req, (s) => {
+      checkProject(s, input.projectId);
+      const current = s.drafts.find((d) => d.ownerUid === req.uid);
+      if (
+        expectedVersion !== undefined &&
+        expectedVersion !== (current?.version || 0)
+      )
+        fail(
+          409,
+          "This draft changed in another tab or device. Reopen it before saving again. Your local copy is retained.",
+        );
+      const d = {
+        ...input,
+        id: req.uid,
+        ownerUid: req.uid,
+        version: (current?.version || 0) + 1,
+        updatedAt: now(),
+      };
+      s.drafts = s.drafts.filter((d) => d.ownerUid !== req.uid);
+      s.drafts.push(d);
+      return d;
+    });
+    res.json({ draft });
+  });
+  app.delete("/api/drafts/current", async (req, res) => {
+    const { expectedVersion } = z
+      .object({ expectedVersion: z.number().int().nonnegative() })
+      .strict()
+      .parse(req.body);
+    await mutate(req, (s) => {
+      const current = s.drafts.find((d) => d.ownerUid === req.uid);
+      if ((current?.version || 0) !== expectedVersion)
+        fail(409, "The draft changed in another tab. It has been kept.");
+      s.drafts = s.drafts.filter((d) => d.ownerUid !== req.uid);
+    });
+    res.json({ removed: true });
+  });
+  async function claimQuota(req) {
+    await mutate(req, (s) => {
+      const date = now().slice(0, 10),
+        count = s.quota.date === date ? s.quota.count : 0;
+      if (count >= Number(process.env.MAX_ANALYSES_PER_DAY || 20))
+        fail(
+          429,
+          "Daily workspace AI-request limit reached. Try again tomorrow (UTC).",
+        );
+      s.quota = { date, count: count + 1 };
     });
   }
-  app.post("/api/transcribe",async(req,res)=>{
-    const audio=validateAudio(req.body);
-    if(provider!=="gemini")fail(422,"Voice transcription needs Gemini. Set AI_PROVIDER=gemini and add GEMINI_API_KEY.");
-    await claimQuota(req.uid);
-    const transcript=await transcriber(audio,provider);
-    res.json({transcript,source:{kind:"audio",name:audio.name},provider});
+  app.post("/api/transcribe", async (req, res) => {
+    const audio = validateAudio(req.body);
+    if (provider !== "gemini")
+      fail(
+        422,
+        "Voice transcription needs Gemini. Set AI_PROVIDER=gemini and add GEMINI_API_KEY.",
+      );
+    await claimQuota(req);
+    const transcript = await transcriber(audio, provider);
+    // Recheck access after an external request; don't return private results after revocation.
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    res.json({
+      transcript,
+      source: { kind: "audio", name: audio.name },
+      provider,
+    });
   });
   app.post("/api/meetings", async (req, res) => {
     const input = meetingInput.parse(req.body),
-      id = meetingId(input),
-      existing = (await repo.list(req.uid)).meetings.find((m) => m.id === id);
+      meetingKey = meetingId(input),
+      data = await read(req.workspaceId);
+    authorize(data, req.actor, req.workspaceId, "write");
+    checkProject(data, input.projectId);
+    const existing = data.meetings.find((m) => m.id === meetingKey);
     if (existing) return res.json({ meeting: existing, cached: true });
-    if ((await repo.list(req.uid)).meetings.length >= 50) fail(409,"Prototype limit: 50 meetings per workspace.");
-    await claimQuota(req.uid);
+    if (data.meetings.length >= 50)
+      fail(409, "Workspace meeting limit reached (50).");
+    await claimQuota(req);
     const result = await analyzer(input, provider),
       createdAt = now();
     const meeting = {
       ...input,
-      id,
+      projectId: input.projectId || null,
+      id: meetingKey,
       createdAt,
+      createdBy: req.uid,
       provider,
       summary: result.summary,
       discussionPoints: result.discussionPoints,
@@ -151,16 +482,18 @@ export function createApp({
       followUps: result.followUps,
       proposals: result.actions.map((a, i) => ({
         ...a,
-        id: hash(id + ":" + i),
+        id: hash(meetingKey + ":" + i),
         owner: a.owner || "Unassigned",
+        ownerUid: null,
         deadline: a.deadline || "Not specified",
         dueDate: resolveDeadline(a.deadline, input.date),
         reviewStatus: "pending",
         taskId: null,
       })),
     };
-    const saved = await repo.mutate(req.uid, (s) => {
-      const current = s.meetings.find((m) => m.id === id);
+    const saved = await mutate(req, (s) => {
+      checkProject(s, meeting.projectId);
+      const current = s.meetings.find((m) => m.id === meetingKey);
       if (current) return current;
       if (s.meetings.length >= 50)
         fail(409, "Workspace meeting limit reached.");
@@ -169,58 +502,136 @@ export function createApp({
     });
     res.status(201).json({ meeting: saved, cached: false });
   });
+  app.patch("/api/meetings/:id/project", async (req, res) => {
+    const { projectId } = z
+      .object({ projectId: key.nullable() })
+      .strict()
+      .parse(req.body);
+    await mutate(req, (s) => {
+      checkProject(s, projectId);
+      const m = s.meetings.find((m) => m.id === req.params.id);
+      if (!m) fail(404, "Meeting not found.");
+      m.projectId = projectId;
+      m.updatedAt = now();
+      for (const t of s.tasks.filter((t) => t.meetingId === m.id)) {
+        t.projectId = projectId;
+        t.updatedAt = now();
+      }
+    });
+    res.json({ saved: true });
+  });
+  function review(s, meeting, proposalId, input, actor) {
+    const p = meeting.proposals.find((p) => p.id === proposalId);
+    if (!p) fail(404, "Proposal not found.");
+    if (p.reviewStatus !== "pending") return false;
+    const { decision, ...value } = input,
+      fields = taskFields(value, s);
+    if (decision === "approved") {
+      if (s.tasks.length >= 250)
+        fail(409, "Workspace task limit reached (250).");
+      const taskId = hash(meeting.id + ":" + p.id);
+      if (!s.tasks.some((t) => t.id === taskId))
+        s.tasks.push({
+          ...fields,
+          id: taskId,
+          projectId: meeting.projectId || null,
+          meetingId: meeting.id,
+          meetingTitle: meeting.title,
+          proposalId: p.id,
+          evidence: p.evidence,
+          sourceType: "meeting",
+          status: "To Do",
+          createdAt: now(),
+          updatedAt: now(),
+          createdBy: actor.uid,
+          notes: [],
+          checklist: [],
+        });
+      p.taskId = taskId;
+    }
+    Object.assign(p, fields, {
+      reviewStatus: decision,
+      reviewedBy: actor.uid,
+      reviewedAt: now(),
+    });
+    return true;
+  }
   app.post(
     "/api/meetings/:meetingId/proposals/:proposalId/review",
     async (req, res) => {
       const input = reviewSchema.parse(req.body);
-      const result = await repo.mutate(req.uid, (s) => {
+      const result = await mutate(req, (s) => {
         const m = s.meetings.find((m) => m.id === req.params.meetingId);
         if (!m) fail(404, "Meeting not found.");
-        const p = m.proposals.find((p) => p.id === req.params.proposalId);
-        if (!p) fail(404, "Proposal not found.");
-        if (p.reviewStatus !== "pending")
-          return { meeting: m, alreadyReviewed: true };
-        const { decision, ...fields } = input;
-        if (decision === "approved") {
-          if (s.tasks.length >= 250)
-            fail(409, "Prototype limit: 250 tasks per workspace.");
-          const id = hash(m.id + ":" + p.id);
-          if (!s.tasks.some((t) => t.id === id))
-            s.tasks.push({
-              ...fields,
-              owner: fields.owner || "Unassigned",
-              deadline: fields.deadline || "Not specified",
-              id,
-              meetingId: m.id,
-              meetingTitle: m.title,
-              proposalId: p.id,
-              evidence: p.evidence,
-              status: "To Do",
-              createdAt: now(),
-              updatedAt: now(),
-              notes: [],
-            });
-          p.taskId = id;
-        }
-        Object.assign(p, fields, {
-          owner: fields.owner || "Unassigned",
-          deadline: fields.deadline || "Not specified",
-          reviewStatus: decision,
-        });
-        return { meeting: m, alreadyReviewed: false };
+        const changed = review(s, m, req.params.proposalId, input, req.actor);
+        return { meeting: m, alreadyReviewed: !changed };
       });
       res.json(result);
     },
   );
+  app.post("/api/meetings/:meetingId/reviews", async (req, res) => {
+    const { reviews } = bulkReviewInput.parse(req.body);
+    if (new Set(reviews.map((r) => r.proposalId)).size !== reviews.length)
+      fail(400, "Select each proposal only once.");
+    const result = await mutate(req, (s) => {
+      const m = s.meetings.find((m) => m.id === req.params.meetingId);
+      if (!m) fail(404, "Meeting not found.");
+      let reviewed = 0;
+      for (const { proposalId, ...input } of reviews)
+        if (review(s, m, proposalId, input, req.actor)) reviewed++;
+      return { meeting: m, reviewed };
+    });
+    res.json(result);
+  });
+  app.post("/api/tasks", async (req, res) => {
+    const input = manualTaskInput.parse(req.body);
+    const task = await mutate(req, (s) => {
+      const taskId = input.clientId
+        ? hash("manual:" + input.clientId)
+        : id("t_");
+      const existing = s.tasks.find((t) => t.id === taskId);
+      if (existing) return existing;
+      if (s.tasks.length >= 250)
+        fail(409, "Workspace task limit reached (250).");
+      const task = {
+        ...taskFields(input, s),
+        id: taskId,
+        projectId: input.projectId || null,
+        ownerUid: input.ownerUid || null,
+        sourceType: "manual",
+        meetingId: null,
+        meetingTitle: "Added manually",
+        proposalId: null,
+        evidence: null,
+        notes: [],
+        checklist: input.checklist || [],
+        createdAt: now(),
+        updatedAt: now(),
+        createdBy: req.uid,
+      };
+      s.tasks.push(task);
+      return task;
+    });
+    res.status(201).json({ task });
+  });
   app.patch("/api/tasks/:id", async (req, res) => {
-    const patch = taskPatch.parse(req.body);
-    const task = await repo.mutate(req.uid, (s) => {
+    const input = taskPatch.parse(req.body);
+    if (
+      input.checklist &&
+      new Set(input.checklist.map((i) => i.id)).size !== input.checklist.length
+    )
+      fail(400, "Checklist items must have unique IDs.");
+    const task = await mutate(req, (s) => {
       const t = s.tasks.find((t) => t.id === req.params.id);
       if (!t) fail(404, "Task not found.");
-      Object.assign(t, patch, {
-        owner: patch.owner || "Unassigned",
-        deadline: patch.deadline || "Not specified",
+      if (input.expectedUpdatedAt && t.updatedAt !== input.expectedUpdatedAt)
+        fail(
+          409,
+          "This task changed since you opened it. Close and reopen it to load the latest version.",
+        );
+      Object.assign(t, taskFields(input, s, t), {
         updatedAt: now(),
+        updatedBy: req.uid,
       });
       return t;
     });
@@ -228,15 +639,17 @@ export function createApp({
   });
   app.post("/api/tasks/:id/notes", async (req, res) => {
     const note = noteInput.parse(req.body);
-    const task = await repo.mutate(req.uid, (s) => {
+    const task = await mutate(req, (s) => {
       const t = s.tasks.find((t) => t.id === req.params.id);
       if (!t) fail(404, "Task not found.");
       if (t.notes.length >= 50)
         fail(409, "Maximum 50 progress updates per task.");
       t.notes.push({
-        id: hash(now() + note.text),
+        id: id("n_"),
         text: note.text,
         createdAt: now(),
+        authorUid: req.uid,
+        authorName: req.actor.name,
       });
       t.updatedAt = now();
       return t;

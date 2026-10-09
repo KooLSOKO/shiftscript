@@ -12,9 +12,13 @@ Final creative prompt/specification:
 
 ## Icons
 
-`src/components/Icons.jsx` contains 27 original code-native SVG icons. Reusable standalone files are under `public/icons/`. Each uses a 24 × 24 viewBox, rounded lines and subtle blue fill, with `currentColor` for flexible theming. React icons are decorative; button/field labels provide their accessible names. Priority badges add text to colour.
+`src/components/Icons.jsx` contains 42 original code-native SVG icons. Reusable standalone files are under `public/icons/`. Each uses a 24 × 24 viewBox, rounded lines and subtle blue fill, with `currentColor` for flexible theming. React icons are decorative; button/field labels provide their accessible names. Priority badges add text to colour.
 
 `public/favicon.svg` is the ShiftScript vector brand mark. Icon paths and colours can be edited directly; no image service or external icon font is required at runtime.
+
+## Report fonts
+
+`public/fonts/DejaVuSans.ttf` and `DejaVuSans-Bold.ttf` are embedded in PDFs for accented names and readable wrapping. Their license/copyright is in `public/fonts/LICENSE.txt`. The UI uses its system font. PDF fonts/dependencies load only for exports.
 
 ## Motion
 

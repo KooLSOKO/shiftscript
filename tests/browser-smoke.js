@@ -37,7 +37,10 @@ const vite = await createServer({
 });
 await vite.listen();
 const browser = await chromium.launch(launchOptions);
-const page = await browser.newPage({ viewport: { width: 1440, height: 1050 }, reducedMotion: "reduce" });
+const page = await browser.newPage({
+  viewport: { width: 1440, height: 1050 },
+  reducedMotion: "reduce",
+});
 page.setDefaultTimeout(15000);
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
@@ -158,41 +161,83 @@ try {
     style: ".toast { visibility: hidden !important; }",
   });
   // A mocked recognition result verifies audio UI wiring without a paid/live API call.
-  await page.route('**/api/config', async route => {
+  await page.route("**/api/config", async (route) => {
     const response = await route.fetch();
-    await route.fulfill({json:{...(await response.json()),provider:'gemini',aiReady:true}});
+    await route.fulfill({
+      json: { ...(await response.json()), provider: "gemini", aiReady: true },
+    });
   });
   let voiceUploaded = false;
-  await page.route('**/api/transcribe', async route => {
+  await page.route("**/api/transcribe", async (route) => {
     const body = route.request().postDataJSON();
-    assert.equal(body.name,'voice-sample.wav');
-    assert.equal(body.mimeType,'audio/wav');
-    assert.ok(body.data.length>16);
+    assert.equal(body.name, "voice-sample.wav");
+    assert.equal(body.mimeType, "audio/wav");
+    assert.ok(body.data.length > 16);
     voiceUploaded = true;
-    await route.fulfill({json:{transcript:sampleTranscript,source:{kind:'audio',name:body.name},provider:'gemini'}});
+    await route.fulfill({
+      json: {
+        transcript: sampleTranscript,
+        source: { kind: "audio", name: body.name },
+        provider: "gemini",
+      },
+    });
   });
-  await page.setViewportSize({width:1440,height:1050});
+  await page.setViewportSize({ width: 1440, height: 1050 });
   await page.reload();
-  await page.getByRole('button',{name:'New meeting',exact:true}).click();
-  await page.getByLabel('Meeting title',{exact:true}).fill('Voice workflow review');
-  await page.getByLabel('Meeting date',{exact:true}).fill('2026-10-09');
+  await page.getByRole("button", { name: "New meeting", exact: true }).click();
+  await page
+    .getByLabel("Meeting title", { exact: true })
+    .fill("Voice workflow review");
+  await page.getByLabel("Meeting date", { exact: true }).fill("2026-10-09");
   const wav = Buffer.alloc(48);
-  wav.write('RIFF');wav.write('WAVE',8);wav.write('fmt ',12);
-  await page.getByLabel('Upload audio file').setInputFiles({name:'voice-sample.wav',mimeType:'audio/wav',buffer:wav});
-  await page.getByRole('button',{name:'Transcribe to text',exact:true}).click();
-  await page.waitForFunction(expected=>document.querySelector('[aria-label="Meeting transcript"]').value===expected,sampleTranscript,{timeout:15000});
-  assert.equal(voiceUploaded,true);
-  await page.screenshot({path:'docs/screenshots/voice-input-desktop.png',fullPage:true});
-  await page.getByRole('button',{name:'Process transcript',exact:true}).click();
-  await page.getByRole('heading',{name:'Meeting summary',exact:true}).waitFor();
-  await page.getByText('Voice source · voice-sample.wav',{exact:true}).waitFor();
+  wav.write("RIFF");
+  wav.write("WAVE", 8);
+  wav.write("fmt ", 12);
+  await page
+    .getByLabel("Upload audio file")
+    .setInputFiles({
+      name: "voice-sample.wav",
+      mimeType: "audio/wav",
+      buffer: wav,
+    });
+  await page
+    .getByRole("button", { name: "Transcribe to text", exact: true })
+    .click();
+  await page.waitForFunction(
+    (expected) =>
+      document.querySelector('[aria-label="Meeting transcript"]').value ===
+      expected,
+    sampleTranscript,
+    { timeout: 15000 },
+  );
+  assert.equal(voiceUploaded, true);
+  await page.screenshot({
+    path: "docs/screenshots/voice-input-desktop.png",
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Process transcript", exact: true })
+    .click();
+  await page
+    .getByRole("heading", { name: "Meeting summary", exact: true })
+    .waitFor();
+  await page
+    .getByText("Voice source · voice-sample.wav", { exact: true })
+    .waitFor();
   assert.deepEqual(errors, []);
   console.log(
     "PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, no overflow, mocked voice upload/transcription/review/source, no page errors.",
   );
 } catch (error) {
-  await page.screenshot({path:'docs/screenshots/browser-failure.png',fullPage:true});
-  console.error('Browser failure:',await page.locator('body').innerText(),errors);
+  await page.screenshot({
+    path: "docs/screenshots/browser-failure.png",
+    fullPage: true,
+  });
+  console.error(
+    "Browser failure:",
+    await page.locator("body").innerText(),
+    errors,
+  );
   throw error;
 } finally {
   await browser.close();

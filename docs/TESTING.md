@@ -1,55 +1,57 @@
-# Testing evidence
+# ShiftScript v2 testing
 
-Tested 9 October 2026, Node.js 24.19.0. No private credential supplied in chat was used.
+Tested 9 October 2026 using Node.js 24.19.0. No private credentials supplied in chat were used.
 
 ## Automated checks
 
-`npm run check`: **17 tests passed, zero failed; production Vite build passed.** Tests cover:
+`npm run check`: **29 tests passed, zero failed; production Vite build passed.** Coverage includes:
 
-- Summary/decision/three proposed actions from the fictional fixture; no tasks before approval.
-- Owner/deadline handling, ambiguous dates and rejection of fabricated evidence.
-- Duplicate meeting caching, simultaneous repeat approval and rejected proposals.
-- Editing/status/progress-note persistence and invalid-input handling.
-- Production refusal of ephemeral local storage.
-- Gemini JSON contract, selected model, `store:false`, bounded timeout and quota error handling, using a mocked SDK client.
-- Audio base64, MIME signatures and size boundaries.
-- Audio input sent to the transcription adapter; no-clear-speech rejection.
-- Transcription endpoint → reviewed transcript → meeting source metadata, without persisted audio, using injected test adapters.
+- Transcript extraction fixtures, evidence grounding, dates, original source links and human approval.
+- Duplicate meetings/reviews/manual create retries and invalid inputs.
+- Manual tasks, checklists, confirmed assignees, notes and stale task updates.
+- Combined filters, date ranges, sorting, CSV quoting/formula protection and embedded-font PDF pagination.
+- Private draft persistence, per-user visibility, save/delete version conflicts.
+- Shared workspace membership, verified email-bound invitations, Owner/Member/Viewer permissions, member revocation and data isolation.
+- Bulk approval/rejection atomicity, edited owners/dates and repeat handling.
+- Legacy local/Firebase metadata migration and read-before-write Firestore transactions.
+- Member revocation while AI analysis is pending, preventing the result being saved.
+- Gemini/audio contracts, validation, timeout/quota error handling and production local-storage refusal.
 
-These tests validate wiring/contracts and guards; they do not prove a live Gemini response.
+Firestore tests use an injected transaction fixture. Auth/model tests use simulated tokens and SDK results. They do not contact live services.
 
 ## Browser checks
 
-Headless Chromium at desktop 1440 × 1050 and mobile 390 × 844. Passed the sample processing, evidence, review edits, approval/rejection, tracker status, progress notes, refresh persistence, board and mobile navigation flow. No page JavaScript errors or horizontal mobile overflow.
+`npm run test:ui`: **all three browser suites passed** with actual React/Vite and Node APIs:
 
-Also tested audio selection, base64 submission, a **mocked recognition result** appearing in the editable transcript, processing that transcript and retaining its voice-source filename. Microphone hardware capture and live speech recognition were not exercised.
+| Suite | Main checks |
+| --- | --- |
+| `browser-smoke.js` | Sample meeting, evidence, edits, approval/rejection, status/notes persistence, board, mobile navigation and mocked voice upload/transcription/source |
+| `accounts-browser.js` | Simulated signup, name prefill, password mismatch, workspace setup/rename, account isolation, reset, invalid password and mobile layout |
+| `collaboration-browser.js` | Projects, draft recovery after reload, bulk edits/approval, manual tasks/checklists/notes, combined filters, PDF/CSV downloads, clipboard invitation links, verified join, Member edits, Viewer access and multiple workspace switching/isolation |
+
+The collaboration suite also checks that adding a progress note from a stale task editor does not let it overwrite another member's status change. A 409 response in this test is expected.
+
+Desktop checks use 1440 px viewports; mobile uses 390 × 844. No page JavaScript errors or horizontal page overflow were found in the tested flows. Wide task tables and boards intentionally scroll inside their containers. Screenshots contain fictional sample data and simulated identities.
 
 ```bash
 npx playwright install chromium
 npm run test:ui
 ```
 
-The test launches its own API/Vite on ports 3009/5179 and uses a temporary workspace. It needs no credentials. Screenshots in `docs/screenshots/` show sample data; `voice-input-desktop.png` shows mocked audio transcription. They are not live Gemini/Firebase evidence.
+Suites create temporary data and use ports 3009/5179, 3010/5180 and 3011/5181 sequentially. No credentials are required. The optional `SHIFTSCRIPT_TEST_CHROMIUM` environment variable supports the bundled Chromium used in this environment; ordinary local runs use Playwright Chromium.
 
-## Sample expectations
+PDF report pages were rendered and visually checked with accented names, long content, page breaks, headers/footers and proposal status/evidence. Both meeting and filtered task downloads were verified in the browser.
 
-| Task | Owner | Deadline |
-| --- | --- | --- |
-| Review dashboard and send feedback | Stephen | 2026-10-12 |
-| Consolidate feedback and prepare final notes | Kiyasha | Not specified |
-| Check the mobile layout | Unassigned | before the next client review; calendar date unconfirmed |
+## Live checks after deployment
 
-The decision retains current navigation; onboarding remains a tentative follow-up. Input and expected JSON are in `examples/`.
+1. Sign up/sign in with real Firebase Auth. Check reset and verification email delivery and authorized domains.
+2. Load old meetings/tasks, create a project and save a draft. Confirm Firestore persistence after refresh.
+3. Invite a second verified email, join, edit as Member, change to Viewer, verify writes are denied, then remove access.
+4. Use Gemini on a fictional/approved transcript with a fresh title; inspect the evidence, owners and dates. Test a short recording and microphone permission on localhost/HTTPS.
+5. Push to GitHub and check Vercel's deployment, sign-in, API requests and font/PDF downloads.
 
-## Live verification after setup
+Not verified here: your live Firebase credentials/IAM, email delivery, Gemini eligibility/key/model accuracy, microphone hardware or the hosted Vercel deployment.
 
-1. Enable Gemini with a fresh key. Process the fictional sample using a fresh title and inspect owners, evidence and deadlines.
-2. Upload a short approved recording. Correct its transcript before extracting tasks. Verify microphone capture in your browser if using recording.
-3. Enable Firebase Auth/Firestore/Admin credentials and the allowlist. Approve a task, refresh and inspect UID-scoped Firestore records.
-4. Deploy to Vercel and repeat sign-in, transcript/audio and persistence checks.
+## Dependency audit
 
-Not verified here: live Gemini project eligibility/key validity/model accuracy, microphone hardware, Firebase IAM/connectivity, hosted login or Vercel deployment. The build and local/mock tests passed; configure the external services to complete those checks.
-
-## Signup update
-
-Six additional API/storage tests cover authenticated personal workspace creation/rename, invalid and cross-owner payloads, existing meeting preservation, account isolation, public/private access modes, local persistence and Firestore metadata merges. `node tests/accounts-browser.js` passes with simulated Firebase Auth on ports 3010/5180: signup/password mismatch, name prefill, workspace setup and edits, refresh, two isolated accounts, reset, wrong password and mobile layout. Live signup/reset email and Firebase connectivity still require deployed verification. See SIGNUP-UPDATE.md for installation.
+The installed tree reports 12 advisories (8 moderate, 4 high). The high findings trace to the Firebase Web SDK's unused Node Firestore transport (`@grpc/grpc-js` 1.9.x); this application imports only browser Auth and uses the Admin SDK's separate 1.14.6 transport for server Firestore. No gRPC server is exposed by ShiftScript. This is a dependency inventory observation, not proof of universal non-exploitability. No force downgrade of Firebase was applied; review upstream updates before adding client-side Firestore/gRPC usage.

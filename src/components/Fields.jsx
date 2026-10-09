@@ -1,5 +1,5 @@
 import { priorities } from "../lib.js";
-export default function Fields({ value, onChange }) {
+export default function Fields({ value, onChange, members = [] }) {
   const change = (key, v) => onChange({ ...value, [key]: v });
   return (
     <div className="field-grid">
@@ -27,13 +27,46 @@ export default function Fields({ value, onChange }) {
         <input
           maxLength={100}
           value={value.owner}
-          onChange={(e) => change("owner", e.target.value)}
+          onChange={(e) =>
+            onChange({ ...value, owner: e.target.value, ownerUid: null })
+          }
           placeholder="Unassigned"
         />
       </label>
+      {members.length > 0 && (
+        <label>
+          Workspace assignee
+          <select
+            aria-label="Workspace assignee"
+            value={value.ownerUid || ""}
+            onChange={(e) => {
+              const member = members.find((m) => m.uid === e.target.value);
+              onChange({
+                ...value,
+                ownerUid: member?.uid || null,
+                owner: member?.name || value.owner,
+              });
+            }}
+          >
+            <option value="">Name only / unassigned</option>
+            {value.ownerUid &&
+              !members.some((m) => m.uid === value.ownerUid) && (
+                <option value={value.ownerUid}>
+                  {value.owner} (former member)
+                </option>
+              )}
+            {members.map((m) => (
+              <option key={m.uid} value={m.uid}>
+                {m.name} · {m.role}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label>
         Priority
         <select
+          aria-label="Priority"
           value={value.priority}
           onChange={(e) => change("priority", e.target.value)}
         >

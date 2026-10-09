@@ -28,7 +28,15 @@ export const meetingInput = z
       "Other",
     ]),
     transcript: z.string().trim().min(40).max(15000),
-    source:z.object({kind:z.enum(["audio","text"]),name:z.string().max(160)}).strict().optional(),
+    projectId: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{1,128}$/)
+      .nullable()
+      .optional(),
+    source: z
+      .object({ kind: z.enum(["audio", "text"]), name: z.string().max(160) })
+      .strict()
+      .optional(),
   })
   .strict();
 export const actionSchema = z
@@ -59,14 +67,74 @@ export const reviewSchema = z
     deadline: z.string().max(150),
     dueDate: date.nullable(),
     priority: z.enum(priorities),
+    ownerUid: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{1,128}$/)
+      .nullable()
+      .optional(),
   })
   .strict();
 export const taskPatch = reviewSchema
   .omit({ decision: true })
-  .extend({ status: z.enum(statuses) })
+  .extend({
+    status: z.enum(statuses),
+    projectId: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{1,128}$/)
+      .nullable()
+      .optional(),
+    expectedUpdatedAt: z.string().optional(),
+    checklist: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(80),
+            text: z.string().trim().min(1).max(200),
+            done: z.boolean(),
+          })
+          .strict(),
+      )
+      .max(30)
+      .refine(
+        (items) => new Set(items.map((item) => item.id)).size === items.length,
+        "Checklist items must have unique IDs",
+      )
+      .optional(),
+  })
   .strict();
 export const noteInput = z
   .object({ text: z.string().trim().min(1).max(2000) })
+  .strict();
+export const manualTaskInput = taskPatch
+  .omit({ expectedUpdatedAt: true })
+  .extend({ clientId: z.string().uuid().optional() })
+  .strict();
+export const projectInput = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    description: z.string().trim().max(700).default(""),
+    color: z.enum(["blue", "teal", "coral", "amber", "purple"]).default("blue"),
+    status: z.enum(["active", "completed"]).default("active"),
+  })
+  .strict();
+export const draftInput = meetingInput
+  .extend({
+    title: z.string().max(120),
+    transcript: z.string().max(15000),
+    expectedVersion: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+export const bulkReviewInput = z
+  .object({
+    reviews: z
+      .array(
+        reviewSchema
+          .extend({ proposalId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/) })
+          .strict(),
+      )
+      .min(1)
+      .max(20),
+  })
   .strict();
 export const hash = (v) =>
   createHash("sha256").update(v).digest("hex").slice(0, 28);
@@ -78,6 +146,7 @@ export const meetingId = (i) =>
       i.date,
       i.type,
       normalize(i.transcript),
+      ...(i.projectId ? [i.projectId] : []),
     ]),
   );
 export function resolveDeadline(wording, meetingDate) {

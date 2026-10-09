@@ -15,7 +15,7 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api/|assets/|art/|icons/|favicon.svg).*)",
+      "source": "/((?!api/|assets/|art/|fonts/|icons/|favicon.svg).*)",
       "destination": "/index.html"
     }
   ],

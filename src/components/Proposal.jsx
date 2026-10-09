@@ -48,7 +48,7 @@ export default function Proposal({ proposal, meetingId, onDone, onError }) {
                 ? formatDate(proposal.dueDate)
                 : proposal.deadline}
             </span>
-            <Priority value={proposal.priority}/>
+            <Priority value={proposal.priority} />
           </div>
         </div>
         {!pending && <span className="badge">{proposal.reviewStatus}</span>}

@@ -1,70 +1,70 @@
-# Technical overview
+# ShiftScript v2 architecture
 
-## Pipeline
+## Pipeline and trust
 
-Voice upload/recording → authenticated `POST /api/transcribe` → Gemini audio-to-text → editable transcript. Pasted or `.txt` transcripts enter at the same editable text stage.
+Voice upload/recording → validated authenticated API → Gemini audio-to-text → editable transcript. Pasted or `.txt` transcripts join the same pipeline. Raw recordings are not persisted.
 
-Transcript → authenticated `POST /api/meetings` → Zod input validation → Gemini structured extraction → evidence/owner/deadline validation → stored meeting with pending proposals → human review → transactional approved task → tracker, board and dashboard.
+Transcript → validation → structured extraction → evidence/owner/deadline grounding → meeting with pending proposals → human single/bulk review → transactional task creation → dashboard/table/board. Manual tasks enter directly with `sourceType:manual`, without a fictional source meeting.
 
-Raw audio is not written to local storage or Firestore. Only the reviewed transcript and optional `{kind:'audio', name}` source metadata are persisted.
+Gemini uses the existing Interactions adapter, configurable `GEMINI_MODEL`, strict response schema, `store:false`, 45-second model timeout and no automatic retries. Cached identical meetings skip new analysis. Model/free-tier access is external to the app. Grounding verifies quotes and explicit names/deadlines, not semantic correctness; humans approve commitments.
 
-## Files
+## Data model
 
-| File | Purpose |
+`workspaces/{workspaceId}` stores `workspace` metadata and a shared daily `quota`. Existing personal workspaces keep their Firebase UID path. Additional workspaces use random `w_` IDs.
+
+| Field / subcollection | Contents |
 | --- | --- |
-| `src/App.jsx` | Workspace, history, dashboard, tracker, board and meeting input |
-| `src/components/Account.jsx` | Signup/sign-in/reset, names and personal workspace setup/settings |
-| `src/components/AudioInput.jsx` | Upload, preview, microphone capture and transcription UI |
-| `src/components/Icons.jsx`, `Priority.jsx` | Original vector icons and urgency badges |
-| `src/firebase-config.js` | Supplied public Firebase Web configuration |
-| `src/lib.js` | Auth, API client, dates and exports |
-| `src/styles.css` | Tailwind plus blue visual system and reduced-motion handling |
-| `public/art/meeting-blue.webp` | Original generated illustration |
-| `public/icons/` | 27 reusable original SVG icons |
-| `server/app.js` | Routes, authentication, allowlist, quota and validation |
-| `server/gemini.js` | Server-only Gemini Interactions JSON adapter |
-| `server/audio.js` | Audio limits/signatures and faithful transcription |
-| `server/analyze.js`, `schema.js` | Extraction, sample fixture, Zod and grounding helpers |
-| `server/store.js` | Firestore and local JSON adapters |
-| `server/firebase.js` | Admin initialization with server credentials |
-| `api/index.js`, `vercel.json` | Vercel function and routing |
+| `workspace` | ID, name, owner UID/name/email, timestamps, members and pending invitations |
+| `workspace.members` | UID, name, email, role, joined timestamp; one immutable owner in this release |
+| `workspace.memberUids` | Membership index for catalog discovery |
+| `workspace.invites` | Random invitation ID, email, Member/Viewer role, inviter UID and timestamp |
+| `workspace.inviteEmails` | Email index for verified invitation discovery |
+| `meetings` | Transcript/source, type/date, project ID, summary, decisions, follow-ups and proposals |
+| `tasks` | Editable task fields, owner UID/name, project, checklist, status, notes and source meeting/proposal/evidence |
+| `projects` | Name, description, accent colour, status, creator and timestamps |
+| `drafts` | One document per user UID, private input, owner UID, version and timestamp |
 
-## Storage
+Legacy metadata is hydrated/persisted in place. Tasks without a project/checklist/owner UID still render. Local JSON upgrades from a flat record into a `schemaVersion:2` workspace map on first mutation. No meetings/tasks move. Historical names remain after member removal.
 
-`workspaces/{uid}` stores `quota: {date,count}` and an optional `workspace` metadata object (name, ownerName, id, ownerUid and timestamps). Existing accounts add metadata on their next sign-in without moving meetings or tasks. `meetings/{meetingId}` under that path stores title/date/type, transcript, optional source, provider, timestamps, summary, discussions, decisions, follow-ups and proposals. A proposal includes evidence, review status, owner, original deadline, confirmed date, priority and optional task ID.
+## Authorization
 
-`tasks/{taskId}` stores the approved task fields, source meeting/proposal IDs, evidence, status, timestamps and progress notes. Notes have IDs, text and creation time.
+A Firebase ID token establishes the actor. `X-Workspace-Id` selects a workspace but never grants access. Every request validates owner/membership, and mutations recheck it within the transaction. Removed members' delayed analyses cannot be committed. Private mode additionally enforces `ALLOWED_EMAILS`; public signup does not bypass workspace permissions.
 
-ISO calendar dates are used for deadlines; timestamps are UTC. Dashboard overdue comparisons use Africa/Johannesburg's current date. Quotas reset at UTC midnight. Missing owners are Unassigned. Ambiguous relative dates remain unresolved until a person confirms them.
+Owners manage settings, invitations and member roles/removal. Members edit work. Viewers only read/export. Owner UID/role cannot be changed through member routes. Browser Firestore access is denied; Admin SDK handles server operations.
 
-## API
+Invitations bind an exact normalized email and require `email_verified` in the verified ID token. Links alone grant no access. Owners can revoke invitations. Links are copied/shared manually, with no automatic email sender or scheduled expiration. Firebase verification/reset emails send on explicit user action. Personal use does not require email verification; joining does.
 
-| Route | Purpose |
+Draft responses contain only the actor's draft. Recovery keys include UID/workspace ID. Saves/deletes compare expected versions; failed saves keep a local copy. Member removal deletes their workspace draft. Task editors supply `expectedUpdatedAt`; stale saves fail. Moving meetings updates approved tasks' projects and timestamps too.
+
+## Transactions and limits
+
+Firestore transactions read the root/subcollections before writes, diff changed records and merge metadata/quota. Bulk review applies a whole selected batch atomically. Repeated review creates no duplicate tasks; manual create retries reuse a UUID-derived ID. Local writes serialize in one Node process and use atomic file rename.
+
+Limits: 20 members plus pending invitations per workspace, 20 memberships per user, 50 projects, 50 meetings, 250 tasks, 20 proposals per meeting, 30 checklist steps and 50 progress notes per task. The quota is 20 combined analysis/transcription attempts per workspace/day by default, resetting at UTC midnight; failures count.
+
+Catalog queries use default single-field array indexes on `workspace.memberUids` and `workspace.inviteEmails`. Reads/transactions load a bounded workspace. Larger deployments need pagination, narrower transactions and job locking. Concurrent unseen duplicate meetings may both call Gemini before one record wins. Workspace-creation membership limits are a soft precheck under simultaneous requests.
+
+No realtime subscriptions, presence, scheduled reminders, automatic invitation delivery, workspace deletion, owner transfer or external meeting connectors are included. Explicit refresh loads colleagues' changes.
+
+## Input and exports
+
+Audio signature/base64 validation permits supported formats, at most 2.5 MB decoded. The JSON body limit is 3.5 MB. Transcripts allow 15,000 characters. Dates use ISO calendar strings; overdue comparisons use Africa/Johannesburg. Timestamps use UTC.
+
+PDF/CSV export runs in the browser for only the selected workspace/current filtered tasks. PDF dynamically loads jsPDF and bundled licensed DejaVu fonts, wraps text and paginates. CSV quotes cells and prefixes possible spreadsheet formula payloads. Meeting reports retain evidence and approval status. No external export service receives content.
+
+## Main modules
+
+| Module | Purpose |
 | --- | --- |
-| GET `/api/config` | Nonsecret modes, model name, audio limit, readiness and sample |
-| GET `/api/workspace` | Current user's metadata, meetings and tasks |
-| POST `/api/workspace` | Create personal workspace metadata |
-| PATCH `/api/workspace` | Update workspace and owner names |
-| POST `/api/transcribe` | Validate inline audio and return editable text/source |
-| POST `/api/meetings` | Validate, extract and store pending proposals |
-| POST `/api/meetings/:id/proposals/:id/review` | Correct and approve/reject a proposal |
-| PATCH `/api/tasks/:id` | Edit task fields/status |
-| POST `/api/tasks/:id/notes` | Append a progress update |
-
-Firestore mode requires a Firebase ID token; production requires an email allowlist unless `PUBLIC_SIGNUP_ENABLED=true` explicitly enables self-service account access. Public mode gives each verified user their own UID-scoped workspace; it does not grant access to other users. Signup and password reset use Firebase Auth, and full names are saved as Auth displayName plus workspace metadata. The server scopes operations to the verified UID. Browser Firestore rules deny direct access. Local storage is localhost-only and blocked in production. The Web config is public; Admin and Gemini credentials remain server-only. API responses disable caching.
-
-Audio uploads use base64 JSON, limited to 2,500,000 decoded bytes. MIME/type signatures and encoding are validated. The JSON body limit is 3.5 MB, keeping the upload below Vercel's 4.5 MB function request limit. Recording requests permission only on user action and stops tracks after completion or dialog unmount.
-
-## Gemini
-
-Default: `gemini-3.5-flash-lite`, configurable through `GEMINI_MODEL`. Both tasks use the Interactions API with `store:false`, structured JSON schemas, temperature 0.2, a 45-second timeout and zero automatic retries. Extraction allows 6,000 output tokens; transcription 7,000. Free-tier eligibility and provider quotas are external to the app. `store:false` controls interaction storage; it is not a promise about Google's training/data policies.
-
-The audio instruction requests faithful speech, unidentified speaker labels and `[unclear]` markers; it forbids summary and fabricated names. The user reviews the result before analysis. The extraction instruction treats transcript content as data, requires exact evidence and explicit owners/urgency, and defaults priority to Medium. Validation rejects invented evidence and clears unsupported owners/deadlines. These checks cannot establish semantic correctness; approval is required.
-
-Daily app quota defaults to 20 combined transcription/analysis attempts per workspace, with failures counted. Cached meeting retrieval does not incur another analysis attempt.
-
-## Idempotency and limits
-
-Meeting IDs hash normalized title/date/type/transcript. A repeat retrieves the saved meeting and approvals. Two simultaneous unseen submissions can still both call Gemini before one record wins; production expansion should use analysis-job locking. Task IDs derive from meeting/proposal IDs. Firestore transactions change proposal status and create tasks atomically, preventing duplicate approval. Local mutations serialize in one process and write by atomic rename.
-
-Reads return the bounded workspace: 50 meetings, 250 tasks, 20 proposals per meeting and 50 notes per task. This is suitable for a prototype, not large shared teams. Expand with pagination, per-document transactions, separate notes, shared roles and analysis jobs.
+| `src/App.jsx` | Auth/catalog, switching, dashboard, navigation and tracker/board |
+| `src/components/Account.jsx` | Signup/sign-in/reset and personal workspace setup/settings |
+| `src/components/Workspaces.jsx` | Invitations, verification, roles and workspace creation |
+| `src/components/Projects.jsx` | Project cards, status and edits |
+| `src/components/NewMeeting.jsx` | Private draft recovery/autosave and text/voice processing |
+| `src/components/MeetingDetail.jsx` | Notes, individual/bulk review and reports |
+| `src/components/TaskEditor.jsx` | Manual/meeting tasks, assignees, checklists and updates |
+| `src/features/` | Pure task filtering and export/report helpers |
+| `server/collaboration.js` | Membership, permissions, project and assignee checks |
+| `server/app.js`, `schema.js` | Authenticated APIs, validation, quota and guarded mutations |
+| `server/store.js` | Firestore/local persistence, catalog and migration |
+| `api/index.js`, `vercel.json` | Node function and Vercel API/asset routing |

@@ -1,3 +1,7 @@
+# Historical v1.2 update — superseded
+
+Use **[UPDATE-v2.md](UPDATE-v2.md)** for this complete ZIP. The instructions below describe an earlier partial update and do not apply to v2.
+
 # ShiftScript: signup, names and personal workspaces
 
 This update adds email/password signup, full names, password reset, first-login workspace setup, and workspace/name editing. Each authenticated Firebase UID owns one private workspace. It does not add team invitations, shared workspaces or multiple workspaces per account.

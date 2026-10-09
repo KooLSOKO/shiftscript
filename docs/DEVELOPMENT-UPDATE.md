@@ -1,9 +1,7 @@
-# Blue edition update
+# Version 2.0.0
 
-Implemented corporate cobalt styling, vivid High/Medium/Low badges, 27 original vector icons, an original Earny-inspired rounded illustration, entrance/hover/dialog/recording animations and reduced-motion support.
+Implemented all five requested workflow improvements: private autosaved drafts; bulk review with shared owner/date/priority edits; manual tasks/checklists; combined task filtering/sorting; and PDF/CSV exports. Added projects, multiple workspaces, shared Member/Viewer invitation links, server permissions and 15 additional original SVG icons (42 total).
 
-Replaced the OpenAI integration with configurable Gemini `gemini-3.5-flash-lite`. Added audio upload/preview, browser microphone capture, server audio validation, transcription, editable text review and voice-source metadata. Raw audio is not persisted. Existing summaries, evidence, human approval, duplicate-safe tasks, tracker, progress notes, board, history and exports remain functional.
+Preserved corporate cobalt, urgency colours, reduced-motion-aware animations, voice input, Gemini extraction, signup/names/reset, evidence and source links. Personal workspace documents upgrade in place. Meeting platform integration remains deferred.
 
-Your public Firebase Web configuration is included. Auth/Firestore/Admin credentials still require console setup; local sample mode works before that setup. No private key from chat is included or used.
-
-Eleven backend tests, the production build and the desktop/mobile browser workflow passed. Audio UI recognition was mocked. Live Gemini, microphone hardware, Firebase and deployment checks remain for the configured accounts. Follow README.md to enable services, push to GitHub and deploy to Vercel.
+Use `docs/UPDATE-v2.md`. This is a complete project ZIP, excluding private credentials, dependencies, generated builds and local data. Included tests use simulated auth/provider data; live Firebase/Gemini/Vercel checks happen in the owner's account.
