@@ -1,0 +1,50 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> shiftscript@1.1.0 check
+> npm test && npm run build
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> shiftscript@1.1.0 test
+> node --test tests/*.test.js
+
+✔ Gemini sends strict JSON contract, configured model, no storage and bounded timeout (2.486257ms)
+✔ Gemini quota errors are readable and never leak upstream key strings (1.129886ms)
+✔ malformed or refused Gemini output does not become tasks (9.171191ms)
+✔ audio MIME, encoding, file signatures and size boundaries (263.403639ms)
+✔ transcription passes audio to Gemini and preserves editable text (2.512216ms)
+✔ audio API -> reviewed transcript -> stored meeting source; no raw audio persisted (67.829767ms)
+✔ full workflow: notes, approval, editing, status, progress, refresh and duplicate prevention (174.995458ms)
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 422 Error
+API error: 404 Error
+✔ invalid inputs, missing records and unsupported sample transcript (32.919136ms)
+✔ ambiguous dates remain unresolved; explicit dates and tomorrow are anchored (0.8699ms)
+✔ fabricated evidence fails; unknown owners and unsupported deadlines are cleared (1.742574ms)
+API error: 503 Error
+✔ hosted mode cannot use ephemeral local storage (6.279223ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2002.658377
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> shiftscript@1.1.0 build
+> vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 48 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.67 kB │ gzip:   0.39 kB
+dist/assets/index-BATze804.css   25.72 kB │ gzip:   6.67 kB
+dist/assets/index-C48A70_I.js   365.62 kB │ gzip: 111.90 kB
+✓ built in 2.14s
+
+Browser smoke test: PASS sample workflow, persistence, desktop/mobile, mocked audio upload/transcription/editing/source metadata; no page errors. No live external services tested.

@@ -1,0 +1,6 @@
+Stephen: The dashboard is much clearer now. Clients liked the simpler navigation in our last review.
+Kiyasha: We agree to keep the current navigation for this release.
+Stephen: I will review the updated dashboard and send feedback by 2026-10-12.
+Kiyasha: I will consolidate Stephen's feedback and prepare the final review notes.
+Stephen: We need to check the mobile layout before the next client review. No owner has been assigned yet.
+Kiyasha: We should revisit the onboarding flow at our next planning meeting.

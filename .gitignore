@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+secrets/
+*-firebase-adminsdk-*.json
+*service-account*.json
+.data/
+.vercel/
+test-results/
+playwright-report/
+.DS_Store

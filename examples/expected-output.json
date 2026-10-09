@@ -1,0 +1,41 @@
+{
+  "summary": "The team reviewed the dashboard and agreed to retain the current navigation. Stephen will provide feedback, Kiyasha will consolidate it, and the mobile layout needs an owner before the client review.",
+  "discussionPoints": [
+    "Clients responded positively to the simpler navigation.",
+    "The dashboard is ready for a further feedback round.",
+    "The mobile layout still needs review."
+  ],
+  "decisions": [
+    "Keep the current navigation for this release."
+  ],
+  "followUps": [
+    "Revisit the onboarding flow at the next planning meeting.",
+    "Assign an owner and deadline for the mobile layout check."
+  ],
+  "actions": [
+    {
+      "title": "Review dashboard and send feedback",
+      "description": "Review the updated dashboard and send feedback to the team.",
+      "owner": "Stephen",
+      "deadline": "2026-10-12",
+      "priority": "Med",
+      "evidence": "Stephen: I will review the updated dashboard and send feedback by 2026-10-12."
+    },
+    {
+      "title": "Consolidate feedback and prepare final notes",
+      "description": "Consolidate Stephen's feedback into the final review notes.",
+      "owner": "Kiyasha",
+      "deadline": null,
+      "priority": "Med",
+      "evidence": "Kiyasha: I will consolidate Stephen's feedback and prepare the final review notes."
+    },
+    {
+      "title": "Check the mobile layout",
+      "description": "Check the mobile layout before the next client review. Assign an owner during approval.",
+      "owner": null,
+      "deadline": "before the next client review",
+      "priority": "Med",
+      "evidence": "Stephen: We need to check the mobile layout before the next client review. No owner has been assigned yet."
+    }
+  ]
+}
