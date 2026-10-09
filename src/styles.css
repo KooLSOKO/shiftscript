@@ -1008,6 +1008,15 @@ td select {
   font-size: 25px;
   margin-bottom: 12px;
 }
+.login-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.login-form fieldset:disabled { opacity: .7; }
+.account-links { display: grid; gap: 18px; margin-top: 22px; font-size: 13px; color: #657492; }
+.account-links .text-button { display: inline-flex; }
+.workspace-switch { width: 100%; text-align: left; font: inherit; }
+.workspace-switch:not(:disabled):hover { border-color: #2458e8; background: #edf3ff; }
+.workspace-switch:disabled { cursor: default; }
+.workspace-switch strong { display: block; max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-foot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .skip-link {
   position: fixed;
   top: -60px;

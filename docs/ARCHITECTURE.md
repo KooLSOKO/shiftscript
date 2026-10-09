@@ -13,6 +13,7 @@ Raw audio is not written to local storage or Firestore. Only the reviewed transc
 | File | Purpose |
 | --- | --- |
 | `src/App.jsx` | Workspace, history, dashboard, tracker, board and meeting input |
+| `src/components/Account.jsx` | Signup/sign-in/reset, names and personal workspace setup/settings |
 | `src/components/AudioInput.jsx` | Upload, preview, microphone capture and transcription UI |
 | `src/components/Icons.jsx`, `Priority.jsx` | Original vector icons and urgency badges |
 | `src/firebase-config.js` | Supplied public Firebase Web configuration |
@@ -30,7 +31,7 @@ Raw audio is not written to local storage or Firestore. Only the reviewed transc
 
 ## Storage
 
-`workspaces/{uid}` stores `quota: {date,count}`. `meetings/{meetingId}` under that path stores title/date/type, transcript, optional source, provider, timestamps, summary, discussions, decisions, follow-ups and proposals. A proposal includes evidence, review status, owner, original deadline, confirmed date, priority and optional task ID.
+`workspaces/{uid}` stores `quota: {date,count}` and an optional `workspace` metadata object (name, ownerName, id, ownerUid and timestamps). Existing accounts add metadata on their next sign-in without moving meetings or tasks. `meetings/{meetingId}` under that path stores title/date/type, transcript, optional source, provider, timestamps, summary, discussions, decisions, follow-ups and proposals. A proposal includes evidence, review status, owner, original deadline, confirmed date, priority and optional task ID.
 
 `tasks/{taskId}` stores the approved task fields, source meeting/proposal IDs, evidence, status, timestamps and progress notes. Notes have IDs, text and creation time.
 
@@ -41,14 +42,16 @@ ISO calendar dates are used for deadlines; timestamps are UTC. Dashboard overdue
 | Route | Purpose |
 | --- | --- |
 | GET `/api/config` | Nonsecret modes, model name, audio limit, readiness and sample |
-| GET `/api/workspace` | Current user's stored meetings and tasks |
+| GET `/api/workspace` | Current user's metadata, meetings and tasks |
+| POST `/api/workspace` | Create personal workspace metadata |
+| PATCH `/api/workspace` | Update workspace and owner names |
 | POST `/api/transcribe` | Validate inline audio and return editable text/source |
 | POST `/api/meetings` | Validate, extract and store pending proposals |
 | POST `/api/meetings/:id/proposals/:id/review` | Correct and approve/reject a proposal |
 | PATCH `/api/tasks/:id` | Edit task fields/status |
 | POST `/api/tasks/:id/notes` | Append a progress update |
 
-Firestore mode requires a Firebase ID token; production also requires an email allowlist. The server scopes operations to the verified UID. Browser Firestore rules deny direct access. Local storage is localhost-only and blocked in production. The Web config is public; Admin and Gemini credentials remain server-only. API responses disable caching.
+Firestore mode requires a Firebase ID token; production requires an email allowlist unless `PUBLIC_SIGNUP_ENABLED=true` explicitly enables self-service account access. Public mode gives each verified user their own UID-scoped workspace; it does not grant access to other users. Signup and password reset use Firebase Auth, and full names are saved as Auth displayName plus workspace metadata. The server scopes operations to the verified UID. Browser Firestore rules deny direct access. Local storage is localhost-only and blocked in production. The Web config is public; Admin and Gemini credentials remain server-only. API responses disable caching.
 
 Audio uploads use base64 JSON, limited to 2,500,000 decoded bytes. MIME/type signatures and encoding are validated. The JSON body limit is 3.5 MB, keeping the upload below Vercel's 4.5 MB function request limit. Recording requests permission only on user action and stops tracks after completion or dialog unmount.
 

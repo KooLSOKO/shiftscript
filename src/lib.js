@@ -5,6 +5,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 const config = {
   ...firebaseWebConfig,
@@ -15,7 +18,7 @@ const config = {
 };
 export const auth =
   config.apiKey && config.appId ? getAuth(initializeApp(config)) : null;
-export { signInWithEmailAndPassword, signOut, onAuthStateChanged };
+export { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail };
 export async function api(path, options = {}) {
   const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
   const controller = new AbortController(),

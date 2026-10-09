@@ -4,7 +4,7 @@ Tested 9 October 2026, Node.js 24.19.0. No private credential supplied in chat w
 
 ## Automated checks
 
-`npm run check`: **11 tests passed, zero failed; production Vite build passed.** Tests cover:
+`npm run check`: **17 tests passed, zero failed; production Vite build passed.** Tests cover:
 
 - Summary/decision/three proposed actions from the fictional fixture; no tasks before approval.
 - Owner/deadline handling, ambiguous dates and rejection of fabricated evidence.
@@ -49,3 +49,7 @@ The decision retains current navigation; onboarding remains a tentative follow-u
 4. Deploy to Vercel and repeat sign-in, transcript/audio and persistence checks.
 
 Not verified here: live Gemini project eligibility/key validity/model accuracy, microphone hardware, Firebase IAM/connectivity, hosted login or Vercel deployment. The build and local/mock tests passed; configure the external services to complete those checks.
+
+## Signup update
+
+Six additional API/storage tests cover authenticated personal workspace creation/rename, invalid and cross-owner payloads, existing meeting preservation, account isolation, public/private access modes, local persistence and Firestore metadata merges. `node tests/accounts-browser.js` passes with simulated Firebase Auth on ports 3010/5180: signup/password mismatch, name prefill, workspace setup and edits, refresh, two isolated accounts, reset, wrong password and mobile layout. Live signup/reset email and Firebase connectivity still require deployed verification. See SIGNUP-UPDATE.md for installation.

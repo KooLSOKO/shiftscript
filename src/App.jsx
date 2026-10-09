@@ -27,7 +27,6 @@ import {
   api,
   auth,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
   signOut,
   statuses,
   types,
@@ -42,6 +41,7 @@ import Fields from "./components/Fields.jsx";
 import Proposal from "./components/Proposal.jsx";
 import AudioInput from "./components/AudioInput.jsx";
 import Priority from "./components/Priority.jsx";
+import AccountAccess, { WorkspaceSetup, WorkspaceSettings, WorkspaceLoading } from "./components/Account.jsx";
 const tabs = [
   ["dashboard", "Overview", LayoutDashboard],
   ["meetings", "Meetings", NotebookPen],
@@ -51,6 +51,9 @@ const tabs = [
 export default function App() {
   const [config, setConfig] = useState(null),
     [user, setUser] = useState(undefined),
+    [registering, setRegistering] = useState(false),
+    [loadedFor, setLoadedFor] = useState(null),
+    [settings, setSettings] = useState(false),
     [data, setData] = useState({ meetings: [], tasks: [] }),
     [tab, setTab] = useState("dashboard"),
     [error, setError] = useState(""),
@@ -63,8 +66,12 @@ export default function App() {
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState("All");
   async function reload() {
+    const uid = auth?.currentUser?.uid || "local-demo";
     const d = await api("/workspace");
+    if ((auth?.currentUser?.uid || "local-demo") !== uid) return d;
     setData(d);
+    setLoadedFor(uid);
+    setError("");
     return d;
   }
   useEffect(() => {
@@ -83,16 +90,28 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (!config) return;
+    if (registering) return;
     if (config.authRequired && !user) {
       setLoading(false);
       setData({ meetings: [], tasks: [] });
+      setLoadedFor(null);
+      setSettings(false);
+      setMenu(false);
+      setTab("dashboard");
+      setSearch("");
+      setFilter("All");
+      setToast("");
+      setNewMeeting(false);
+      setMeetingId(null);
+      setTaskId(null);
       return;
     }
     setLoading(true);
+    setError("");
     reload()
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [config, user]);
+  }, [config, user, registering]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 4500);
@@ -135,8 +154,12 @@ export default function App() {
       setError(e.message);
     }
   }
-  if (config?.authRequired && !user)
-    return <Login config={config} error={error} setError={setError} />;
+  if (config?.authRequired && (!user || registering))
+    return <AccountAccess config={config} error={error} setError={setError} setRegistering={setRegistering} />;
+  if (config?.authRequired && loadedFor !== user?.uid)
+    return <WorkspaceLoading error={error} onRetry={() => { setError(""); reload().catch(e => setError(e.message)); }} />;
+  if (config?.authRequired && !data.workspace)
+    return <WorkspaceSetup user={user} onSaved={reload} />;
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">
@@ -165,17 +188,17 @@ export default function App() {
         >
           <X />
         </button>
-        <div className="workspace-pill">
+        <button className="workspace-pill workspace-switch" type="button" aria-label="Workspace settings" disabled={!data.workspace} onClick={() => setSettings(true)}>
           <span className="avatar">SS</span>
           <div>
-            <strong>Your workspace</strong>
+            <strong>{data.workspace?.name || "Your workspace"}</strong>
             <span>
               {config?.storage === "firebase"
                 ? "Connected to Firebase"
                 : "Local sample workspace"}
             </span>
           </div>
-        </div>
+        </button>
         <p className="nav-label">WORKSPACE</p>
         <nav>
           {tabs.map(([id, label, Icon]) => (
@@ -207,10 +230,10 @@ export default function App() {
         </div>
         <div className="sidebar-foot">
           <span className="avatar dark">
-            {user?.email?.slice(0, 2).toUpperCase() || "VS"}
+            {(data.workspace?.ownerName || user?.displayName || user?.email)?.slice(0, 2).toUpperCase() || "VS"}
           </span>
           <div>
-            <strong>{user?.email || "ShiftScript demo"}</strong>
+            <strong>{data.workspace?.ownerName || user?.displayName || user?.email || "ShiftScript demo"}</strong>
             <span>
               {config?.provider === "gemini"
                 ? "Gemini connected"
@@ -711,6 +734,11 @@ export default function App() {
           }}
         />
       )}
+      {settings && data.workspace && (
+        <WorkspaceSettings user={user} workspace={data.workspace} onClose={() => setSettings(false)} onSaved={async () => {
+          await reload(); setSettings(false); setToast("Workspace details saved.");
+        }} />
+      )}
       {task && (
         <TaskModal
           task={task}
@@ -1140,90 +1168,5 @@ function TaskModal({ task, onClose, reload, onSource }) {
         </p>
       )}
     </Modal>
-  );
-}
-function Login({ config, error, setError }) {
-  const [email, setEmail] = useState(""),
-    [password, setPassword] = useState(""),
-    [busy, setBusy] = useState(false);
-  async function login(e) {
-    e.preventDefault();
-    if (!auth) return;
-    setBusy(true);
-    setError("");
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch {
-      setError(
-        "Sign-in failed. Check your email, password and Firebase Email/Password provider.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <main className="login">
-      <div className="login-art">
-        <img src="/art/meeting-blue.webp" alt="Clay-style colleagues planning together" />
-        <h1>
-          Talk it through.
-          <br />
-          Put it in motion.
-        </h1>
-        <p>Your next steps deserve a place to land.</p>
-      </div>
-      <section className="login-form">
-        <div className="brand mb-8">
-          <img src="/favicon.svg" alt="" />
-          ShiftScript
-        </div>
-        <h2>Welcome to your workspace.</h2>
-        <p className="muted mb-6">
-          Sign in with an account created in Firebase Authentication.
-        </p>
-        {!auth ? (
-          <div className="alert">
-            Add VITE_FIREBASE_API_KEY and VITE_FIREBASE_APP_ID from your
-            Firebase Web app config, then restart or redeploy. See README.md.
-          </div>
-        ) : (
-          <form onSubmit={login}>
-            <label className="block mb-4">
-              Email
-              <input
-                type="email"
-                autoComplete="username"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-            <label className="block mb-6">
-              Password
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </label>
-            <button className="button primary w-full" disabled={busy}>
-              {busy ? "Signing in…" : "Open workspace"}
-              <ArrowRight size={17} />
-            </button>
-          </form>
-        )}
-        {error && (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        )}
-        <p className="hint mt-6">
-          Private workspace ·{" "}
-          {config.provider === "sample" ? "Sample analysis" : "Gemini analysis"}
-        </p>
-      </section>
-    </main>
   );
 }

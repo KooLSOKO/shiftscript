@@ -25,6 +25,8 @@ export function createApp({
   transcriber = transcribe,
   storage = process.env.STORAGE_MODE || "local",
   provider = process.env.AI_PROVIDER || "sample",
+  signupEnabled = process.env.PUBLIC_SIGNUP_ENABLED === "true",
+  verifyToken = (token) => firebase().auth.verifyIdToken(token, true),
 } = {}) {
   const app = express(),
     production =
@@ -43,6 +45,7 @@ export function createApp({
       storage,
       provider,
       authRequired: storage === "firebase",
+      signupEnabled: storage === "firebase" && signupEnabled,
       sampleTranscript,
       model:process.env.GEMINI_MODEL || defaultModel,
       maxAudioBytes:MAX_AUDIO_BYTES,
@@ -64,7 +67,7 @@ export function createApp({
       if (!token) fail(401, "Please sign in to your ShiftScript workspace.");
       let decoded;
       try {
-        decoded = await firebase().auth.verifyIdToken(token, true);
+        decoded = await verifyToken(token);
       } catch {
         fail(401, "Your session could not be verified. Sign in again.");
       }
@@ -72,9 +75,9 @@ export function createApp({
         .split(",")
         .map((v) => v.trim().toLowerCase())
         .filter(Boolean);
-      if (production && !allowed.length)
+      if (!signupEnabled && production && !allowed.length)
         fail(503, "Configure ALLOWED_EMAILS before using the deployed app.");
-      if (allowed.length && !allowed.includes(decoded.email?.toLowerCase()))
+      if (!signupEnabled && allowed.length && !allowed.includes(decoded.email?.toLowerCase()))
         fail(403, "This account does not have access to this workspace.");
       req.uid = decoded.uid;
       next();
@@ -85,11 +88,34 @@ export function createApp({
   app.get("/api/workspace", async (req, res) => {
     const d = await repo.list(req.uid);
     res.json({
+      workspace: d.workspace || null,
       meetings: d.meetings.sort((a, b) =>
         b.createdAt.localeCompare(a.createdAt),
       ),
       tasks: d.tasks.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     });
+  });
+  const workspaceInput = z.object({
+    name: z.string().trim().min(2).max(80),
+    ownerName: z.string().trim().min(2).max(80),
+  }).strict();
+  app.post("/api/workspace", async (req, res) => {
+    const input = workspaceInput.parse(req.body);
+    const workspace = await repo.mutate(req.uid, (s) => {
+      if (s.workspace) fail(409, "You already have a workspace. Open workspace settings to rename it.");
+      s.workspace = { ...input, id: req.uid, ownerUid: req.uid, createdAt: now(), updatedAt: now() };
+      return s.workspace;
+    });
+    res.status(201).json({ workspace });
+  });
+  app.patch("/api/workspace", async (req, res) => {
+    const input = workspaceInput.parse(req.body);
+    const workspace = await repo.mutate(req.uid, (s) => {
+      if (!s.workspace) fail(404, "Create your workspace first.");
+      Object.assign(s.workspace, input, { updatedAt: now() });
+      return s.workspace;
+    });
+    res.json({ workspace });
   });
   async function claimQuota(uid) {
     await repo.mutate(uid,s=>{
