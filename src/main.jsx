@@ -12,9 +12,9 @@ if (window.location.pathname === "/" && legacyAppLink) {
   const root = document.getElementById("root");
   root.hidden = false;
   root.innerHTML =
-    '<p role="status" style="padding:32px;font-family:Arial,sans-serif">Opening your workspace…</p>';
+    '<p role="status" style="padding:32px;font-family:Manrope,Arial,sans-serif">Opening your workspace…</p>';
   import("./app-entry.jsx").catch(() => {
     root.innerHTML =
-      '<main style="padding:32px;font-family:Arial,sans-serif"><h1>We couldn’t load your workspace.</h1><p>Refresh this page to try again.</p><a href="/">Back to home</a></main>';
+      '<main style="padding:32px;font-family:Manrope,Arial,sans-serif"><h1>We couldn’t load your workspace.</h1><p>Refresh this page to try again.</p><a href="/">Back to home</a></main>';
   });
 }

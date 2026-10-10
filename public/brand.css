@@ -1,0 +1,32 @@
+/* Shared Earny identity for the public home, workspace and policy pages. */
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/Manrope-400.woff") format("woff");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/Manrope-700.woff") format("woff");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/Manrope-800.woff") format("woff");
+  font-weight: 800;
+  font-display: swap;
+}
+:root {
+  --ss-font: Manrope, Arial, sans-serif;
+  --ss-blue: #2458e8;
+  --ss-blue-edge: #143aab;
+  --ss-navy: #172c58;
+  --ss-muted: #667287;
+  --ss-line: #dce3ef;
+  --ss-soft-blue: #eaf0ff;
+  --ss-page: #f5f7fc;
+  --ss-surface: #fff;
+  --ss-control-radius: 9px;
+  --ss-panel-radius: 12px;
+}

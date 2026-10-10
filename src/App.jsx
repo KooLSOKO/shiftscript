@@ -91,6 +91,7 @@ export default function App() {
     [filters, setFilters] = useState({ ...defaultFilters }),
     [meetingSearch, setMeetingSearch] = useState(""),
     [meetingProject, setMeetingProject] = useState("All"),
+    [meetingReview, setMeetingReview] = useState("All"),
     [pdfBusy, setPdfBusy] = useState(false),
     [personal, setPersonal] = useState(null),
     [selectedIds, setSelectedIds] = useState([]),
@@ -197,6 +198,7 @@ export default function App() {
     setSettings(false);
     setFilters({ ...defaultFilters });
     setMeetingProject("All");
+    setMeetingReview("All");
     setMeetingSearch("");
     setTab("dashboard");
     setMenu(false);
@@ -390,6 +392,13 @@ export default function App() {
     setTab("tasks");
     setMeetingId(null);
   }
+  function meetingView(review = "All") {
+    setMeetingSearch("");
+    setMeetingProject("All");
+    setMeetingReview(review);
+    setMeetingId(null);
+    setTab("meetings");
+  }
   const notices = taskNotifications(data.tasks, actor, personal?.preferences),
     unread = notices.filter(
       (item) =>
@@ -417,6 +426,8 @@ export default function App() {
     name = actor.name;
   const visibleMeetings = data.meetings.filter(
     (m) =>
+      (meetingReview === "All" ||
+        m.proposals.some((proposal) => proposal.reviewStatus === "pending")) &&
       (meetingProject === "All" ||
         (meetingProject === "None"
           ? !m.projectId
@@ -846,33 +857,74 @@ export default function App() {
                       alt="Illustration of colleagues planning their next steps"
                     />
                   </section>
-                  <section className="stats">
+                  <section className="stats" aria-label="Workspace shortcuts">
                     {[
                       [
                         data.meetings.length,
                         "Meetings processed",
                         Icons.NotebookPen,
                         "sage",
+                        () => meetingView(),
                       ],
-                      [data.projects.length, "Projects", Icons.Folder, "sage"],
-                      [pending, "Awaiting approval", Icons.Clock, "peach"],
-                      [active.length, "Active tasks", Icons.ListTodo, "sage"],
+                      [
+                        data.projects.length,
+                        "Projects",
+                        Icons.Folder,
+                        "sage",
+                        () => {
+                          setMeetingId(null);
+                          setTab("projects");
+                        },
+                      ],
+                      [
+                        pending,
+                        "Awaiting approval",
+                        Icons.Clock,
+                        "peach",
+                        () => meetingView("Pending"),
+                      ],
+                      [
+                        active.length,
+                        "Active tasks",
+                        Icons.ListTodo,
+                        "sage",
+                        () => taskView({ status: "Active" }),
+                      ],
                       [
                         completed.length,
                         "Completed",
                         Icons.CheckCircle2,
                         "sage",
+                        () => taskView({ status: "Completed" }),
                       ],
-                      [blocked.length, "Blocked", Icons.AlertCircle, "peach"],
-                      [late.length, "Overdue", Icons.CalendarDays, "peach"],
-                    ].map(([v, label, Icon, color]) => (
-                      <article className="stat" key={label}>
-                        <div className={"stat-icon " + color}>
-                          <Icon size={18} />
-                        </div>
+                      [
+                        blocked.length,
+                        "Blocked",
+                        Icons.AlertCircle,
+                        "peach",
+                        () => taskView({ status: "Blocked" }),
+                      ],
+                      [
+                        late.length,
+                        "Overdue",
+                        Icons.CalendarDays,
+                        "peach",
+                        () => taskView({ due: "Overdue" }),
+                      ],
+                    ].map(([v, label, Icon, color, onClick]) => (
+                      <button
+                        type="button"
+                        className="stat"
+                        key={label}
+                        onClick={onClick}
+                        aria-label={`View ${label.toLowerCase()}: ${v}`}
+                      >
+                        <span className={"stat-icon " + color}>
+                          <Icon size={32} />
+                        </span>
                         <strong>{v}</strong>
-                        <span>{label}</span>
-                      </article>
+                        <span className="stat-label">{label}</span>
+                      </button>
                     ))}
                   </section>
                   <NeedsAttention
@@ -893,7 +945,7 @@ export default function App() {
                         <h2>Recent conversations</h2>
                         <button
                           className="text-button"
-                          onClick={() => setTab("meetings")}
+                          onClick={() => meetingView()}
                         >
                           View all
                         </button>
@@ -1106,6 +1158,17 @@ export default function App() {
                               {p.name}
                             </option>
                           ))}
+                        </select>
+                      </label>
+                      <label>
+                        Review
+                        <select
+                          aria-label="Meeting review"
+                          value={meetingReview}
+                          onChange={(e) => setMeetingReview(e.target.value)}
+                        >
+                          <option value="All">All meetings</option>
+                          <option value="Pending">Needs approval</option>
                         </select>
                       </label>
                     </div>

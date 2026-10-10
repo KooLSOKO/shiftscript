@@ -56,6 +56,12 @@ Two new custom clay input icons, `audio-voice.png` and `meet-notes.png`, complet
 
 Original CSS provides a raised base, hover fill and press feedback inspired by [CSSButtons](https://cssbuttons.io/). Button arrows are removed from public and workspace actions. Functional chevrons and disclosure controls remain. Reduced-motion preferences disable animated transitions.
 
+## Shared styling and larger icons (v3.0.5)
+
+Dashboard shortcut cards use the existing original ShiftScript SVG icon set at 32–36px on desktop and 30px on mobile. No new generated image assets are needed for this revision. All existing transparent character and clay PNGs remain in use. Image element box shadows/corner clipping are removed from the app's character illustrations so the PNG cutouts blend directly into each section.
+
+`public/brand.css` owns local Manrope font faces, primary cobalt/navy colours, muted text, border colour and control/panel corner sizes. Homepage, app, account and policy styles consume these shared values. Raised primary buttons use the same dark-blue base and hover-fill/press interaction; keyboard focus and reduced-motion preferences remain supported. The actual public product preview is refreshed from the current fictional app screenshot.
+
 Prompt shared by all four assets:
 
 > Use case: stylized-concept. Asset type: a custom clay illustration icon for ShiftScript by Earny's website. The supplied image is a MATERIAL, LIGHTING AND PALETTE REFERENCE ONLY, not an edit target. Create one original new object composition. Style: handmade clay/plasticine 3D illustration, matte slightly tactile surface, friendly rounded forms, restrained soft studio light, cobalt blue #2458E8 with ivory white, a little soft powder blue and tiny warm yellow details. Slight three-quarter isometric view. Background: genuinely transparent alpha, no floor, no coloured backdrop, no checkerboard baked in, no strong drop shadow. Composition: centered single grouped symbol, fills about 75% of square canvas with generous unclipped padding. No words, no letters, no numerals, no logos, no watermark, no sparkles, no robot, no chrome, no glass, no UI panel. Match the reference's softly imperfect claycraft, not shiny generic 3D.

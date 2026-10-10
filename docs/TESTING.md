@@ -107,3 +107,7 @@ The revised public home passes the production build, all 69 unit/API tests, the 
 ## PNG artwork and button revision (v3.0.4)
 
 All 69 unit/API tests, the production build and all seven browser suites passed after the illustration/button changes. PNG integrity and the alpha channel were verified for every character and clay icon. Desktop/mobile home screenshots and the Board screenshot were visually reviewed. The actual workspace preview was refreshed from the current fictional demo screenshot; the final built landing asset/layout suite was rerun after that image change. Exact logs are included in `check-results.txt`. External auth, Google imports, emails and Calendar operations are simulated in these tests.
+
+## Clickable dashboard and shared styling (v3.0.5)
+
+The new `dashboard-browser.js` suite uses isolated fictional tasks and three meetings to verify all seven totals and destinations. It checks Active/Completed/Blocked/Overdue subsets, multiple pending meetings, stale filter reset, empty totals, workspace isolation/reset and Enter/Space activation. Card bounds and touch targets are checked at 320/390/768/2048px. The normal browser command now contains eight suites. Public-page tests exercise the shared brand stylesheet and local fonts with JavaScript disabled; homepage checks cover 320–1440px. Logs and refreshed screenshots are included with the release.

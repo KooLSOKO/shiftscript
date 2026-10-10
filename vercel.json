@@ -14,12 +14,30 @@
     }
   },
   "rewrites": [
-    { "source": "/app", "destination": "/index.html" },
-    { "source": "/app/", "destination": "/index.html" },
-    { "source": "/about", "destination": "/about/index.html" },
-    { "source": "/privacy", "destination": "/privacy/index.html" },
-    { "source": "/terms", "destination": "/terms/index.html" },
-    { "source": "/data-deletion", "destination": "/data-deletion/index.html" },
+    {
+      "source": "/app",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/app/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/data-deletion",
+      "destination": "/data-deletion/index.html"
+    },
     {
       "source": "/api/reminders",
       "destination": "/api/reminders"
@@ -29,14 +47,19 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg|landing.css|robots.txt|sitemap.xml).*)",
+      "source": "/((?!api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg|landing.css|brand.css|robots.txt|sitemap.xml).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
       "source": "/app/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
     },
     {
       "source": "/(.*)",
