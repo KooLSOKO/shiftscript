@@ -56,6 +56,12 @@ const page = await browser.newPage({
   reducedMotion: "reduce",
   timezoneId: "Africa/Johannesburg",
 });
+await page.addInitScript(() =>
+  localStorage.setItem(
+    "shiftscript:cookie-preferences:v1",
+    JSON.stringify({ version: 1, essential: true, optional: false }),
+  ),
+);
 page.setDefaultTimeout(15000);
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));

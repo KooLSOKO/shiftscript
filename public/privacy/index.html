@@ -23,6 +23,7 @@
       property="og:image"
       content="https://shiftscript.earny.co.za/art/social-sharing.png"
     />
+    <script defer src="/cookie-consent.js"></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -300,7 +301,11 @@
               retain draft text until you discard it or clear its site data. The
               current app does not initialise Google Analytics or include
               advertising trackers. Google authentication uses a short-lived
-              security cookie during the connection flow.
+              security cookie during the connection flow. The first-visit notice
+              stores your essential-storage acknowledgement on this browser. You
+              can reopen it using the Cookie preferences control at the bottom
+              of the page. Accepting this notice does not enable optional
+              trackers.
             </p>
           </section>
           <section id="choices">
@@ -350,6 +355,13 @@
         ><a href="mailto:meetings@earny.co.za">Contact Earny</a>
       </nav>
       <p>© 2026 Earny · A clear next step, every time.</p>
+      <button
+        type="button"
+        class="ss-cookie-preferences"
+        data-cookie-preferences
+      >
+        Cookie preferences
+      </button>
     </footer>
   </body>
 </html>

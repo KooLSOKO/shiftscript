@@ -1550,7 +1550,12 @@ export default function App() {
           {toast}
         </div>
       )}
-      <nav className="mobile-bottom-nav" aria-label="Quick navigation">
+      <nav
+        className={
+          "mobile-bottom-nav" + (!readOnly ? " has-meeting-action" : "")
+        }
+        aria-label="Quick navigation"
+      >
         {[
           ["dashboard", "Overview", Icons.LayoutDashboard],
           ["meetings", "Meetings", Icons.NotebookPen],
@@ -1572,6 +1577,38 @@ export default function App() {
           </button>
         ))}
       </nav>
+      {!readOnly && !menu && !newMeeting && (
+        <button
+          className="mobile-meeting-button"
+          aria-label="Add new meeting"
+          title="New meeting"
+          onClick={() => {
+            setMenu(false);
+            setNewMeeting(true);
+          }}
+        >
+          <svg
+            className="mobile-meeting-ring"
+            viewBox="0 0 80 80"
+            aria-hidden="true"
+          >
+            <defs>
+              <path
+                id="meeting-text-ring"
+                d="M40,11 a29,29 0 1,1 0,58 a29,29 0 1,1 0,-58"
+              />
+            </defs>
+            <text textLength="182" lengthAdjust="spacing">
+              <textPath href="#meeting-text-ring">
+                NEW MEETING • NEW MEETING •{" "}
+              </textPath>
+            </text>
+          </svg>
+          <span className="mobile-meeting-centre" aria-hidden="true">
+            <Icons.Plus size={28} />
+          </span>
+        </button>
+      )}
       {newMeeting && (
         <NewMeeting
           key={workspaceId}

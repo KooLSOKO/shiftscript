@@ -41,6 +41,12 @@ const page = await browser.newPage({
   viewport: { width: 1440, height: 1050 },
   reducedMotion: "reduce",
 });
+await page.addInitScript(() =>
+  localStorage.setItem(
+    "shiftscript:cookie-preferences:v1",
+    JSON.stringify({ version: 1, essential: true, optional: false }),
+  ),
+);
 page.setDefaultTimeout(15000);
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));

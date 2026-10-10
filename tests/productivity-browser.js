@@ -113,6 +113,12 @@ const browser = await chromium.launch(options),
     timezoneId: "Africa/Johannesburg",
     reducedMotion: "reduce",
   });
+await page.addInitScript(() =>
+  localStorage.setItem(
+    "shiftscript:cookie-preferences:v1",
+    JSON.stringify({ version: 1, essential: true, optional: false }),
+  ),
+);
 page.setDefaultTimeout(15000);
 const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));

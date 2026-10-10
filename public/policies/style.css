@@ -1,4 +1,5 @@
 @import url("/brand.css");
+@import url("/cookie-consent.css");
 * {
   box-sizing: border-box;
 }

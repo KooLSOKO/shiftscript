@@ -4,7 +4,7 @@ The interface takes colour and art-direction inspiration from [earny.co.za](http
 
 ## Illustration
 
-Saved project asset: `public/art/meeting-blue.webp`. Created with the built-in image-generation tool, then resized and encoded as WebP for the app. The original scene uses two corporate colleagues, a laptop, a checklist and three urgency cards. It appears in the overview and sidebar.
+Saved project asset: `public/art/meeting-blue.png`. Created with the built-in image-generation tool, then revised as a transparent PNG cutout for the current app. The original scene uses two corporate colleagues, a laptop, a checklist and three urgency cards. It appears in the overview and sidebar.
 
 Final creative prompt/specification:
 
@@ -18,7 +18,7 @@ Final creative prompt/specification:
 
 ## Report fonts
 
-`public/fonts/DejaVuSans.ttf` and `DejaVuSans-Bold.ttf` are embedded in PDFs for accented names and readable wrapping. Their license/copyright is in `public/fonts/LICENSE.txt`. The UI uses its system font. PDF fonts/dependencies load only for exports.
+`public/fonts/DejaVuSans.ttf` and `DejaVuSans-Bold.ttf` are embedded in PDFs for accented names and readable wrapping. Their license/copyright is in `public/fonts/LICENSE.txt`. The UI uses locally hosted Manrope from `public/brand.css`. PDF fonts/dependencies load only for exports.
 
 ## Motion
 
@@ -72,3 +72,7 @@ Subjects appended to that prompt:
 - `reviewed-tasks`: An ivory clipboard with a chunky cobalt blue clip and blue rim, two raised cobalt check marks on the face and one empty blue outlined checkbox below. A small rounded blue pencil rests diagonally beside it with an ivory tip. Immediately reads as reviewed tasks.
 - `shared-projects`: A cobalt blue open project folder holding ivory papers, with two small ivory-and-powder-blue person silhouette tokens in front. Person tokens have a round head and simple rounded shoulder shape, no facial detail. Immediately reads as shared projects and people.
 - `reminders-sharing`: A small ivory desk calendar with cobalt blue frame and two rounded binder rings, a single large cobalt circle marking a date but no numerals. Beside it a cobalt-and-ivory envelope with a tiny warm yellow notification dot. Immediately reads as deadlines and email reminders.
+
+## Mobile controls and homepage marquee (v3.0.6)
+
+The central mobile action uses the existing original Plus SVG, a code-native SVG text path and Earny's cobalt/navy colours. The circular-text interaction is adapted from the user-supplied Creatlydev Uiverse.io example; it adds no raster image, icon font or runtime dependency. CSS supplies its rotation and the homepage text marquee, with static reduced-motion variants. Sidebar and toolbar icons are enlarged from the same original SVG set. The first-visit notice reuses shared typography and colours.

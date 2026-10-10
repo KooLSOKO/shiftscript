@@ -18,3 +18,12 @@ if (window.location.pathname === "/" && legacyAppLink) {
       '<main style="padding:32px;font-family:Manrope,Arial,sans-serif"><h1>We couldn’t load your workspace.</h1><p>Refresh this page to try again.</p><a href="/">Back to home</a></main>';
   });
 }
+
+const marquee = document.querySelector(".ss-marquee");
+const marqueeToggle = marquee?.querySelector(".ss-marquee-toggle");
+marqueeToggle?.addEventListener("click", () => {
+  const paused = marqueeToggle.getAttribute("aria-pressed") !== "true";
+  marqueeToggle.setAttribute("aria-pressed", String(paused));
+  marqueeToggle.textContent = paused ? "Resume movement" : "Pause movement";
+  marquee.dataset.paused = String(paused);
+});

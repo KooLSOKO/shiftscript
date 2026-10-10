@@ -136,6 +136,12 @@ const browser = await chromium.launch(launch),
     reducedMotion: "reduce",
   }),
   errors = [];
+await page.addInitScript(() =>
+  localStorage.setItem(
+    "shiftscript:cookie-preferences:v1",
+    JSON.stringify({ version: 1, essential: true, optional: false }),
+  ),
+);
 page.setDefaultTimeout(15000);
 page.on("pageerror", (e) => errors.push(e.message));
 await page.route("https://**", (route) => route.abort());

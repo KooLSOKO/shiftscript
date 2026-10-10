@@ -47,7 +47,7 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg|landing.css|brand.css|robots.txt|sitemap.xml).*)",
+      "source": "/((?!api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg|landing.css|brand.css|cookie-consent.css|cookie-consent.js|robots.txt|sitemap.xml).*)",
       "destination": "/index.html"
     }
   ],

@@ -58,6 +58,8 @@
       crossorigin
     />
     <link rel="stylesheet" href="/brand.css" />
+    <link rel="stylesheet" href="/cookie-consent.css" />
+    <script defer src="/cookie-consent.js"></script>
     <link rel="stylesheet" href="/landing.css" />
     <script type="application/ld+json">
       {
@@ -79,12 +81,6 @@
   <body>
     <div id="home" class="ss-home">
       <a class="ss-skip" href="#main">Skip to content</a>
-      <div class="ss-topbar">
-        <div class="ss-container">
-          <span>A little structure for the work after the meeting.</span
-          ><span>ShiftScript by Earny</span>
-        </div>
-      </div>
       <header class="ss-header ss-container">
         <a class="ss-brand" href="/" aria-label="ShiftScript home"
           ><img src="/favicon.svg" width="34" height="34" alt="" /><span
@@ -242,6 +238,30 @@
                   </p>
                 </div>
               </article>
+            </div>
+          </div>
+        </section>
+        <section class="ss-marquee" aria-label="From conversation to progress">
+          <div class="ss-marquee-header ss-container">
+            <p>Keep good work moving.</p>
+            <button
+              type="button"
+              class="ss-marquee-toggle"
+              aria-pressed="false"
+            >
+              Pause movement
+            </button>
+          </div>
+          <div class="ss-marquee-window">
+            <div class="ss-marquee-track">
+              <p class="ss-marquee-group">
+                <span>Clear decisions</span><span>Named owners</span
+                ><span>Next steps</span><span>Shared progress</span>
+              </p>
+              <p class="ss-marquee-group" aria-hidden="true">
+                <span>Clear decisions</span><span>Named owners</span
+                ><span>Next steps</span><span>Shared progress</span>
+              </p>
             </div>
           </div>
         </section>
@@ -573,6 +593,13 @@
           ><a href="mailto:meetings@earny.co.za">Contact Earny</a>
         </nav>
         <p class="ss-copyright">© 2026 Earny · Made for the work ahead.</p>
+        <button
+          type="button"
+          class="ss-cookie-preferences"
+          data-cookie-preferences
+        >
+          Cookie preferences
+        </button>
       </footer>
     </div>
     <div id="root" hidden></div>

@@ -93,6 +93,14 @@ try {
     )["@type"],
     "SoftwareApplication",
   );
+  await page.getByRole("button", { name: "Accept essential cookies" }).click();
+  assert.equal(await page.locator(".ss-topbar").count(), 0);
+  assert.equal(
+    await page
+      .locator(".ss-marquee-track")
+      .evaluate((el) => getComputedStyle(el).animationName),
+    "none",
+  );
   // Load below-fold illustrations before taking a full-page screenshot.
   await page.locator("#home img").evaluateAll(async (images) => {
     for (const img of images) img.loading = "eager";

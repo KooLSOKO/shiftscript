@@ -14,6 +14,13 @@ export default function PolicyLinks() {
         Data requests
       </a>
       <a href="mailto:meetings@earny.co.za">Contact Earny</a>
+      <button
+        type="button"
+        className="ss-cookie-preferences"
+        data-cookie-preferences
+      >
+        Cookie preferences
+      </button>
     </nav>
   );
 }

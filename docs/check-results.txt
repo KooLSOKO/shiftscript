@@ -1,37 +1,37 @@
-ShiftScript v3.0.5 verification — 10 October 2026
-Clickable dashboard shortcuts and shared branding revision. External auth/integrations simulated; no live accounts or emails.
+ShiftScript v3.0.6 verification — 10 October 2026
+Mobile controls, high contrast, essential storage notice and homepage marquee. External auth/integrations simulated; no live accounts or emails.
 
 npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-> shiftscript@3.0.5 check
+> shiftscript@3.0.6 check
 > npm test && npm run build
 
 npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-> shiftscript@3.0.5 test
+> shiftscript@3.0.6 test
 > node --test tests/*.test.js
 
 API error: 401 Error
 Firebase verification: Error
 API error: 401 Error
-✔ signup access is configured by the server; workspace routes require verified tokens (81.812001ms)
+✔ signup access is configured by the server; workspace routes require verified tokens (53.784718ms)
 API error: 409 Error
 API error: 404 Error
-✔ workspace creation and rename preserve meetings and isolate different accounts (42.058459ms)
+✔ workspace creation and rename preserve meetings and isolate different accounts (23.743735ms)
 API error: 400 ZodError
 API error: 400 ZodError
 API error: 400 ZodError
 API error: 400 ZodError
 API error: 400 ZodError
 API error: 400 ZodError
-✔ clients cannot choose an owner uid or another user's workspace id (17.744325ms)
+✔ clients cannot choose an owner uid or another user's workspace id (12.691944ms)
 API error: 403 Error
-✔ private mode retains the email allowlist and public mode enables new accounts (6.181704ms)
-✔ workspace metadata persists after restarting the local store (19.85652ms)
-✔ Firestore workspace metadata merges without overwriting an existing quota or meetings (2.078856ms)
-✔ calendar export preserves South African time and crosses midnight and year boundaries correctly (27.213558ms)
-✔ calendar requires a real date, explicit time, valid duration and saved task (5.647789ms)
-✔ calendar detects unavailable daylight-saving times and adjusts valid times to UTC (1.314102ms)
+✔ private mode retains the email allowlist and public mode enables new accounts (4.749955ms)
+✔ workspace metadata persists after restarting the local store (17.231201ms)
+✔ Firestore workspace metadata merges without overwriting an existing quota or meetings (1.289465ms)
+✔ calendar export preserves South African time and crosses midnight and year boundaries correctly (14.502866ms)
+✔ calendar requires a real date, explicit time, valid duration and saved task (1.735628ms)
+✔ calendar detects unavailable daylight-saving times and adjusts valid times to UTC (0.938335ms)
 API error: 403 Error
 API error: 404 Error
 API error: 403 Error
@@ -39,7 +39,7 @@ API error: 403 Error
 API error: 403 Error
 API error: 400 Error
 API error: 400 Error
-✔ invitations bind verified email, enforce roles and revoke member access (169.335937ms)
+✔ invitations bind verified email, enforce roles and revoke member access (161.17297ms)
 API error: 403 Error
 API error: 403 Error
 API error: 403 Error
@@ -49,124 +49,124 @@ API error: 403 Error
 API error: 403 Error
 API error: 403 Error
 API error: 403 Error
-✔ viewer reads/export data but cannot change any workspace workflow (74.37937ms)
+✔ viewer reads/export data but cannot change any workspace workflow (52.784378ms)
 API error: 400 Error
 API error: 403 Error
-✔ extra workspaces and projects isolate records; meeting moves preserve task origins (41.62197ms)
+✔ extra workspaces and projects isolate records; meeting moves preserve task origins (27.880685ms)
 API error: 409 Error
 API error: 409 Error
-✔ drafts are private, persistent and reject stale save/delete versions (32.908938ms)
+✔ drafts are private, persistent and reject stale save/delete versions (31.575563ms)
 API error: 404 Error
 API error: 400 Error
-✔ bulk review commits edited owners/dates atomically, remains idempotent and never auto-approves (51.183772ms)
+✔ bulk review commits edited owners/dates atomically, remains idempotent and never auto-approves (38.081712ms)
 API error: 409 Error
 API error: 400 Error
 API error: 400 ZodError
-✔ manual tasks preserve checklists, notes and retries; stale edits fail; removed assignees retain history (38.712341ms)
-✔ legacy local data migrates in place without losing meetings, tasks or quota (3.029349ms)
-✔ Firestore membership migration and transactions read before writes and preserve unrelated documents (2.383845ms)
+✔ manual tasks preserve checklists, notes and retries; stale edits fail; removed assignees retain history (47.602588ms)
+✔ legacy local data migrates in place without losing meetings, tasks or quota (3.088293ms)
+✔ Firestore membership migration and transactions read before writes and preserve unrelated documents (2.284647ms)
 API error: 403 Error
-✔ revocation during analysis prevents the result from being saved (30.562739ms)
-✔ task filters combine ownership, project, priority, source, date range and stable sorting (13.32618ms)
-✔ my tasks matches each user's full name, first name or surname, with account assignments taking precedence (0.726435ms)
-✔ name matching applies to the Me filter while preserving combined filters and explicit owner choices (0.419963ms)
-✔ CSV quotes commas, accents, checklists and rejects spreadsheet formula execution (0.632343ms)
-✔ PDF uses embedded fonts and paginates long reports; report builders preserve evidence and statuses (233.463674ms)
-✔ Gemini sends strict JSON contract, configured model, no storage and bounded timeout (1.728528ms)
-✔ Gemini quota errors are readable and never leak upstream key strings (0.912777ms)
-✔ malformed or refused Gemini output does not become tasks (6.462768ms)
-✔ audio MIME, encoding, file signatures and size boundaries (213.057023ms)
-✔ transcription passes audio to Gemini and preserves editable text (1.59725ms)
-✔ audio API -> reviewed transcript -> stored meeting source; no raw audio persisted (67.733961ms)
-✔ meeting preparation stays separate from Gemini discussion evidence (0.800197ms)
-✔ OAuth binds state to the browser, uses PKCE, expires, and rejects replay without exposing secrets (111.75841ms)
+✔ revocation during analysis prevents the result from being saved (29.434809ms)
+✔ task filters combine ownership, project, priority, source, date range and stable sorting (8.418398ms)
+✔ my tasks matches each user's full name, first name or surname, with account assignments taking precedence (0.469589ms)
+✔ name matching applies to the Me filter while preserving combined filters and explicit owner choices (0.247623ms)
+✔ CSV quotes commas, accents, checklists and rejects spreadsheet formula execution (0.424821ms)
+✔ PDF uses embedded fonts and paginates long reports; report builders preserve evidence and statuses (246.428708ms)
+✔ Gemini sends strict JSON contract, configured model, no storage and bounded timeout (0.958175ms)
+✔ Gemini quota errors are readable and never leak upstream key strings (0.652704ms)
+✔ malformed or refused Gemini output does not become tasks (5.155247ms)
+✔ audio MIME, encoding, file signatures and size boundaries (88.731611ms)
+✔ transcription passes audio to Gemini and preserves editable text (1.759194ms)
+✔ audio API -> reviewed transcript -> stored meeting source; no raw audio persisted (66.181416ms)
+✔ meeting preparation stays separate from Gemini discussion evidence (0.853588ms)
+✔ OAuth binds state to the browser, uses PKCE, expires, and rejects replay without exposing secrets (113.114419ms)
 API error: 401 Error
-✔ unconfigured integration remains optional and unauthenticated private endpoints are rejected (10.135538ms)
-✔ Docs extraction handles tables and child tabs, and link validation prevents arbitrary URL fetches (0.666195ms)
+✔ unconfigured integration remains optional and unauthenticated private endpoints are rejected (10.855834ms)
+✔ Docs extraction handles tables and child tabs, and link validation prevents arbitrary URL fetches (0.882451ms)
 API error: 400 ZodError
 API error: 409 Error
-✔ Google preview/import keeps trusted source metadata, requires review and prevents client text or source tampering (55.082905ms)
-✔ Meet pagination preserves speaker names and unknown speakers without inventing identities (50.909539ms)
-✔ expired previews, overlong documents and incomplete artifact generation are rejected (30.736512ms)
-✔ long Unicode Google imports preserve all text and keep the encrypted preview vault bounded (95.826299ms)
-✔ token refresh preserves encrypted connection identity, and upstream failures never disclose key strings (35.467036ms)
+✔ Google preview/import keeps trusted source metadata, requires review and prevents client text or source tampering (55.173864ms)
+✔ Meet pagination preserves speaker names and unknown speakers without inventing identities (28.615322ms)
+✔ expired previews, overlong documents and incomplete artifact generation are rejected (14.313009ms)
+✔ long Unicode Google imports preserve all text and keep the encrypted preview vault bounded (62.702198ms)
+✔ token refresh preserves encrypted connection identity, and upstream failures never disclose key strings (42.363721ms)
 API error: 403 Error
 API error: 403 Error
 API error: 400 ZodError
 API error: 400 ZodError
 API error: 409 Error
-✔ email previews include only approved tasks, escape HTML, enforce roles and recipient limits (24.237098ms)
+✔ email previews include only approved tasks, escape HTML, enforce roles and recipient limits (24.182356ms)
 API error: 502 Error
 API error: 409 Error
-✔ uncertain SMTP outcomes are recorded and the same send cannot be repeated (13.063184ms)
-✔ Zoho sender and Bcc are configured server-side and only SMTP accepted recipients are reported (0.734488ms)
-✔ Firestore integration transactions persist encrypted user-only documents and preserve other users (0.776361ms)
-✔ unknown speaker labels cannot become named task owners (1.505621ms)
+✔ uncertain SMTP outcomes are recorded and the same send cannot be repeated (23.70134ms)
+✔ Zoho sender and Bcc are configured server-side and only SMTP accepted recipients are reported (0.700657ms)
+✔ Firestore integration transactions persist encrypted user-only documents and preserve other users (0.756381ms)
+✔ unknown speaker labels cannot become named task owners (1.476077ms)
 API error: 409 Error
 API error: 400 ZodError
 API error: 429 Error
 API error: 404 Error
 API error: 403 Error
-✔ invitation creation retries are idempotent; email target and join link are server-owned (214.952409ms)
+✔ invitation creation retries are idempotent; email target and join link are server-owned (112.941659ms)
 API error: 410 Error
 API error: 410 Error
-✔ expired invitations disappear from recipient catalog and cannot join or send; recreation gets a new link (29.81118ms)
+✔ expired invitations disappear from recipient catalog and cannot join or send; recreation gets a new link (38.739469ms)
 API error: 502 Error
 API error: 409 Error
-✔ uncertain sends retain invitations and cannot silently replay; rejected recipients are reported (30.777332ms)
+✔ uncertain sends retain invitations and cannot silently replay; rejected recipients are reported (29.457433ms)
 API error: 429 Error
 API error: 503 Error
-✔ invitation mail daily quota is separate and survives AI requests; missing config keeps copy links usable (30.091147ms)
+✔ invitation mail daily quota is separate and survives AI requests; missing config keeps copy links usable (20.778932ms)
 API error: 404 Error
-✔ revocation during SMTP preserves mail outcome without reviving the invitation (18.534937ms)
-✔ invitation URLs use configured HTTPS origins, with loopback exceptions for development (0.340503ms)
+✔ revocation during SMTP preserves mail outcome without reviving the invitation (21.214049ms)
+✔ invitation URLs use configured HTTPS origins, with loopback exceptions for development (0.276107ms)
 API error: 400 ZodError
 API error: 400 ZodError
-✔ 100,000-character transcripts and drafts keep all text, including commitments at the end (130.402011ms)
-✔ comma-separated email recipients are validated and deduplicated (1.668106ms)
+✔ 100,000-character transcripts and drafts keep all text, including commitments at the end (79.660858ms)
+✔ comma-separated email recipients are validated and deduplicated (1.131016ms)
 API error: 400 ZodError
 API error: 400 Error
 API error: 400 Error
 API error: 400 ZodError
-✔ personal profile persists privately, syncs name aliases and rejects unsafe avatars and unverified reminders (125.38255ms)
-✔ owner suggestions preserve ambiguous names and explicit account ownership wins aliases (0.508427ms)
+✔ personal profile persists privately, syncs name aliases and rejects unsafe avatars and unverified reminders (94.311738ms)
+✔ owner suggestions preserve ambiguous names and explicit account ownership wins aliases (0.495878ms)
 API error: 409 Error
 API error: 400 Error
 API error: 400 Error
 API error: 409 Error
 API error: 409 Error
 API error: 403 Error
-✔ dependencies reject cycles, foreign ids, deletion and premature completion; bulk is atomic and versioned (61.224418ms)
+✔ dependencies reject cycles, foreign ids, deletion and premature completion; bulk is atomic and versioned (50.215934ms)
 API error: 410 Error
 API error: 409 Error
 API error: 410 Error
-✔ undo is author-only, expires, rejects concurrent edits and restores deleted source links (36.844349ms)
+✔ undo is author-only, expires, rejects concurrent edits and restores deleted source links (22.644486ms)
 API error: 409 Error
 API error: 400 ZodError
 API error: 403 Error
-✔ saved schedules validate wall time and persist atomically without changing deadlines; calendar marks are private (50.544038ms)
-✔ task views and notifications are private and workspace-scoped; dependency filters work (31.073765ms)
+✔ saved schedules validate wall time and persist atomically without changing deadlines; calendar marks are private (32.318609ms)
+✔ task views and notifications are private and workspace-scoped; dependency filters work (21.679711ms)
 API error: 403 Error
 API error: 400 Error
-✔ meeting agendas preserve references, reuse retries and show real progress without approving new tasks (36.038088ms)
+✔ meeting agendas preserve references, reuse retries and show real progress without approving new tasks (36.84857ms)
 API error: 400 Error
-✔ ambiguous proposal owners need account confirmation before approval (21.801163ms)
+✔ ambiguous proposal owners need account confirmation before approval (16.57487ms)
 API error: 401 Error
-✔ cron reminders require a secret, verified consent and current membership, send only to self and never replay (23.108856ms)
-✔ uncertain cron sends are durable and are not automatically retried (20.732031ms)
-✔ deleting and undoing an approved task preserves its original meeting proposal link (27.584898ms)
-✔ reminders honour revoked membership, withdrawn consent, current verification and overlapping cron invocations (28.913331ms)
-✔ Firestore private profiles use per-user documents and preserve unrelated integration records (0.827749ms)
-✔ full workflow: notes, approval, editing, status, progress, refresh and duplicate prevention (73.35837ms)
+✔ cron reminders require a secret, verified consent and current membership, send only to self and never replay (21.963118ms)
+✔ uncertain cron sends are durable and are not automatically retried (20.809719ms)
+✔ deleting and undoing an approved task preserves its original meeting proposal link (26.049101ms)
+✔ reminders honour revoked membership, withdrawn consent, current verification and overlapping cron invocations (29.576742ms)
+✔ Firestore private profiles use per-user documents and preserve unrelated integration records (0.836422ms)
+✔ full workflow: notes, approval, editing, status, progress, refresh and duplicate prevention (72.762371ms)
 API error: 400 ZodError
 API error: 400 ZodError
 API error: 422 Error
 API error: 404 Error
-✔ invalid inputs, missing records and unsupported sample transcript (11.861732ms)
-✔ ambiguous dates remain unresolved; explicit dates and tomorrow are anchored (0.312371ms)
-✔ fabricated evidence fails; unknown owners and unsupported deadlines are cleared (0.677071ms)
+✔ invalid inputs, missing records and unsupported sample transcript (10.535551ms)
+✔ ambiguous dates remain unresolved; explicit dates and tomorrow are anchored (0.329477ms)
+✔ fabricated evidence fails; unknown owners and unsupported deadlines are cleared (0.684262ms)
 API error: 503 Error
-✔ hosted mode cannot use ephemeral local storage (2.79124ms)
+✔ hosted mode cannot use ephemeral local storage (2.636066ms)
 ℹ tests 69
 ℹ suites 0
 ℹ pass 69
@@ -174,10 +174,10 @@ API error: 503 Error
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1549.615587
+ℹ duration_ms 1226.922584
 npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-> shiftscript@3.0.5 build
+> shiftscript@3.0.6 build
 > vite build
 
 vite v7.3.7 building client environment for production...
@@ -185,53 +185,35 @@ transforming...
 ✓ 322 modules transformed.
 rendering chunks...
 computing gzip size...
-dist/index.html                           22.29 kB │ gzip:   5.47 kB
-dist/assets/app-entry-CMrai9xA.css        53.75 kB │ gzip:  12.25 kB
-dist/assets/index-BJRp5yUf.js              2.73 kB │ gzip:   1.38 kB
+dist/index.html                           23.30 kB │ gzip:   5.68 kB
+dist/assets/app-entry-CV22SHjf.css        58.41 kB │ gzip:  13.01 kB
+dist/assets/index-BEafoxbt.js              3.02 kB │ gzip:   1.50 kB
 dist/assets/purify.es-BPuvlvQ_.js         29.05 kB │ gzip:  11.09 kB
-dist/assets/index.es-DhFk87z5.js         159.00 kB │ gzip:  53.08 kB
+dist/assets/index.es-BG9zHEsd.js         159.00 kB │ gzip:  53.08 kB
 dist/assets/html2canvas.esm-DXEQVQnt.js  201.04 kB │ gzip:  47.43 kB
-dist/assets/jspdf.es.min-B7FzsfIB.js     386.23 kB │ gzip: 126.41 kB
-dist/assets/app-entry-BYckA47w.js        484.70 kB │ gzip: 144.22 kB
-✓ built in 2.92s
+dist/assets/jspdf.es.min-BXx11sCW.js     386.23 kB │ gzip: 126.41 kB
+dist/assets/app-entry-CmC2oiQR.js        485.49 kB │ gzip: 144.47 kB
+✓ built in 2.75s
 
-Final production build after shared branding and refreshed preview:
+All nine browser suites on final source/build:
 npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-> shiftscript@3.0.5 build
-> vite build
-
-vite v7.3.7 building client environment for production...
-transforming...
-✓ 322 modules transformed.
-rendering chunks...
-computing gzip size...
-dist/index.html                           22.29 kB │ gzip:   5.47 kB
-dist/assets/app-entry--gdnqg-Q.css        54.94 kB │ gzip:  12.42 kB
-dist/assets/index-Bjak7IMk.js              2.73 kB │ gzip:   1.38 kB
-dist/assets/purify.es-BPuvlvQ_.js         29.05 kB │ gzip:  11.09 kB
-dist/assets/index.es-DyW4xkFi.js         159.00 kB │ gzip:  53.08 kB
-dist/assets/html2canvas.esm-DXEQVQnt.js  201.04 kB │ gzip:  47.43 kB
-dist/assets/jspdf.es.min-D9w6Asc9.js     386.23 kB │ gzip: 126.41 kB
-dist/assets/app-entry-BFdjjkj1.js        484.70 kB │ gzip: 144.22 kB
-✓ built in 3.11s
-
-PASS: built landing with/without JS, no home auth/API requests, SEO, assets, 320/390/430/768/1440 layouts, FAQs, app navigation and legacy Google/invitation links.
-
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
-
-> shiftscript@3.0.5 test:ui
-> node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js && node tests/productivity-browser.js && node tests/public-pages-browser.js && node tests/landing-browser.js && node tests/dashboard-browser.js
+> shiftscript@3.0.6 test:ui
+> node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js && node tests/productivity-browser.js && node tests/public-pages-browser.js && node tests/landing-browser.js && node tests/dashboard-browser.js && node tests/experience-browser.js
 
 PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, no overflow, mocked voice upload/transcription/review/source, no page errors.
 PASS: simulated email and Google sign-in, returning workspace preservation, Google onboarding/name, cancellation and configuration errors, account isolation, reset, mobile overflow and policy links.
 API error: 409 Error
-API failure 409 PATCH http://127.0.0.1:5181/api/tasks/89fcaccf9010595b477713387261 soko {"error":"This task changed since you opened it. Close and reopen it to load the latest version."}
+API failure 409 PATCH http://127.0.0.1:5181/api/tasks/c96f3e0850a1f15df74f8c8dde90 soko {"error":"This task changed since you opened it. Close and reopen it to load the latest version."}
 PASS: projects, private draft/reload, bulk assignment/approval, manual tasks/checklists/notes, combined filters, PDF/CSV downloads, share-link clipboard, verified invitation join, member edits, viewer read-only, workspace isolation/switching, mobile layouts, no page errors.
 Google import, task approval, email preview/send, phone layouts (320/390/430), tablet (768), landscape (844), modal controls and drawer keyboard checks passed.
 PASS: notifications/read, aliases/profile, dependencies, bulk priority/undo, saved views, global search, persisted schedules/bulk Calendar, saved agendas/follow-up comparison, activity, mobile 390/320 px; no live external calls.
 PASS: four built public pages without JavaScript/authentication, configured routes, titles/canonicals, policy links, contact, desktop and 320/390px layouts.
 PASS: built landing with/without JS, no home auth/API requests, SEO, assets, 320/390/430/768/1440 layouts, FAQs, app navigation and legacy Google/invitation links.
 PASS: all seven dashboard shortcuts, keyboard Enter/Space, correct task subsets, all pending meetings, stale filter reset, workspace isolation/reset, zero totals, Manrope and 320/390/768/2048px layouts.
+PASS: first-visit notice, essential-only persistence, policy/app preferences, cross-tab updates, blocked storage, marquee pause/reduced motion, centred mobile action, keyboard activation, four non-overlapping tabs, 320–650px touch targets and desktop toolbar/calendar controls.
 
-All referenced clay illustrations are PNG with verified alpha transparency. Desktop/mobile screenshots visually reviewed.
+Final experience screenshots/checks:
+PASS: first-visit notice, essential-only persistence, policy/app preferences, cross-tab updates, blocked storage, marquee pause/reduced motion, centred mobile action, keyboard activation, four non-overlapping tabs, 320–650px touch targets and desktop toolbar/calendar controls.
+
+Desktop/mobile screenshots visually reviewed. Calendar labels verified at 14px, tap targets at least 44px, centred creation at 320–650px and desktop toolbar at 48px.

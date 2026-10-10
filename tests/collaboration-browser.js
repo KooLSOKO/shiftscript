@@ -89,6 +89,12 @@ async function pageFor(uid, verified = true) {
       emailVerified: verified,
     },
   );
+  await context.addInitScript(() =>
+    localStorage.setItem(
+      "shiftscript:cookie-preferences:v1",
+      JSON.stringify({ version: 1, essential: true, optional: false }),
+    ),
+  );
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
   page.on("pageerror", (e) => errors.push(e.message));
@@ -440,6 +446,17 @@ try {
     await viewer
       .getByRole("button", { name: "New meeting", exact: true })
       .count(),
+    0,
+  );
+  await viewer.setViewportSize({ width: 390, height: 844 });
+  assert.equal(
+    await viewer
+      .getByRole("button", { name: "Add new meeting", exact: true })
+      .count(),
+    0,
+  );
+  assert.equal(
+    await viewer.locator(".mobile-bottom-nav.has-meeting-action").count(),
     0,
   );
   await nav("Task tracker", viewer);

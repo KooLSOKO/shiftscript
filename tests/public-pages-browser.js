@@ -19,7 +19,13 @@ for (const [slug] of pages) {
     resolve("dist", "." + rule.destination),
     "utf8",
   );
-  assert(!/<script\b/i.test(document));
+  assert.deepEqual(
+    [...document.matchAll(/<script\b[^>]*src="([^"]+)"/gi)].map(
+      (match) => match[1],
+    ),
+    ["/cookie-consent.js"],
+  );
+  assert(!/<script\b(?![^>]*src="\/cookie-consent\.js")/i.test(document));
   app.get("/" + slug, (_req, res) =>
     res.sendFile(resolve("dist", "." + rule.destination)),
   );

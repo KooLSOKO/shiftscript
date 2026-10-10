@@ -3607,3 +3607,225 @@ textarea {
     font-size: 13px;
   }
 }
+
+/* v3.0.6: clearer controls and a central mobile meeting action.
+   Circular-text interaction adapted from the Creatlydev button supplied by the user (Uiverse.io). */
+.nav-item {
+  color: #405272;
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 48px;
+}
+.nav-item > svg {
+  stroke-width: 2;
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+}
+.nav-label {
+  color: #435575;
+  font-size: 11px;
+  font-weight: 700;
+}
+.nav-count {
+  font-size: 12px;
+  font-weight: 800;
+}
+.icon-button {
+  color: #435575;
+  min-width: 44px;
+  min-height: 44px;
+}
+.topbar .icon-button {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+  border: 1px solid #dce3ef;
+  background: #f7f9fd;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.topbar .icon-button > svg {
+  stroke-width: 2;
+  width: 25px;
+  height: 25px;
+}
+.topbar .icon-button:hover {
+  color: var(--ss-blue);
+  background: var(--ss-soft-blue);
+  border-color: #a8bcf5;
+}
+.breadcrumb {
+  color: #435575;
+  font-size: 14px;
+  font-weight: 700;
+}
+.mode-badge {
+  font-size: 13px;
+  font-weight: 700;
+}
+.hint,
+.muted {
+  color: #4b5e7d;
+}
+.text-button,
+.source-link {
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.task-calendar-link,
+.task-table td .task-calendar-link {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 46px;
+  padding: 9px 12px;
+  border: 1px solid #c6d5f8;
+  background: var(--ss-soft-blue);
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: left;
+}
+.task-calendar-link > svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.task-calendar-link:hover {
+  background: #dce7ff;
+  border-color: var(--ss-blue);
+}
+.calendar-actions .button,
+.calendar-editor-action .button,
+.quick-dates button {
+  min-height: 44px;
+}
+.mobile-meeting-button {
+  display: none;
+}
+@keyframes meeting-text-rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 650px) {
+  .topbar {
+    min-height: 72px;
+    padding: 8px 12px;
+  }
+  .topbar > div {
+    gap: 3px;
+  }
+  .topbar .icon-button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 9px;
+  }
+  .topbar .icon-button > svg {
+    width: 24px;
+    height: 24px;
+  }
+  .topbar .breadcrumb {
+    display: none;
+  }
+  .mobile-bottom-nav {
+    min-height: calc(76px + env(safe-area-inset-bottom));
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  .mobile-bottom-nav.has-meeting-action {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 80px repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+  .mobile-bottom-nav.has-meeting-action button:nth-child(3) {
+    grid-column: 4;
+  }
+  .mobile-bottom-nav.has-meeting-action button:nth-child(4) {
+    grid-column: 5;
+  }
+  .mobile-bottom-nav button {
+    color: #435575;
+    font-size: 11px;
+    line-height: 1.2;
+    min-width: 0;
+    min-height: 60px;
+    font-weight: 800;
+    padding: 4px 1px;
+  }
+  .mobile-bottom-nav button > svg {
+    width: 25px;
+    height: 25px;
+  }
+  .mobile-meeting-button {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    z-index: 16;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 76px;
+    height: 76px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: var(--ss-blue);
+    color: #fff;
+    box-shadow:
+      0 4px 0 var(--ss-blue-edge),
+      0 5px 16px #172c5826;
+    cursor: pointer;
+    transition:
+      background 300ms,
+      box-shadow 200ms;
+  }
+  .mobile-meeting-ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: meeting-text-rotation 12s linear infinite;
+    fill: currentColor;
+    font-family: var(--ss-font);
+    font-size: 8.4px;
+    font-weight: 800;
+  }
+  .mobile-meeting-centre {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ss-blue);
+  }
+  .mobile-meeting-button:hover {
+    background: var(--ss-blue-edge);
+  }
+  .mobile-meeting-button:hover .mobile-meeting-ring,
+  .mobile-meeting-button:focus-visible .mobile-meeting-ring {
+    animation-play-state: paused;
+  }
+  .mobile-meeting-button:active {
+    box-shadow: 0 1px 0 var(--ss-blue-edge);
+  }
+  .mobile-meeting-button:focus-visible {
+    outline: 3px solid var(--ss-navy);
+    outline-offset: 4px;
+  }
+  main#main {
+    padding-bottom: calc(116px + env(safe-area-inset-bottom));
+  }
+  .toast,
+  .undo-banner,
+  .integration-busy {
+    bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-meeting-ring {
+    animation: none;
+  }
+}
