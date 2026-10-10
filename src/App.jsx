@@ -779,6 +779,8 @@ export default function App() {
                   workspace={data.workspace}
                   readOnly={readOnly}
                   config={config}
+                  existingMeetings={data.meetings}
+                  onOpenExisting={(m) => openMeeting(m.id)}
                   onCreated={async (m) => {
                     await reload();
                     openMeeting(m.id);
@@ -1045,6 +1047,7 @@ export default function App() {
                   onRefresh={refreshCatalog}
                   onError={setError}
                   onToast={setToast}
+                  invitationEmailReady={config.invitationEmailReady}
                 />
               )}
             </>
@@ -1089,6 +1092,12 @@ export default function App() {
           actorId={actor.uid}
           projects={data.projects}
           draft={data.draft}
+          meetings={data.meetings}
+          workspace={data.workspace}
+          onOpenExisting={async (m) => {
+            setNewMeeting(false);
+            openMeeting(m.id);
+          }}
           onClose={async () => {
             setNewMeeting(false);
             try {

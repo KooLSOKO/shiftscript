@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { firebase } from "./firebase.js";
+import { invitationExpired } from "./invitation-email.js";
 export const collections = ["meetings", "tasks", "projects", "drafts"];
 export function hydrate(record = {}, id) {
   const s = { ...record, quota: record.quota || {} };
@@ -39,7 +40,9 @@ export function catalogFrom(records, actor) {
         ownerName: w.ownerName,
       });
     if (actor.emailVerified)
-      for (const i of w.invites.filter((i) => i.email === actor.email))
+      for (const i of w.invites.filter(
+        (i) => i.email === actor.email && !invitationExpired(i),
+      ))
         invitations.push({ ...i, workspaceId: id, workspaceName: w.name });
   }
   return { workspaces, invitations };

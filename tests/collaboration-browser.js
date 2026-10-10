@@ -15,6 +15,7 @@ const names = {
 };
 const directory = await mkdtemp(join(tmpdir(), "shift-collaboration-ui-")),
   store = new LocalStore(join(directory, "db.json"));
+const invitationEmails = [];
 await store.mutate("soko", (s) => {
   s.workspace = newWorkspace(
     "soko",
@@ -27,6 +28,14 @@ const server = createApp({
   provider: "sample",
   signupEnabled: true,
   store,
+  appUrl: "https://shiftscript.earny.co.za",
+  mailer: {
+    ready: true,
+    send: async (recipients, message) => {
+      invitationEmails.push({ recipients, message });
+      return { accepted: recipients, rejected: [] };
+    },
+  },
   verifyToken: async (token) => {
     const [uid, verified] = token.split("|");
     if (!names[uid]) throw new Error("Bad test token");
@@ -270,7 +279,7 @@ try {
     .getByLabel("Email address", { exact: true })
     .fill("kopano@example.test");
   await page
-    .getByRole("button", { name: "Create invitation", exact: true })
+    .getByRole("button", { name: "Send invitation", exact: true })
     .click();
   await page
     .getByRole("button", {
@@ -282,14 +291,77 @@ try {
     navigator.clipboard.readText(),
   );
   assert.ok(invitationLink.includes("workspaceInvite=soko"));
+  assert.equal(invitationEmails.length, 1);
+  assert.deepEqual(invitationEmails[0].recipients, ["kopano@example.test"]);
+  assert(
+    invitationEmails[0].message.text.includes(
+      "https://shiftscript.earny.co.za/?workspaceInvite=soko",
+    ),
+  );
   await page
     .getByLabel("Email address", { exact: true })
     .fill("viewer@example.test");
   await page.getByLabel("Access", { exact: true }).selectOption("viewer");
   await page
-    .getByRole("button", { name: "Create invitation", exact: true })
+    .getByRole("button", { name: "Send invitation", exact: true })
     .click();
   await page.getByText("viewer@example.test", { exact: true }).waitFor();
+  await page
+    .getByText("Email accepted by mail server", { exact: true })
+    .first()
+    .waitFor();
+  assert.equal(invitationEmails.length, 2);
+  await page.screenshot({
+    path: "docs/screenshots/invitation-email-desktop.png",
+    fullPage: true,
+    style: ".toast{visibility:hidden!important}",
+  });
+  for (const width of [320, 390, 430, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+      ),
+      "Invitation controls fit " + width,
+    );
+    if (width <= 650) {
+      const name = await page
+        .locator(".invite-row strong")
+        .first()
+        .boundingBox();
+      const row = await page.locator(".invite-row").first().boundingBox();
+      assert(
+        name.width >= width - 100,
+        "Invited email has a readable full-width column",
+      );
+      assert(
+        row.height < 220,
+        "Invitation card does not become a vertical letter column",
+      );
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "docs/screenshots/invitation-email-mobile.png",
+    fullPage: true,
+    style: ".toast{visibility:hidden!important}",
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await store.mutate("soko", (s) => {
+    s.workspace.invites[0].emailSends[0].at = new Date(
+      Date.now() - 120000,
+    ).toISOString();
+  });
+  await page
+    .getByRole("button", {
+      name: "Resend invitation email to kopano@example.test",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByText("Invitation email accepted by the mail server.", { exact: true })
+    .waitFor();
+  assert.equal(invitationEmails.length, 3);
   const member = await pageFor("kopano", false);
   await member.goto(invitationLink);
   await member

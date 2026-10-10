@@ -10,7 +10,7 @@ export const emailInput = z
     fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   })
   .strict();
-const escape = (s) =>
+export const escapeEmail = (s) =>
   String(s).replace(
     /[&<>"']/g,
     (c) =>
@@ -51,7 +51,7 @@ export function recap(s, meetingId) {
     (m.source?.url ? "\n" + m.source.url : "") +
     `\n\n${pending} pending proposal(s) excluded.\nSent from Earny using ShiftScript.`;
   const fingerprint = createHash("sha256").update(text).digest("hex");
-  const html = `<div style="font-family:Arial,sans-serif;max-width:640px;color:#182b52"><h1 style="font-size:22px;color:#2458e8">Earny · ShiftScript</h1><div style="white-space:pre-wrap;line-height:1.7">${escape(text)}</div></div>`;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:640px;color:#182b52"><h1 style="font-size:22px;color:#2458e8">Earny · ShiftScript</h1><div style="white-space:pre-wrap;line-height:1.7">${escapeEmail(text)}</div></div>`;
   return {
     text,
     html,

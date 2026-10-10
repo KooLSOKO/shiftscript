@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { api, today, types } from "../lib.js";
-import { Save, Upload, ArrowRight, RefreshCw } from "./Icons.jsx";
+import {
+  Save,
+  Upload,
+  ArrowRight,
+  RefreshCw,
+  Video,
+  FileText,
+  NotebookPen,
+} from "./Icons.jsx";
+import GoogleMeet from "./GoogleMeet.jsx";
 import Modal from "./Modal.jsx";
 import AudioInput from "./AudioInput.jsx";
 import {
@@ -19,9 +28,12 @@ export default function NewMeeting({
   workspaceId,
   actorId,
   projects,
+  meetings = [],
+  workspace,
   draft,
   onClose,
   onCreated,
+  onOpenExisting,
 }) {
   const key = `shiftscript:draft:${actorId}:${workspaceId}`;
   const initial = useRef(null);
@@ -57,6 +69,10 @@ export default function NewMeeting({
     [audioBusy, setAudioBusy] = useState(false),
     [error, setError] = useState(""),
     [saveState, setSaveState] = useState("Draft ready");
+  const [sourceMode, setSourceMode] = useState("text"),
+    [importBusy, setImportBusy] = useState(false),
+    [previousSearch, setPreviousSearch] = useState(""),
+    [previousId, setPreviousId] = useState(null);
   const latest = useRef(form),
     version = useRef(draft?.version || 0),
     queue = useRef(Promise.resolve()),
@@ -146,7 +162,7 @@ export default function NewMeeting({
     };
   }, []);
   async function close() {
-    if (busy || audioBusy) return;
+    if (busy || audioBusy || importBusy) return;
     try {
       await save();
     } catch {
@@ -223,6 +239,65 @@ export default function NewMeeting({
       setError(e.message);
     }
   }
+  const previousMeetings = meetings.filter((m) =>
+    (m.title + " " + m.date + " " + m.type)
+      .toLowerCase()
+      .includes(previousSearch.toLowerCase()),
+  );
+  const previousMeeting = meetings.find((m) => m.id === previousId);
+  function usePrevious() {
+    if (!previousMeeting) return;
+    if (
+      form.transcript &&
+      !window.confirm(
+        "Replace the text in this draft with the selected meeting transcript?",
+      )
+    )
+      return;
+    setForm({
+      title: (previousMeeting.title + " — follow-up").slice(0, 120),
+      date: previousMeeting.date,
+      type: previousMeeting.type,
+      projectId: projects.some((p) => p.id === previousMeeting.projectId)
+        ? previousMeeting.projectId
+        : null,
+      transcript: previousMeeting.transcript,
+      source: {
+        kind: "text",
+        name: ("Copied from " + previousMeeting.title).slice(0, 160),
+      },
+    });
+    setSourceMode("text");
+    setError("");
+  }
+  async function importedCreated(meeting) {
+    // A Google import must not delete an unrelated text draft. Clear only an
+    // empty draft created while opening this modal.
+    if (!latest.current.transcript.trim() && !latest.current.title.trim()) {
+      processed.current = true;
+      clearTimeout(timer.current);
+      try {
+        await queue.current;
+        await api("/drafts/current", {
+          workspace: workspaceId,
+          method: "DELETE",
+          body: JSON.stringify({ expectedVersion: version.current }),
+        });
+        localStorage.removeItem(key);
+      } catch {
+        /* Existing local drafts remain available on failure. */
+      }
+    }
+    await onCreated(meeting);
+  }
+  async function openSaved(meeting) {
+    try {
+      await save();
+    } catch {
+      /* Keep the local draft if saving is unavailable. */
+    }
+    await onOpenExisting?.(meeting);
+  }
   return (
     <Modal title="A new conversation" onClose={close}>
       <p className="muted mb-3">
@@ -233,154 +308,274 @@ export default function NewMeeting({
         <Save size={16} />
         {saveState}
       </p>
-      <form onSubmit={submit}>
-        <fieldset disabled={busy}>
-          <div className="field-grid">
-            <label className="col-span-full">
-              Meeting title
-              <input
-                required
-                minLength={3}
-                maxLength={120}
-                value={form.title}
-                onChange={(e) => change("title", e.target.value)}
-                placeholder="e.g. Portfolio launch review"
-              />
-            </label>
-            <label>
-              Meeting date
-              <input
-                required
-                type="date"
-                value={form.date}
-                onChange={(e) => change("date", e.target.value)}
-              />
-            </label>
-            <label>
-              Meeting type
-              <select
-                aria-label="Meeting type"
-                value={form.type}
-                onChange={(e) => change("type", e.target.value)}
-              >
-                {types.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </label>
-            <label className="col-span-full">
-              Project
-              <select
-                aria-label="Project"
-                value={form.projectId || ""}
-                onChange={(e) => change("projectId", e.target.value || null)}
-              >
-                <option value="">No project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                    {p.status === "completed" ? " (completed)" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <div
+        className="meeting-source-tabs"
+        role="group"
+        aria-label="Meeting source"
+      >
+        {[
+          ["text", "Text or voice", FileText],
+          ["google", "Recent Google Meet", Video],
+          ["previous", "Previous meeting", NotebookPen],
+        ].map(([mode, label, Icon]) => (
+          <button
+            key={mode}
+            type="button"
+            className={"button small " + (sourceMode === mode ? "primary" : "")}
+            aria-pressed={sourceMode === mode}
+            disabled={busy || audioBusy || importBusy}
+            onClick={() => setSourceMode(mode)}
+          >
+            <Icon size={17} />
+            {label}
+          </button>
+        ))}
+      </div>
+      {sourceMode !== "text" && (
+        <p className="hint mb-4">
+          Your text/voice draft is kept while you browse other sources.
+        </p>
+      )}
+      {sourceMode === "google" && (
+        <GoogleMeet
+          embedded
+          autoLoad
+          config={config}
+          projects={projects}
+          workspace={workspace}
+          initialForm={form}
+          existingMeetings={meetings}
+          onBeforeConnect={save}
+          onBusyChange={setImportBusy}
+          onCreated={importedCreated}
+          onOpenExisting={openSaved}
+          readOnly={false}
+        />
+      )}
+      {sourceMode === "previous" && (
+        <section className="previous-meetings">
+          <label>
+            Search saved meetings
+            <input
+              aria-label="Search saved meetings"
+              placeholder="Search title, date or meeting type"
+              value={previousSearch}
+              onChange={(e) => setPreviousSearch(e.target.value)}
+            />
+          </label>
+          <p className="hint mt-2">
+            Reuse a transcript as a starting point. Its original meeting date is
+            kept so relative deadlines stay accurate. Update the text and date
+            for a new discussion. Existing tasks stay with their meeting.
+          </p>
+          <div className="previous-meeting-list">
+            {previousMeetings.length ? (
+              previousMeetings.map((m) => (
+                <button
+                  type="button"
+                  key={m.id}
+                  aria-pressed={previousId === m.id}
+                  className={
+                    "previous-meeting-option " +
+                    (previousId === m.id ? "selected" : "")
+                  }
+                  onClick={() => setPreviousId(m.id)}
+                >
+                  <FileText size={19} />
+                  <span>
+                    <strong>{m.title}</strong>
+                    <small>
+                      {m.date} · {m.type}
+                    </small>
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className="hint mt-4">No saved meetings match this view.</p>
+            )}
           </div>
-          <AudioInput
-            config={config}
-            disabled={busy}
-            onBusy={setAudioBusy}
-            onTranscript={(transcript, source) =>
-              setForm((p) => ({ ...p, transcript, source }))
-            }
-          />
-          <div className="flex flex-wrap gap-3 justify-between mt-5 mb-2">
-            <span className="field-label">Transcript</span>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="text-button"
-                disabled={audioBusy}
-                onClick={() => {
-                  setForm((p) => ({
-                    title: "Dashboard project review",
-                    date: "2026-10-09",
-                    type: "Project review",
-                    projectId: p.projectId,
-                    transcript: config.sampleTranscript,
-                  }));
-                  setError("");
-                }}
-              >
-                Load sample
-              </button>
-              <label className="text-button upload">
-                <Upload size={14} />
-                Upload .txt
+          {previousMeeting && (
+            <>
+              <details className="transcript">
+                <summary>
+                  Preview selected transcript ·{" "}
+                  {previousMeeting.transcript.length.toLocaleString()}{" "}
+                  characters
+                </summary>
+                <pre>{previousMeeting.transcript}</pre>
+              </details>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => openSaved(previousMeeting)}
+                >
+                  Open saved meeting
+                </button>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={usePrevious}
+                >
+                  Use this transcript <ArrowRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+      {sourceMode === "text" && (
+        <form onSubmit={submit}>
+          <fieldset disabled={busy}>
+            <div className="field-grid">
+              <label className="col-span-full">
+                Meeting title
                 <input
-                  aria-label="Upload transcript"
-                  type="file"
-                  accept=".txt,text/plain"
-                  disabled={audioBusy}
-                  onChange={(e) => upload(e.target.files?.[0])}
+                  required
+                  minLength={3}
+                  maxLength={120}
+                  value={form.title}
+                  onChange={(e) => change("title", e.target.value)}
+                  placeholder="e.g. Portfolio launch review"
                 />
               </label>
+              <label>
+                Meeting date
+                <input
+                  required
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => change("date", e.target.value)}
+                />
+              </label>
+              <label>
+                Meeting type
+                <select
+                  aria-label="Meeting type"
+                  value={form.type}
+                  onChange={(e) => change("type", e.target.value)}
+                >
+                  {types.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="col-span-full">
+                Project
+                <select
+                  aria-label="Project"
+                  value={form.projectId || ""}
+                  onChange={(e) => change("projectId", e.target.value || null)}
+                >
+                  <option value="">No project</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                      {p.status === "completed" ? " (completed)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
-          </div>
-          <textarea
-            aria-label="Meeting transcript"
-            required
-            minLength={40}
-            rows={10}
-            value={form.transcript}
-            onChange={(e) => change("transcript", e.target.value)}
-            placeholder="Paste a transcript here. Speaker names help identify owners."
-          />
-          <p className="hint mt-2">
-            {form.transcript.length.toLocaleString()} /{" "}
-            {MAX_TRANSCRIPT_CHARS.toLocaleString()} characters · Check speaker
-            names and dates before processing.
-          </p>
-          {form.transcript.length > MAX_TRANSCRIPT_CHARS && (
+            <AudioInput
+              config={config}
+              disabled={busy}
+              onBusy={setAudioBusy}
+              onTranscript={(transcript, source) =>
+                setForm((p) => ({ ...p, transcript, source }))
+              }
+            />
+            <div className="flex flex-wrap gap-3 justify-between mt-5 mb-2">
+              <span className="field-label">Transcript</span>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={audioBusy}
+                  onClick={() => {
+                    setForm((p) => ({
+                      title: "Dashboard project review",
+                      date: "2026-10-09",
+                      type: "Project review",
+                      projectId: p.projectId,
+                      transcript: config.sampleTranscript,
+                    }));
+                    setError("");
+                  }}
+                >
+                  Load sample
+                </button>
+                <label className="text-button upload">
+                  <Upload size={14} />
+                  Upload .txt
+                  <input
+                    aria-label="Upload transcript"
+                    type="file"
+                    accept=".txt,text/plain"
+                    disabled={audioBusy}
+                    onChange={(e) => upload(e.target.files?.[0])}
+                  />
+                </label>
+              </div>
+            </div>
+            <textarea
+              aria-label="Meeting transcript"
+              required
+              minLength={40}
+              rows={10}
+              value={form.transcript}
+              onChange={(e) => change("transcript", e.target.value)}
+              placeholder="Paste a transcript here. Speaker names help identify owners."
+            />
+            <p className="hint mt-2">
+              {form.transcript.length.toLocaleString()} /{" "}
+              {MAX_TRANSCRIPT_CHARS.toLocaleString()} characters · Check speaker
+              names and dates before processing.
+            </p>
+            {form.transcript.length > MAX_TRANSCRIPT_CHARS && (
+              <p className="form-error" role="alert">
+                This transcript exceeds 100,000 characters. Shorten it or split
+                it into separate meetings before processing.
+              </p>
+            )}
+          </fieldset>
+          {error && (
             <p className="form-error" role="alert">
-              This transcript exceeds 100,000 characters. Shorten it or split it
-              into separate meetings before processing.
+              {error}
             </p>
           )}
-        </fieldset>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="modal-actions">
-          <button
-            type="button"
-            className="button"
-            disabled={busy || audioBusy}
-            onClick={close}
-          >
-            Save & close
-          </button>
-          <button
-            className="button primary"
-            disabled={
-              busy || audioBusy || form.transcript.length > MAX_TRANSCRIPT_CHARS
-            }
-          >
-            {busy ? (
-              <>
-                <RefreshCw className="spin" size={16} />
-                Reading the conversation…
-              </>
-            ) : (
-              <>
-                Process transcript
-                <ArrowRight size={16} />
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="button"
+              disabled={busy || audioBusy}
+              onClick={close}
+            >
+              Save & close
+            </button>
+            <button
+              className="button primary"
+              disabled={
+                busy ||
+                audioBusy ||
+                form.transcript.length > MAX_TRANSCRIPT_CHARS
+              }
+            >
+              {busy ? (
+                <>
+                  <RefreshCw className="spin" size={16} />
+                  Reading the conversation…
+                </>
+              ) : (
+                <>
+                  Process transcript
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      )}
     </Modal>
   );
 }

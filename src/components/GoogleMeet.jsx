@@ -15,6 +15,13 @@ export default function GoogleMeet({
   readOnly,
   config,
   onCreated,
+  embedded = false,
+  autoLoad = false,
+  initialForm,
+  existingMeetings = [],
+  onOpenExisting,
+  onBeforeConnect,
+  onBusyChange,
 }) {
   const [connection, setConnection] = useState(null),
     [busy, setBusy] = useState(false),
@@ -25,17 +32,26 @@ export default function GoogleMeet({
     [artifacts, setArtifacts] = useState(null),
     [url, setUrl] = useState(""),
     [preview, setPreview] = useState(null),
+    [search, setSearch] = useState(""),
     [form, setForm] = useState({
       title: "",
-      date: today(),
-      type: "Project review",
-      projectId: "",
+      date: initialForm?.date || today(),
+      type: initialForm?.type || "Project review",
+      projectId: initialForm?.projectId || "",
     });
   useEffect(() => {
     let active = true;
     api("/google/status")
-      .then((v) => {
-        if (active) setConnection(v);
+      .then(async (v) => {
+        if (!active) return;
+        setConnection(v);
+        if (autoLoad && v.connected) {
+          const result = await api("/google/meetings");
+          if (!active) return;
+          setMeetings(result.meetings);
+          setCursor(result.cursor);
+          setListed(true);
+        }
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -43,7 +59,11 @@ export default function GoogleMeet({
     return () => {
       active = false;
     };
-  }, []);
+  }, [autoLoad]);
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   async function run(action) {
     setBusy(true);
     setError("");
@@ -87,21 +107,46 @@ export default function GoogleMeet({
       : preview?.source.kind === "google-notes"
         ? "Meet Gemini notes"
         : "Google document";
+  const alreadyImported =
+    preview &&
+    existingMeetings.find(
+      (m) =>
+        (preview.source.artifact &&
+          m.source?.artifact === preview.source.artifact) ||
+        (preview.source.documentId &&
+          m.source?.documentId === preview.source.documentId),
+    );
+  const displayedMeetings = meetings.filter((m) =>
+    [
+      m.name,
+      m.startTime,
+      m.startTime &&
+        new Date(m.startTime).toLocaleString("en-ZA", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }),
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
   return (
-    <div className="google-page">
-      <section className="panel integration-intro">
-        <div className="integration-symbol">
-          <Video size={34} />
-        </div>
-        <div>
-          <p className="eyebrow">YOUR MEETING, ITS NEXT CHAPTER</p>
-          <h2>Bring your Google meeting into ShiftScript</h2>
-          <p className="summary">
-            Import the notes or transcript Google has already generated. Review
-            the source, process it and approve the next steps.
-          </p>
-        </div>
-      </section>
+    <div className={"google-page" + (embedded ? " google-embedded" : "")}>
+      {!embedded && (
+        <section className="panel integration-intro">
+          <div className="integration-symbol">
+            <Video size={34} />
+          </div>
+          <div>
+            <p className="eyebrow">YOUR MEETING, ITS NEXT CHAPTER</p>
+            <h2>Bring your Google meeting into ShiftScript</h2>
+            <p className="summary">
+              Import the notes or transcript Google has already generated.
+              Review the source, process it and approve the next steps.
+            </p>
+          </div>
+        </section>
+      )}
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -116,10 +161,12 @@ export default function GoogleMeet({
             </span>
           )}
         </div>
-        <p className="summary">
-          This connection belongs to your account. Importing a source shares its
-          content with members of {workspace?.name || "this workspace"}.
-        </p>
+        {!embedded && (
+          <p className="summary">
+            This connection belongs to your account. Importing a source shares
+            its content with members of {workspace?.name || "this workspace"}.
+          </p>
+        )}
         {!connection ? (
           <p className="hint mt-4">Checking connection…</p>
         ) : !connection.ready ? (
@@ -136,22 +183,24 @@ export default function GoogleMeet({
             >
               <RefreshCw size={17} /> Load recent meetings
             </button>
-            <button
-              className="button"
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  await api("/google/connection", { method: "DELETE" });
-                  setConnection({ ready: true, connected: false });
-                  setPreview(null);
-                  setMeetings([]);
-                  setArtifacts(null);
-                  setListed(false);
-                })
-              }
-            >
-              <LogOut size={17} /> Disconnect
-            </button>
+            {!embedded && (
+              <button
+                className="button"
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    await api("/google/connection", { method: "DELETE" });
+                    setConnection({ ready: true, connected: false });
+                    setPreview(null);
+                    setMeetings([]);
+                    setArtifacts(null);
+                    setListed(false);
+                  })
+                }
+              >
+                <LogOut size={17} /> Disconnect
+              </button>
+            )}
           </div>
         ) : (
           <button
@@ -160,6 +209,7 @@ export default function GoogleMeet({
             onClick={() =>
               run(async () => {
                 const v = await api("/google/connect", { method: "POST" });
+                await onBeforeConnect?.();
                 window.location.assign(v.url);
               })
             }
@@ -167,59 +217,80 @@ export default function GoogleMeet({
             <Link size={17} /> Connect Google
           </button>
         )}
-        <p className="hint mt-4">
-          Read access to Meet and Google Docs is requested. You select what to
-          import. Disconnect removes ShiftScript's saved connection; you can
-          also revoke access in your Google account.
-        </p>
+        {!embedded && (
+          <p className="hint mt-4">
+            Read access to Meet and Google Docs is requested. You select what to
+            import. Disconnect removes ShiftScript's saved connection; you can
+            also revoke access in your Google account.
+          </p>
+        )}
       </section>
       {connection?.connected && (
         <>
-          <section className="panel">
-            <h2>Have the notes link?</h2>
-            <p className="summary">
-              Paste the Google Docs link from your meeting notes. This also
-              works when your meetings are unavailable through the Meet API.
-            </p>
-            <form
-              className="docs-import"
-              onSubmit={(e) => {
-                e.preventDefault();
-                run(() => select({ kind: "document", url }));
-              }}
-            >
-              <label>
-                Google Docs notes link
-                <input
-                  type="url"
-                  inputMode="url"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  required
-                  placeholder="https://docs.google.com/document/d/…"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  disabled={busy || readOnly}
-                />
-              </label>
-              <button className="button primary" disabled={busy || readOnly}>
-                <FileText size={17} /> Preview notes
-              </button>
-            </form>
-            <p className="hint mt-3">
-              Notes summarise a discussion; they are not a full transcript.
-              ShiftScript preserves names only when they appear in the source.
-            </p>
+          <section className="panel docs-panel">
+            <details open={!embedded}>
+              <summary>Have the notes link?</summary>
+              <p className="summary">
+                Paste the Google Docs link from your meeting notes. This also
+                works when your meetings are unavailable through the Meet API.
+              </p>
+              <form
+                className="docs-import"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  run(() => select({ kind: "document", url }));
+                }}
+              >
+                <label>
+                  Google Docs notes link
+                  <input
+                    type="url"
+                    inputMode="url"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    required
+                    placeholder="https://docs.google.com/document/d/…"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    disabled={busy || readOnly}
+                  />
+                </label>
+                <button className="button primary" disabled={busy || readOnly}>
+                  <FileText size={17} /> Preview notes
+                </button>
+              </form>
+              <p className="hint mt-3">
+                Notes summarise a discussion; they are not a full transcript.
+                ShiftScript preserves names only when they appear in the source.
+              </p>
+            </details>
           </section>
           {listed && (
-            <section className="panel">
+            <section className="panel recent-meeting-panel">
               <div className="section-heading">
                 <h2>Recent meetings</h2>
                 <span className="badge">{meetings.length}</span>
               </div>
+              {meetings.length > 0 && (
+                <label className="block mb-3">
+                  Search recent meetings
+                  <input
+                    aria-label="Search recent Google meetings"
+                    placeholder="Search date, time or meeting reference"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </label>
+              )}
               {meetings.length ? (
                 <div className="google-meetings">
-                  {meetings.map((m, i) => (
+                  {displayedMeetings.length === 0 && (
+                    <p className="hint">
+                      No meetings match your search. Clear it to see all loaded
+                      meetings.
+                    </p>
+                  )}
+                  {displayedMeetings.map((m, i) => (
                     <div className="google-meeting" key={m.name}>
                       <div>
                         <h3>
@@ -232,6 +303,9 @@ export default function GoogleMeet({
                         </h3>
                         <p className="hint">
                           {m.endTime ? "Completed" : "In progress"}
+                          {existingMeetings.some((saved) =>
+                            saved.source?.artifact?.startsWith(m.name + "/"),
+                          ) && " · Already imported"}
                         </p>
                       </div>
                       <button
@@ -313,6 +387,22 @@ export default function GoogleMeet({
                 <h2>Review your import</h2>
                 <span className="badge">{sourceLabel}</span>
               </div>
+              {alreadyImported && onOpenExisting && (
+                <div className="import-existing">
+                  <p className="hint">
+                    This source was imported before. Open the saved meeting or
+                    process its current content below.
+                  </p>
+                  <button
+                    className="button small"
+                    disabled={busy}
+                    onClick={() => onOpenExisting(alreadyImported)}
+                  >
+                    <ArrowRight size={16} />
+                    Open saved meeting
+                  </button>
+                </div>
+              )}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();

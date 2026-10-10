@@ -1,4 +1,4 @@
-# ShiftScript v2.1.1
+# ShiftScript v2.2
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -6,7 +6,7 @@ A corporate blue meeting workspace: turn a transcript or voice recording into st
 
 ## Existing project: start here
 
-Read **[docs/UPDATE-v2.1.1.md](docs/UPDATE-v2.1.1.md)** for this dashboard email/longer transcript update, Mac commands and usage. For Google Meet, Zoho email and shared workspace setup, see **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)**. This is a complete source project, not a partial patch. Your Firebase Web configuration is included; private credentials are excluded.
+Read **[docs/UPDATE-v2.2.md](docs/UPDATE-v2.2.md)** for invitation emails, recent meetings inside New meeting, usability improvements and Mac deployment commands. For Google Meet and Zoho setup, see **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)**. This is a complete source project. Your Firebase Web configuration is included; private credentials are excluded.
 
 ## New project in VS Code
 
@@ -87,7 +87,7 @@ Use a full path; `~` is not expanded in `.env`. On Vercel, leave `GOOGLE_APPLICA
 
 `PUBLIC_SIGNUP_ENABLED=true` allows teammates to register. Workspace membership still controls access. With `false`, `ALLOWED_EMAILS` restricts which accounts can use the hosted app; include all intended teammates if you use private mode.
 
-**Shared workspaces:** Owner creates an invitation, copies its link and sends it. The recipient must sign in using the invited email and verify that email before joining. Invitations are shown under **Switch workspace**. The app sends Firebase verification/reset emails on user request; it does not automatically send invitation emails.
+**Shared workspaces:** Owners can create and email an invitation from Earny's configured Zoho mailbox, resend it, or copy its link. New invitations expire after 7 days. The recipient must sign in using the invited email and verify it before joining. Invitations appear under **Switch workspace**. Enable `PUBLIC_SIGNUP_ENABLED=true` for new teammates to register, or keep private mode and add their email to `ALLOWED_EMAILS` if they already have an account. Set `APP_URL` to your canonical ShiftScript URL for email links; it falls back to the origin of `GOOGLE_REDIRECT_URI` when omitted.
 
 Existing UID workspace records stay where they are. Owner membership metadata upgrades automatically. Projects and drafts use new subcollections; no document moves are required.
 

@@ -1,10 +1,10 @@
-# ShiftScript v2.1.1 testing
+# ShiftScript v2.2 testing
 
 Tested 10 October 2026 using Node.js 24.19.0. No private credentials supplied in chat were used.
 
 ## Automated checks
 
-`npm run check`: **44 tests passed, zero failed; production Vite build passed.** Coverage includes:
+`npm run check`: **50 tests passed, zero failed; production Vite build passed.** Coverage includes:
 
 - Transcript extraction fixtures, evidence grounding, dates, original source links and human approval; anonymous speaker labels cannot become named owners.
 - Duplicate meetings/reviews/manual create retries and invalid inputs.
@@ -20,6 +20,10 @@ Tested 10 October 2026 using Node.js 24.19.0. No private credentials supplied in
 Firestore tests use an injected transaction fixture. Auth/model tests use simulated tokens and SDK results. They do not contact live services.
 
 ## Google and email checks
+
+Version 2.2 adds owner-only invitation emails with normalized stored recipients, canonical links immune to request-host changes, escaped workspace names, 7-day expiration/discovery/acceptance, idempotent creation/send, cooldown, separate mail quota preserved during AI calls, rejected/uncertain outcomes and revocation during SMTP. No real invitation emails are sent in tests.
+
+The browser integration suite processes a recent Google meeting directly inside New meeting, searches the loaded list, reuses saved transcripts and confirms drafts survive switching sources. The collaboration browser suite creates two invitations with automatic mocked email, verifies recipient/link content, resends one, checks status and phone/tablet overflow, and completes the existing verified recipient join/permissions workflow.
 
 Version 2.1.1 adds 100,000-character text/draft processing with verified commitments at the end and one AI call per unique meeting; oversized input rejects before AI use. Large Unicode Google sources retain all text while old previews are evicted to bound encrypted vault size. Comma-separated addresses are trimmed, validated and deduplicated before sending. Browser checks cover dashboard/history recap buttons, invalid-address blocking, two recipients from comma-separated input, 44-pixel phone controls, a text upload above 15,000 characters and non-truncating paste over the new limit.
 

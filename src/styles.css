@@ -525,6 +525,137 @@ main#main {
   flex-shrink: 0;
   min-height: 44px;
 }
+.meeting-source-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 14px;
+}
+.meeting-source-tabs .button {
+  min-height: 44px;
+}
+.google-embedded {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.google-embedded .recent-meeting-panel {
+  order: 1;
+}
+.google-embedded .import-preview {
+  order: 2;
+}
+.google-embedded .docs-panel {
+  order: 3;
+}
+.docs-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+}
+.docs-panel details[open] > summary {
+  margin-bottom: 12px;
+}
+.google-embedded .panel {
+  padding: 16px;
+  box-shadow: none;
+}
+.import-existing {
+  border: 1px solid #d3e2ff;
+  background: #edf3ff;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+  display: grid;
+  gap: 10px;
+}
+.previous-meeting-list {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  max-height: 280px;
+  overflow: auto;
+}
+.previous-meeting-option {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px;
+  border: 1px solid #dce5f6;
+  border-radius: 8px;
+}
+.previous-meeting-option.selected {
+  border-color: #2458e8;
+  background: #edf3ff;
+}
+.previous-meeting-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.previous-meeting-option strong,
+.previous-meeting-option small {
+  display: block;
+}
+.previous-meeting-option small {
+  margin-top: 4px;
+  color: #657492;
+}
+.invite-email-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  min-height: 44px;
+}
+.invite-email-option input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.invite-actions .button {
+  min-height: 44px;
+}
+@media (max-width: 650px) {
+  .meeting-source-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .meeting-source-tabs .button {
+    flex-direction: column;
+    padding: 9px 5px;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: normal;
+  }
+  .member-row.invite-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    align-items: start;
+  }
+  .member-row.invite-row > span {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .member-row.invite-row .invite-actions {
+    grid-column: 1;
+  }
+  .member-row.invite-row strong {
+    font-size: 14px;
+  }
+  .invite-row small {
+    overflow-wrap: anywhere;
+  }
+  .google-embedded .panel {
+    padding: 12px;
+  }
+}
 @media (max-width: 650px) {
   .meeting-entry-recap {
     padding-left: 0;

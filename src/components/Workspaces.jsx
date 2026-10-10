@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { api, auth, sendEmailVerification } from "../lib.js";
 import {
   Users,
@@ -227,10 +227,13 @@ export function Team({
   onRefresh,
   onError,
   onToast,
+  invitationEmailReady,
 }) {
   const [email, setEmail] = useState(""),
     [inviteRole, setInviteRole] = useState("member"),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [sendByEmail, setSendByEmail] = useState(Boolean(invitationEmailReady));
+  const creationRequest = useRef(null);
   const owner = role === "owner";
   async function action(path, method, body) {
     setBusy(true);
@@ -250,16 +253,68 @@ export function Team({
   }
   async function invite(e) {
     e.preventDefault();
-    const result = await action("/members/invitations", "POST", {
-      email,
-      role: inviteRole,
-    });
-    if (result) {
+    if (busy) return;
+    const address = email.trim().toLowerCase();
+    if (
+      creationRequest.current?.email !== address ||
+      creationRequest.current?.role !== inviteRole
+    )
+      creationRequest.current = {
+        email: address,
+        role: inviteRole,
+        clientId: crypto.randomUUID(),
+      };
+    setBusy(true);
+    try {
+      const result = await api("/members/invitations", {
+        method: "POST",
+        body: JSON.stringify(creationRequest.current),
+      });
+      creationRequest.current = null;
       setEmail("");
-      onToast(
-        "Invitation created. Copy the link and share it with your teammate.",
-      );
+      if (sendByEmail) {
+        try {
+          const delivery = await api(
+            `/members/invitations/${result.invitation.id}/email`,
+            {
+              method: "POST",
+              body: JSON.stringify({ requestId: crypto.randomUUID() }),
+            },
+          );
+          if (delivery.send.status === "accepted")
+            onToast(
+              "Invitation email accepted by the mail server. Your teammate can use the link to join.",
+            );
+          else
+            onError(
+              "Invitation created, but the mail server rejected the recipient. Check the address or copy its link.",
+            );
+        } catch (e) {
+          onError(e.message);
+        }
+      } else
+        onToast(
+          "Invitation created. Copy its link, or send the email from Pending invitations.",
+        );
+      await reload();
+      await onRefresh();
+    } catch (e) {
+      onError(e.message);
+    } finally {
+      setBusy(false);
     }
+  }
+  async function sendInvite(i) {
+    if (busy) return;
+    const result = await action(`/members/invitations/${i.id}/email`, "POST", {
+      requestId: crypto.randomUUID(),
+    });
+    if (result?.send.status === "accepted")
+      onToast("Invitation email accepted by the mail server.");
+    else if (result)
+      onError(
+        "The mail server rejected this recipient. Check their address or copy the link.",
+      );
   }
   async function copy(i) {
     const url = new URL(window.location.origin + window.location.pathname);
@@ -347,10 +402,11 @@ export function Team({
             <form className="note-section" onSubmit={invite}>
               <h3>Invite a teammate</h3>
               <p className="hint mt-2">
-                Create an invitation, then copy and share the link. ShiftScript
-                does not send invitation emails.
+                Invite by email from Earny, or create a link to share yourself.
+                New invitations expire after 7 days and only the invited,
+                verified email can join.
               </p>
-              <div className="field-grid mt-4">
+              <fieldset disabled={busy} className="field-grid mt-4">
                 <label>
                   Email address
                   <input
@@ -372,41 +428,99 @@ export function Team({
                     <option value="viewer">Viewer</option>
                   </select>
                 </label>
-              </div>
+              </fieldset>
+              <label className="invite-email-option">
+                <input
+                  type="checkbox"
+                  checked={sendByEmail}
+                  disabled={busy || !invitationEmailReady}
+                  onChange={(e) => setSendByEmail(e.target.checked)}
+                />
+                Send an invitation email
+              </label>
+              {!invitationEmailReady && (
+                <p className="hint mt-2">
+                  Email invitations need Earny's email setup and a public app
+                  URL. You can create and copy a link now.
+                </p>
+              )}
               <button className="button primary mt-3" disabled={busy}>
                 <Mail size={16} />
-                Create invitation
+                {busy
+                  ? "Creating invitation…"
+                  : sendByEmail
+                    ? "Send invitation"
+                    : "Create invitation"}
               </button>
             </form>
             <section className="note-section">
               <h3>Pending invitations</h3>
               {workspace.invites.length ? (
-                workspace.invites.map((i) => (
-                  <div className="member-row invite-row" key={i.id}>
-                    <span>
-                      <strong>{i.email}</strong>
-                      <small>{i.role} access</small>
-                    </span>
-                    <button
-                      className="button small"
-                      aria-label={"Copy invitation for " + i.email}
-                      onClick={() => copy(i)}
-                    >
-                      <Copy size={15} />
-                      Copy link
-                    </button>
-                    <button
-                      className="icon-button danger"
-                      aria-label={"Revoke invitation for " + i.email}
-                      disabled={busy}
-                      onClick={() =>
-                        action("/members/invitations/" + i.id, "DELETE")
-                      }
-                    >
-                      <Trash size={16} />
-                    </button>
-                  </div>
-                ))
+                workspace.invites.map((i) => {
+                  const expired =
+                    i.expiresAt && Date.parse(i.expiresAt) <= Date.now();
+                  const last = i.emailSends?.at(-1);
+                  const delivery =
+                    {
+                      accepted: "Email accepted by mail server",
+                      sending: "Sending email…",
+                      uncertain: "Send unconfirmed — check Zoho Sent mail",
+                      rejected: "Recipient rejected by mail server",
+                    }[last?.status] || "Email not sent";
+                  return (
+                    <div className="member-row invite-row" key={i.id}>
+                      <span>
+                        <strong>{i.email}</strong>
+                        <small>
+                          {i.role} access ·{" "}
+                          {expired
+                            ? "Expired"
+                            : i.expiresAt
+                              ? "Expires " +
+                                new Date(i.expiresAt).toLocaleDateString(
+                                  "en-ZA",
+                                )
+                              : "Active"}
+                        </small>
+                        <small>{delivery}</small>
+                      </span>
+                      <div className="invite-actions">
+                        <button
+                          className="button small"
+                          disabled={busy || !invitationEmailReady || expired}
+                          aria-label={
+                            (last ? "Resend" : "Send") +
+                            " invitation email to " +
+                            i.email
+                          }
+                          onClick={() => sendInvite(i)}
+                        >
+                          <Mail size={15} />{" "}
+                          {last ? "Resend email" : "Send email"}
+                        </button>
+                        <button
+                          className="button small"
+                          aria-label={"Copy invitation for " + i.email}
+                          disabled={busy || expired}
+                          onClick={() => copy(i)}
+                        >
+                          <Copy size={15} />
+                          Copy link
+                        </button>
+                      </div>
+                      <button
+                        className="icon-button danger"
+                        aria-label={"Revoke invitation for " + i.email}
+                        disabled={busy}
+                        onClick={() =>
+                          action("/members/invitations/" + i.id, "DELETE")
+                        }
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </div>
+                  );
+                })
               ) : (
                 <p className="hint mt-2">No pending invitations.</p>
               )}

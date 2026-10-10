@@ -20,6 +20,7 @@ const source = {
   name: "Portfolio launch notes",
   url: "https://docs.google.com/document/d/portfolio-document/edit",
   documentId: "portfolio-document",
+  artifact: "conferenceRecords/portfolio/smartNotes/notes",
 };
 let sent = 0;
 const sentRecipients = [];
@@ -156,10 +157,23 @@ async function screen(name) {
 }
 try {
   await page.goto("http://127.0.0.1:5182");
-  await page.getByRole("button", { name: "Google Meet", exact: true }).click();
+  await page.getByRole("button", { name: "New meeting", exact: true }).click();
   await page
-    .getByRole("button", { name: "Load recent meetings", exact: true })
+    .getByRole("button", { name: "Recent Google Meet", exact: true })
     .click();
+  await page
+    .getByRole("heading", { name: "Recent meetings", exact: true })
+    .waitFor();
+  assert.equal(await page.locator(".google-embedded").count(), 1);
+  await page
+    .getByLabel("Search recent Google meetings")
+    .fill("no-such-meeting");
+  await page
+    .getByText(
+      "No meetings match your search. Clear it to see all loaded meetings.",
+    )
+    .waitFor();
+  await page.getByLabel("Search recent Google meetings").fill("");
   await page
     .getByRole("button", { name: "View sources", exact: false })
     .click();
@@ -174,6 +188,7 @@ try {
     .fill("Kopano portfolio review");
   await page.getByLabel("Project", { exact: true }).selectOption("portfolio");
   await screen("google-import-desktop");
+  await screen("new-meeting-google-desktop");
   for (const width of [320, 390, 430, 768]) {
     await page.setViewportSize({ width, height: 844 });
     await widthCheck("Google import " + width);
@@ -187,12 +202,18 @@ try {
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await screen("google-import-mobile");
+  await screen("new-meeting-google-mobile");
   await page
     .getByRole("button", { name: "Process meeting", exact: true })
     .click();
   await page
     .getByRole("heading", { name: "Meeting summary", exact: true })
     .waitFor();
+  assert.equal(
+    (await store.list()).drafts.length,
+    0,
+    "Google import clears an empty scratch draft",
+  );
   assert.equal(
     await page
       .getByRole("button", { name: "Approve task", exact: true })
@@ -279,12 +300,47 @@ try {
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.getByRole("button", { name: "New meeting", exact: true }).click();
   await page
-    .getByLabel("Upload transcript", { exact: true })
-    .setInputFiles({
-      name: "long-meeting.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from(transcript),
-    });
+    .getByRole("button", { name: "Previous meeting", exact: true })
+    .click();
+  await page.getByLabel("Search saved meetings").fill("Kopano");
+  await page.locator(".previous-meeting-option").first().click();
+  await screen("reuse-meeting-mobile");
+  await page
+    .getByRole("button", { name: "Use this transcript", exact: false })
+    .click();
+  assert.equal(
+    await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
+    transcript,
+  );
+  assert(
+    (
+      await page.getByLabel("Meeting title", { exact: true }).inputValue()
+    ).endsWith("follow-up"),
+  );
+  await page
+    .getByRole("button", { name: "Recent Google Meet", exact: true })
+    .click();
+  await page
+    .getByRole("heading", { name: "Recent meetings", exact: true })
+    .waitFor();
+  assert(
+    (await page.locator(".google-meeting .hint").first().innerText()).includes(
+      "Already imported",
+    ),
+  );
+  await page
+    .getByRole("button", { name: "Text or voice", exact: true })
+    .click();
+  assert.equal(
+    await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
+    transcript,
+    "Source switching keeps the draft",
+  );
+  await page.getByLabel("Upload transcript", { exact: true }).setInputFiles({
+    name: "long-meeting.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from(transcript),
+  });
   assert.equal(
     await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
     transcript,

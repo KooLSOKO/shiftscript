@@ -32,7 +32,7 @@ A Firebase ID token establishes the actor. `X-Workspace-Id` selects a workspace 
 
 Owners manage settings, invitations and member roles/removal. Members edit work. Viewers only read/export. Owner UID/role cannot be changed through member routes. Browser Firestore access is denied; Admin SDK handles server operations.
 
-Invitations bind an exact normalized email and require `email_verified` in the verified ID token. Links alone grant no access. Owners can revoke invitations. Links are copied/shared manually, with no automatic email sender or scheduled expiration. Firebase verification/reset emails send on explicit user action. Personal use does not require email verification; joining does.
+Invitations bind an exact normalized email and require `email_verified` in the verified ID token. Links alone grant no access. Owners can revoke invitations or send/resend them through Zoho. New invitations have a server-enforced 7-day expiry, checked at discovery, acceptance and sending. Legacy invitations without an expiry remain compatible. Owner creation requests support a client UUID for safe retries. Email bodies and recipients come from persisted workspace/invitation data, never from arbitrary client content. Links use the configured `APP_URL` origin, falling back to `GOOGLE_REDIRECT_URI`; request Host/Origin headers cannot change them. Firebase verification/reset emails send on explicit user action. Personal use does not require email verification; joining does.
 
 Draft responses contain only the actor's draft. Recovery keys include UID/workspace ID. Saves/deletes compare expected versions; failed saves keep a local copy. Member removal deletes their workspace draft. Task editors supply `expectedUpdatedAt`; stale saves fail. Moving meetings updates approved tasks' projects and timestamps too.
 
@@ -44,7 +44,7 @@ Limits: 20 members plus pending invitations per workspace, 20 memberships per us
 
 Catalog queries use default single-field array indexes on `workspace.memberUids` and `workspace.inviteEmails`. Reads/transactions load a bounded workspace. Larger deployments need pagination, narrower transactions and job locking. Concurrent unseen duplicate meetings may both call Gemini before one record wins. Workspace-creation membership limits are a soft precheck under simultaneous requests.
 
-No realtime subscriptions, presence, scheduled reminders, automatic invitation delivery, workspace deletion, owner transfer or external meeting connectors are included. Explicit refresh loads colleagues' changes.
+No realtime subscriptions, presence, scheduled reminders, workspace deletion or owner transfer are included. Explicit refresh loads colleagues' changes. Google Meet imports and optional invitation/recap emails are described below.
 
 ## Input and exports
 
@@ -79,3 +79,9 @@ Only server-fetched previews can become trusted Google sources. They are bound t
 `server/recap-email.js` builds a recap from persisted meeting data and approved tasks. The client submits recipients, a preview fingerprint and idempotency UUID, not arbitrary email body/from/HTML. A workspace transaction validates the fingerprint, role, limit and send reservation before SMTP. Sender and SMTP credentials remain server-only. Outcome histories live on meeting records; uncertain outcomes are not auto-retried. Email recipients are Bcc. SMTP outcomes are acceptance statuses, not delivery receipts.
 
 Google imports are user initiated. There are no Meet bots, background polling, webhook subscriptions, Calendar scopes or restricted Drive read scopes in this phase.
+
+## v2.2 invitation and intake flow
+
+`server/invitation-email.js` builds an escaped Earny invitation with a canonical join link, role and expiry. `/members/invitations/:id/email` is owner-only and accepts only an idempotency UUID. A transaction reserves the send and quota before SMTP, checks membership and invitation again before sending, and records accepted/rejected/uncertain status. A failed send keeps the invitation. Resends have a 60-second cooldown, 20 attempts per invitation and 20 sends per workspace/day (UTC), independent of the AI-request quota. SMTP acceptance is not inbox delivery. Revocation during SMTP never revives the invitation.
+
+`NewMeeting.jsx` keeps its text/voice draft when users switch between text/voice, recent Google Meet sources and saved meeting transcripts. Embedded `GoogleMeet.jsx` loads accessible recent records, supports search/pagination, preview and trusted import, and marks imported artifacts. Opening a saved meeting saves the local text draft first. Reusing a transcript keeps its source date for relative deadline accuracy and requires another processing/review flow; it does not copy existing tasks. Empty drafts created while opening the modal are cleared after a successful Google import, while unrelated text drafts are kept.

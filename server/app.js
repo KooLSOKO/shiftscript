@@ -3,6 +3,12 @@ import express from "express";
 import { z } from "zod";
 import { GoogleIntegration } from "./google.js";
 import { RecapMailer, recap, emailInput } from "./recap-email.js";
+import {
+  invitationOrigin,
+  invitationMessage,
+  invitationExpired,
+  INVITATION_DAYS,
+} from "./invitation-email.js";
 import { LocalStore, FirebaseStore, hydrate } from "./store.js";
 import { firebase } from "./firebase.js";
 import { analyze, sampleTranscript } from "./analyze.js";
@@ -41,6 +47,7 @@ export function createApp({
   store,
   google,
   mailer = new RecapMailer(),
+  appUrl = process.env.APP_URL || process.env.GOOGLE_REDIRECT_URI,
   analyzer = analyze,
   transcriber = transcribe,
   storage = process.env.STORAGE_MODE || "local",
@@ -54,6 +61,7 @@ export function createApp({
   const repo =
     store || (storage === "firebase" ? new FirebaseStore() : new LocalStore());
   const googleClient = google || new GoogleIntegration({ storage });
+  const publicOrigin = invitationOrigin(appUrl);
   app.disable("x-powered-by");
   app.use(express.json({ limit: "3.5mb" }));
   app.use("/api", (_req, res, next) => {
@@ -72,7 +80,8 @@ export function createApp({
       aiReady: provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
       googleReady: googleClient.ready,
       emailReady: mailer.ready,
-      version: "2.1.1",
+      invitationEmailReady: Boolean(mailer.ready && publicOrigin),
+      version: "2.2.0",
     }),
   );
   // OAuth returns through a top-level navigation, without a Firebase bearer header.
@@ -233,6 +242,11 @@ export function createApp({
         );
         if (!invitation)
           fail(404, "Invitation not found or no longer available.");
+        if (invitationExpired(invitation))
+          fail(
+            410,
+            "This invitation expired. Ask the workspace owner for a new one.",
+          );
         if (w.members.length >= 20 && !w.members.some((m) => m.uid === req.uid))
           fail(409, "This workspace has reached its 20-member limit.");
         if (!w.members.some((m) => m.uid === req.uid))
@@ -304,8 +318,9 @@ export function createApp({
   app.post("/api/members/invitations", async (req, res) => {
     const input = z
       .object({
-        email: z.email().trim().toLowerCase().max(254),
+        email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
         role: z.enum(["member", "viewer"]),
+        clientId: z.string().uuid().optional(),
       })
       .strict()
       .parse(req.body);
@@ -315,6 +330,18 @@ export function createApp({
         if (!s.workspace)
           fail(400, "Name your workspace before inviting members.");
         const w = s.workspace;
+        const prior =
+          input.clientId &&
+          w.invites.find((i) => i.clientId === input.clientId);
+        if (prior) {
+          if (prior.email !== input.email || prior.role !== input.role)
+            fail(
+              409,
+              "This invitation request was already used. Start a new invitation.",
+            );
+          return prior;
+        }
+        w.invites = w.invites.filter((i) => !invitationExpired(i));
         if (
           input.email === req.actor.email ||
           w.members.some((m) => m.email === input.email)
@@ -331,6 +358,9 @@ export function createApp({
           ...input,
           id: id("i_"),
           createdAt: now(),
+          expiresAt: new Date(
+            Date.now() + INVITATION_DAYS * 86400000,
+          ).toISOString(),
           invitedBy: req.uid,
         };
         w.invites.push(invitation);
@@ -341,6 +371,109 @@ export function createApp({
       "owner",
     );
     res.status(201).json({ invitation });
+  });
+  app.post("/api/members/invitations/:inviteId/email", async (req, res) => {
+    key.parse(req.params.inviteId);
+    const { requestId } = z
+      .object({ requestId: z.string().uuid() })
+      .strict()
+      .parse(req.body);
+    const reservation = await mutate(
+      req,
+      (s) => {
+        if (!mailer.ready || !publicOrigin)
+          fail(
+            503,
+            "Invitation email needs Zoho SMTP and APP_URL (or GOOGLE_REDIRECT_URI) configured. The invitation link is still available to copy.",
+          );
+        const invite = s.workspace.invites.find(
+          (i) => i.id === req.params.inviteId,
+        );
+        if (!invite) fail(404, "Invitation not found or no longer available.");
+        if (invitationExpired(invite))
+          fail(410, "This invitation expired. Revoke it and create a new one.");
+        const previous = (invite.emailSends || []).find(
+          (v) => v.id === requestId,
+        );
+        if (previous) {
+          if (["accepted", "rejected"].includes(previous.status))
+            return { previous };
+          fail(
+            409,
+            "This send is already in progress or its result is uncertain. Check Zoho Sent mail before resending.",
+          );
+        }
+        const last = invite.emailSends?.at(-1);
+        if (last && Date.now() - Date.parse(last.at) < 60000)
+          fail(429, "Wait one minute before resending this invitation.");
+        if ((invite.emailSends || []).length >= 20)
+          fail(
+            429,
+            "This invitation reached its email limit. Use the copy link option.",
+          );
+        const day = now().slice(0, 10);
+        const quota = s.quota.invitationMail || {};
+        const count = quota.date === day ? quota.count : 0;
+        if (count >= 20)
+          fail(
+            429,
+            "Daily workspace invitation email limit reached (20). Use the copy link option or try tomorrow (UTC).",
+          );
+        s.quota.invitationMail = { date: day, count: count + 1 };
+        const send = {
+          id: requestId,
+          status: "sending",
+          at: now(),
+          by: req.uid,
+        };
+        invite.emailSends = [...(invite.emailSends || []), send];
+        return {
+          send,
+          email: invite.email,
+          message: invitationMessage(
+            s.workspace,
+            invite,
+            publicOrigin,
+            req.actor.name,
+          ),
+        };
+      },
+      "owner",
+    );
+    if (reservation.previous)
+      return res.json({ send: reservation.previous, cached: true });
+    async function finish(outcome) {
+      return repo.mutate(req.workspaceId, (s) => {
+        const attempt = s.workspace?.invites
+          .find((i) => i.id === req.params.inviteId)
+          ?.emailSends?.find((v) => v.id === requestId);
+        // The owner may revoke the invitation, or its recipient may join, during SMTP.
+        if (attempt) Object.assign(attempt, outcome);
+        return { ...reservation.send, ...outcome };
+      });
+    }
+    let result;
+    try {
+      const fresh = await read(req.workspaceId);
+      authorize(fresh, req.actor, req.workspaceId, "owner");
+      if (!fresh.workspace.invites.some((i) => i.id === req.params.inviteId))
+        fail(409, "Invitation was revoked.");
+      result = await mailer.send([reservation.email], reservation.message);
+    } catch {
+      await finish({ status: "uncertain" });
+      fail(
+        502,
+        "Invitation saved, but sending could not be confirmed. Check Zoho Sent mail before resending. You can still copy its link.",
+      );
+    }
+    const send = await finish({
+      ...result,
+      status: result.accepted.includes(reservation.email)
+        ? "accepted"
+        : "rejected",
+    });
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "owner");
+    res.json({ send, cached: false });
   });
   app.delete("/api/members/invitations/:inviteId", async (req, res) => {
     await mutate(
@@ -466,7 +599,7 @@ export function createApp({
           429,
           "Daily workspace AI-request limit reached. Try again tomorrow (UTC).",
         );
-      s.quota = { date, count: count + 1 };
+      s.quota = { ...s.quota, date, count: count + 1 };
     });
   }
   app.post("/api/transcribe", async (req, res) => {
