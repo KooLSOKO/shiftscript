@@ -21,6 +21,7 @@ import AccountAccess, {
 } from "./components/Account.jsx";
 import NewMeeting from "./components/NewMeeting.jsx";
 import MeetingDetail from "./components/MeetingDetail.jsx";
+import GoogleMeet from "./components/GoogleMeet.jsx";
 import TaskEditor from "./components/TaskEditor.jsx";
 import TaskFilters from "./components/TaskFilters.jsx";
 import Projects from "./components/Projects.jsx";
@@ -29,6 +30,7 @@ import Priority from "./components/Priority.jsx";
 const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
+  ["google", "Google Meet", Icons.Video],
   ["tasks", "Task tracker", Icons.ListTodo],
   ["board", "Board", Icons.Columns3],
   ["projects", "Projects", Icons.Folder],
@@ -70,6 +72,42 @@ export default function App() {
     [pdfBusy, setPdfBusy] = useState(false);
   const current = useRef({ uid: null, workspaceId: null }),
     generation = useRef(0);
+  useEffect(() => {
+    if (!menu || !window.matchMedia("(max-width: 850px)").matches) return;
+    const drawer = document.getElementById("workspace-navigation"),
+      previous = document.activeElement;
+    if (!drawer) return;
+    const priorOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const controls = () =>
+      [...drawer.querySelectorAll("button:not(:disabled), a[href]")].filter(
+        (v) => v.getClientRects().length,
+      );
+    controls()[0]?.focus();
+    function key(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMenu(false);
+      }
+      if (e.key !== "Tab") return;
+      const items = controls(),
+        first = items[0],
+        last = items.at(-1);
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    }
+    document.addEventListener("keydown", key);
+    return () => {
+      document.body.style.overflow = priorOverflow;
+      document.removeEventListener("keydown", key);
+      previous?.focus();
+    };
+  }, [menu]);
   const actor = catalog.actor || {
     uid: user?.uid || "local-demo",
     name: user?.displayName || "ShiftScript demo",
@@ -142,6 +180,27 @@ export default function App() {
         result.workspaces[0]?.id ||
         uid;
       await selectWorkspace(id);
+      const googleStatus = new URLSearchParams(window.location.search).get(
+        "google",
+      );
+      if (googleStatus) {
+        setTab("google");
+        if (googleStatus === "connected")
+          setToast(
+            "Google account connected. Select your meeting notes to import.",
+          );
+        else
+          setError(
+            "Google connection could not be completed. Try Connect Google again and approve Meet and Docs read access.",
+          );
+        const url = new URL(window.location.href);
+        url.searchParams.delete("google");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + url.search + url.hash,
+        );
+      }
       if (new URLSearchParams(window.location.search).has("workspaceInvite"))
         setSwitcher(true);
     } catch (e) {
@@ -290,7 +349,11 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <aside className={"sidebar " + (menu ? "open" : "")}>
+      <aside
+        id="workspace-navigation"
+        aria-label="Workspace navigation"
+        className={"sidebar " + (menu ? "open" : "")}
+      >
         <a
           href="#"
           className="brand"
@@ -397,6 +460,8 @@ export default function App() {
             <button
               className="icon-button mobile-menu"
               aria-label="Open navigation"
+              aria-expanded={menu}
+              aria-controls="workspace-navigation"
               onClick={() => setMenu(true)}
             >
               <Icons.Menu />
@@ -469,6 +534,7 @@ export default function App() {
                       board: "A little clarity goes a long way.",
                       projects: "Make room for the bigger picture.",
                       team: "Good work happens together.",
+                      google: "From Google Meet to a clear next step.",
                     }[tab]}
               </h1>
               <p>
@@ -485,6 +551,8 @@ export default function App() {
                       projects:
                         "A shared home for related conversations and commitments.",
                       team: "Manage your people, permissions and workspace.",
+                      google:
+                        "Bring in your notes. Review the work. Keep moving.",
                     }[tab]}
               </p>
             </div>
@@ -695,11 +763,28 @@ export default function App() {
                   </div>
                 </>
               )}
+              {tab === "google" && (
+                <GoogleMeet
+                  key={workspaceId + ":" + actor.uid}
+                  projects={data.projects}
+                  workspace={data.workspace}
+                  readOnly={readOnly}
+                  config={config}
+                  onCreated={async (m) => {
+                    await reload();
+                    openMeeting(m.id);
+                    setToast(
+                      "Google source processed. Review your proposed tasks.",
+                    );
+                  }}
+                />
+              )}
               {tab === "meetings" &&
                 (meeting ? (
                   <MeetingDetail
                     key={meeting.id}
                     meeting={meeting}
+                    emailReady={config.emailReady}
                     workspace={data.workspace}
                     projects={data.projects}
                     readOnly={readOnly}
@@ -789,7 +874,7 @@ export default function App() {
                   {tab === "tasks" ? (
                     <section className="panel task-table">
                       <div className="table-scroll">
-                        <table>
+                        <table className="task-table">
                           <thead>
                             <tr>
                               <th>Task</th>
@@ -803,7 +888,7 @@ export default function App() {
                           <tbody>
                             {filtered.map((t) => (
                               <tr key={t.id}>
-                                <td>
+                                <td data-label="Task">
                                   <button
                                     className="card-title"
                                     onClick={() => setTaskId(t.id)}
@@ -817,14 +902,17 @@ export default function App() {
                                     </span>
                                   )}
                                 </td>
-                                <td>{t.owner}</td>
-                                <td className={overdue(t) ? "late" : ""}>
+                                <td data-label="Owner">{t.owner}</td>
+                                <td
+                                  data-label="Due date"
+                                  className={overdue(t) ? "late" : ""}
+                                >
                                   {formatDate(t.dueDate)}
                                 </td>
-                                <td>
+                                <td data-label="Priority">
                                   <Priority value={t.priority} />
                                 </td>
-                                <td>
+                                <td data-label="Status">
                                   <select
                                     aria-label={"Status for " + t.title}
                                     disabled={readOnly}
@@ -838,7 +926,7 @@ export default function App() {
                                     ))}
                                   </select>
                                 </td>
-                                <td>
+                                <td data-label="Project / source">
                                   <p className="hint">
                                     {data.projects.find(
                                       (p) => p.id === t.projectId,
@@ -959,6 +1047,27 @@ export default function App() {
           {toast}
         </div>
       )}
+      <nav className="mobile-bottom-nav" aria-label="Quick navigation">
+        {[
+          ["dashboard", "Overview", Icons.LayoutDashboard],
+          ["tasks", "Tasks", Icons.ListTodo],
+          ["google", "Google Meet", Icons.Video],
+        ].map(([id, label, Icon]) => (
+          <button
+            key={id}
+            aria-label={"Go to " + label}
+            aria-current={tab === id ? "page" : undefined}
+            onClick={() => {
+              setTab(id);
+              setMeetingId(null);
+              setMenu(false);
+            }}
+          >
+            <Icon size={21} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
       {newMeeting && (
         <NewMeeting
           key={workspaceId}

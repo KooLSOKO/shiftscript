@@ -10,11 +10,14 @@ import {
   Quote,
   ChevronDown,
   Layers,
+  Mail,
 } from "./Icons.jsx";
 import Fields from "./Fields.jsx";
 import Priority from "./Priority.jsx";
+import RecapEmail from "./RecapEmail.jsx";
 export default function MeetingDetail({
   meeting: m,
+  emailReady,
   workspace,
   projects,
   readOnly,
@@ -23,6 +26,7 @@ export default function MeetingDetail({
   onTask,
   onError,
 }) {
+  const [email, setEmail] = useState(false);
   const [edits, setEdits] = useState({}),
     [selected, setSelected] = useState([]),
     [editing, setEditing] = useState({}),
@@ -98,6 +102,20 @@ export default function MeetingDetail({
           <Download size={16} />
           Export JSON
         </button>
+        {!readOnly && (
+          <button
+            className="button small"
+            disabled={!emailReady || busy}
+            title={
+              emailReady
+                ? "Review and send the recap"
+                : "Earny email setup is required"
+            }
+            onClick={() => setEmail(true)}
+          >
+            <Mail size={16} /> Email recap
+          </button>
+        )}
         <span className="badge">
           {m.provider === "sample"
             ? "Fictional sample · preset results"
@@ -107,6 +125,39 @@ export default function MeetingDetail({
           <span className="badge">Voice source · {m.source.name}</span>
         )}
       </div>
+      {m.source?.kind?.startsWith("google-") && (
+        <div className="source-banner">
+          <span className="badge">
+            {m.source.kind === "google-transcript"
+              ? "Google Meet transcript"
+              : m.source.kind === "google-notes"
+                ? "Meet Gemini notes"
+                : "Google document"}
+          </span>
+          <p className="hint">
+            {m.source.kind === "google-transcript"
+              ? "Speaker labels were provided by Google. Unknown speakers stay unassigned."
+              : "Processed from notes or a document. Evidence refers to this source, rather than verbatim meeting speech."}
+          </p>
+          {m.source.url && (
+            <a
+              className="text-button"
+              href={m.source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open source document <ArrowUpRight size={15} />
+            </a>
+          )}
+        </div>
+      )}
+      {email && (
+        <RecapEmail
+          meeting={m}
+          onClose={() => setEmail(false)}
+          reload={reload}
+        />
+      )}
       <label className="meeting-project">
         Project
         <select
@@ -165,7 +216,12 @@ export default function MeetingDetail({
             ))}
           </section>
           <details className="panel transcript mt-5">
-            <summary>Original transcript</summary>
+            <summary>
+              {m.source?.kind === "google-notes" ||
+              m.source?.kind === "google-document"
+                ? "Original source document"
+                : "Original transcript"}
+            </summary>
             <pre>{m.transcript}</pre>
           </details>
         </div>

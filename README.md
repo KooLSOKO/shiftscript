@@ -1,4 +1,4 @@
-# ShiftScript v2
+# ShiftScript v2.1
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -6,11 +6,11 @@ A corporate blue meeting workspace: turn a transcript or voice recording into st
 
 ## Existing project: start here
 
-Read **[docs/UPDATE-v2.md](docs/UPDATE-v2.md)** for the safe Mac update, GitHub push, Vercel deployment and shared workspace setup. This is a complete source project, not a partial patch. Your Firebase Web configuration is included; private credentials are excluded.
+Read **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)** for the safe Mac update, GitHub push, Vercel deployment and Google Meet, Zoho email and shared workspace setup. This is a complete source project, not a partial patch. Your Firebase Web configuration is included; private credentials are excluded.
 
 ## New project in VS Code
 
-Open the extracted **ShiftScript-v2** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
+Open the extracted **ShiftScript-v2.1** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
 
 ```bash
 npm ci
@@ -21,6 +21,10 @@ npm run dev
 Open http://localhost:5173. Windows PowerShell: use `Copy-Item .env.example .env`. The command starts the React frontend and Node API together. `npm run preview` previews built frontend files only; it does not start the API.
 
 The default is a fictional sample with local storage and no paid/live API calls. **New meeting → Load sample → Process transcript**. Sample mode accepts the included sample transcript only. Local data lives in `.data/workspace.json`; local mode is blocked in production.
+
+## New in v2.1
+
+Google Meet/Docs notes imports, speaker-labelled transcripts when available, optional Earny recap emails through Zoho, and improved mobile navigation, task cards, touch controls and filters. Read [docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md) for the required server variables and live test steps. The integration tests use mocked services; your personal Google account and Zoho delivery still need a live check.
 
 ## What is included
 

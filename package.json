@@ -1,6 +1,6 @@
 {
   "name": "shiftscript",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,7 +13,7 @@
     "start": "node server/index.js",
     "test": "node --test tests/*.test.js",
     "check": "npm test && npm run build",
-    "test:ui": "node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js",
+    "test:ui": "node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js",
     "format": "prettier --write src server tests"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "firebase": "^12.0.0",
     "firebase-admin": "^13.4.0",
     "jspdf": "^4.2.1",
+    "nodemailer": "^10.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zod": "^4.0.0"

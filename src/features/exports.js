@@ -80,6 +80,20 @@ export function meetingReport(meeting, workspace, projects = []) {
     subtitle: `${workspace?.name || "ShiftScript"} · ${meeting.date} · ${meeting.type} · ${projectName(meeting.projectId, projects)}`,
     sections: [
       { title: "Meeting summary", items: [meeting.summary] },
+      ...(meeting.source?.kind?.startsWith("google-")
+        ? [
+            {
+              title: "Source",
+              items: [
+                meeting.source.name +
+                  (meeting.source.url ? "\n" + meeting.source.url : ""),
+                meeting.source.kind === "google-transcript"
+                  ? "Google Meet speaker-labelled transcript."
+                  : "Source document or notes; evidence is quoted from this source.",
+              ],
+            },
+          ]
+        : []),
       { title: "Discussion", items: meeting.discussionPoints },
       { title: "Decisions", items: meeting.decisions },
       { title: "Follow-ups", items: meeting.followUps },

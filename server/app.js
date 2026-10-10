@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import { z } from "zod";
+import { GoogleIntegration } from "./google.js";
+import { RecapMailer, recap, emailInput } from "./recap-email.js";
 import { LocalStore, FirebaseStore, hydrate } from "./store.js";
 import { firebase } from "./firebase.js";
 import { analyze, sampleTranscript } from "./analyze.js";
@@ -37,6 +39,8 @@ const workspaceInput = z
   .strict();
 export function createApp({
   store,
+  google,
+  mailer = new RecapMailer(),
   analyzer = analyze,
   transcriber = transcribe,
   storage = process.env.STORAGE_MODE || "local",
@@ -49,6 +53,7 @@ export function createApp({
       process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
   const repo =
     store || (storage === "firebase" ? new FirebaseStore() : new LocalStore());
+  const googleClient = google || new GoogleIntegration({ storage });
   app.disable("x-powered-by");
   app.use(express.json({ limit: "3.5mb" }));
   app.use("/api", (_req, res, next) => {
@@ -65,9 +70,34 @@ export function createApp({
       model: process.env.GEMINI_MODEL || defaultModel,
       maxAudioBytes: MAX_AUDIO_BYTES,
       aiReady: provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
-      version: "2.0.0",
+      googleReady: googleClient.ready,
+      emailReady: mailer.ready,
+      version: "2.1.0",
     }),
   );
+  // OAuth returns through a top-level navigation, without a Firebase bearer header.
+  app.get("/api/google/callback", async (req, res) => {
+    if (!googleClient.ready)
+      return res
+        .status(503)
+        .send("Google connection is not configured. Return to ShiftScript.");
+    const cookie = req.headers.cookie
+      ?.split(";")
+      .map((v) => v.trim())
+      .find((v) => v.startsWith("shiftscript-google="))
+      ?.split("=")
+      .slice(1)
+      .join("=");
+    let status = "connected";
+    try {
+      await googleClient.callback(req.query, cookie);
+    } catch {
+      status = "error";
+    }
+    res.clearCookie("shiftscript-google", googleClient.cookieOptions());
+    res.set("Referrer-Policy", "no-referrer");
+    res.redirect(303, googleClient.redirect.origin + "/?google=" + status);
+  });
   app.use("/api", async (req, _res, next) => {
     try {
       if (production && storage !== "firebase")
@@ -456,8 +486,8 @@ export function createApp({
       provider,
     });
   });
-  app.post("/api/meetings", async (req, res) => {
-    const input = meetingInput.parse(req.body),
+  async function processMeeting(req, res, body, trustedSource) {
+    const input = meetingInput.parse(body),
       meetingKey = meetingId(input),
       data = await read(req.workspaceId);
     authorize(data, req.actor, req.workspaceId, "write");
@@ -467,10 +497,14 @@ export function createApp({
     if (data.meetings.length >= 50)
       fail(409, "Workspace meeting limit reached (50).");
     await claimQuota(req);
-    const result = await analyzer(input, provider),
+    const result = await analyzer(
+        trustedSource ? { ...input, source: trustedSource } : input,
+        provider,
+      ),
       createdAt = now();
     const meeting = {
       ...input,
+      ...(trustedSource ? { source: trustedSource } : {}),
       projectId: input.projectId || null,
       id: meetingKey,
       createdAt,
@@ -501,6 +535,160 @@ export function createApp({
       return meeting;
     });
     res.status(201).json({ meeting: saved, cached: false });
+  }
+  app.post("/api/meetings", async (req, res) =>
+    processMeeting(req, res, req.body),
+  );
+  app.get("/api/google/status", async (req, res) =>
+    res.json(await googleClient.status(req.uid)),
+  );
+  app.post("/api/google/connect", async (req, res) => {
+    const result = await googleClient.start(req.uid);
+    res.cookie(
+      "shiftscript-google",
+      result.binding,
+      googleClient.cookieOptions(),
+    );
+    res.json({ url: result.url });
+  });
+  app.delete("/api/google/connection", async (req, res) => {
+    await googleClient.disconnect(req.uid);
+    res.json({ disconnected: true });
+  });
+  app.get("/api/google/meetings", async (req, res) =>
+    res.json(await googleClient.list(req.uid, req.query.cursor)),
+  );
+  app.get("/api/google/artifacts", async (req, res) =>
+    res.json(await googleClient.artifacts(req.uid, req.query.name)),
+  );
+  app.post("/api/google/preview", async (req, res) => {
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    const result = await googleClient.preview(
+      req.uid,
+      req.workspaceId,
+      req.body,
+    );
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    res.json(result);
+  });
+  app.post("/api/google/import", async (req, res) => {
+    if (provider !== "gemini")
+      fail(422, "Google imports require live Gemini analysis.");
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    const { previewId, ...fields } = meetingInput
+      .omit({ transcript: true, source: true })
+      .extend({ previewId: z.string().min(20).max(100) })
+      .strict()
+      .parse(req.body);
+    const imported = await googleClient.imported(
+      req.uid,
+      req.workspaceId,
+      previewId,
+    );
+    await processMeeting(
+      req,
+      res,
+      { ...fields, transcript: imported.transcript },
+      imported.source,
+    );
+  });
+  app.get("/api/meetings/:id/email-preview", async (req, res) => {
+    const data = await read(req.workspaceId);
+    authorize(data, req.actor, req.workspaceId, "write");
+    const { html, subject, ...preview } = recap(data, req.params.id);
+    res.json(preview);
+  });
+  app.post("/api/meetings/:id/email", async (req, res) => {
+    if (!mailer.ready)
+      fail(
+        503,
+        "Earny email is not configured yet. Contact your administrator.",
+      );
+    const input = emailInput.parse(req.body),
+      recipients = [...new Set(input.recipients.map((v) => v.toLowerCase()))];
+    const reservation = await mutate(req, (s) => {
+      const m = s.meetings.find((v) => v.id === req.params.id);
+      if (!m) fail(404, "Meeting not found.");
+      const previous = (m.emailSends || []).find(
+        (v) => v.id === input.requestId,
+      );
+      if (previous) {
+        if (previous.status === "accepted" || previous.status === "partial")
+          return { previous };
+        fail(
+          409,
+          "This email attempt is already in progress or its result is uncertain. Check your mailbox before trying a new send.",
+        );
+      }
+      const date = now().slice(0, 10);
+      if (
+        s.meetings
+          .flatMap((v) => v.emailSends || [])
+          .filter((v) => v.at.slice(0, 10) === date).length >= 10
+      )
+        fail(
+          429,
+          "Daily workspace email limit reached (10). Try again tomorrow (UTC).",
+        );
+      if ((m.emailSends || []).length >= 100)
+        fail(409, "This meeting reached its email history limit.");
+      const message = recap(s, m.id);
+      if (message.fingerprint !== input.fingerprint)
+        fail(
+          409,
+          "The recap changed since your preview. Reopen the email preview before sending.",
+        );
+      m.emailSends = [
+        ...(m.emailSends || []),
+        {
+          id: input.requestId,
+          status: "sending",
+          recipients,
+          at: now(),
+          by: req.uid,
+        },
+      ];
+      return { message };
+    });
+    if (reservation.previous)
+      return res.json({ send: reservation.previous, cached: true });
+    let result;
+    try {
+      authorize(
+        await read(req.workspaceId),
+        req.actor,
+        req.workspaceId,
+        "write",
+      );
+      result = await mailer.send(recipients, reservation.message);
+    } catch {
+      await repo.mutate(req.workspaceId, (s) => {
+        s.meetings
+          .find((v) => v.id === req.params.id)
+          .emailSends.find((v) => v.id === input.requestId).status =
+          "uncertain";
+      });
+      fail(
+        502,
+        "Email sending could not be confirmed. Check Zoho Sent mail before retrying to avoid duplicates.",
+      );
+    }
+    // Record the external outcome even if membership changed during SMTP sending.
+    const send = await repo.mutate(req.workspaceId, (raw) => {
+      const m = raw.meetings.find((v) => v.id === req.params.id),
+        send = m.emailSends.find((v) => v.id === input.requestId);
+      Object.assign(send, {
+        status: result.rejected.length
+          ? result.accepted.length
+            ? "partial"
+            : "rejected"
+          : "accepted",
+        ...result,
+      });
+      return send;
+    });
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    res.json({ send, cached: false });
   });
   app.patch("/api/meetings/:id/project", async (req, res) => {
     const { projectId } = z

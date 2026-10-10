@@ -173,7 +173,14 @@ export function groundAnalysis(raw, input) {
         ),
         { status: 502 },
       );
-    if (a.owner && !transcript.includes(normalize(a.owner))) a.owner = null;
+    if (
+      a.owner &&
+      (!transcript.includes(normalize(a.owner)) ||
+        /^(?:(?:unknown|unnamed|unidentified)\s+)?(?:speaker|voice|participant)(?:\s+\d+)?$|^(?:unknown|unassigned)$/i.test(
+          a.owner.trim(),
+        ))
+    )
+      a.owner = null;
     if (a.deadline && !normalize(a.evidence).includes(normalize(a.deadline)))
       a.deadline = null;
     const key = hash(normalize(a.title) + normalize(a.evidence));

@@ -1,6 +1,7 @@
+import { useId, useState } from "react";
 import { defaultFilters } from "../features/task-filters.js";
 import { statuses, priorities } from "../lib.js";
-import { Filter, Search } from "./Icons.jsx";
+import { Filter, Search, ChevronDown } from "./Icons.jsx";
 export default function TaskFilters({
   value,
   onChange,
@@ -8,6 +9,11 @@ export default function TaskFilters({
   projects,
   count,
 }) {
+  const [expanded, setExpanded] = useState(false),
+    filterId = useId();
+  const active = Object.keys(defaultFilters).filter(
+    (key) => key !== "sort" && value[key] !== defaultFilters[key],
+  ).length;
   const change = (key, v) => onChange({ ...value, [key]: v });
   return (
     <section className="panel filter-panel" aria-label="Task filters">
@@ -26,7 +32,21 @@ export default function TaskFilters({
           Clear filters
         </button>
       </div>
-      <div className="filter-grid">
+      <button
+        className="button mobile-filter-toggle"
+        aria-label={expanded ? "Hide task filters" : "Show task filters"}
+        aria-expanded={expanded}
+        aria-controls={filterId}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {expanded ? "Hide filters" : "More filters"}
+        {active > 0 ? " · " + active + " active" : ""}
+        <ChevronDown size={17} />
+      </button>
+      <div
+        id={filterId}
+        className={"filter-grid " + (expanded ? "filters-open" : "")}
+      >
         <label className="filter-search">
           Search tasks
           <div className="search-field">

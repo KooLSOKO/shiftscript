@@ -247,3 +247,10 @@ export const Briefcase = frame(
     <path d="M8 7V3h8v4M3 12l9 3 9-3m-9 1v4" />
   </>,
 );
+
+export const Video = frame(
+  <>
+    <rect x="3" y="6" width="12" height="12" rx="3" fill={soft} />
+    <path d="m15 10 6-3v10l-6-3M7 10h4M7 14h2" />
+  </>,
+);

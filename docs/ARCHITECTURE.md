@@ -68,3 +68,14 @@ PDF/CSV export runs in the browser for only the selected workspace/current filte
 | `server/app.js`, `schema.js` | Authenticated APIs, validation, quota and guarded mutations |
 | `server/store.js` | Firestore/local persistence, catalog and migration |
 | `api/index.js`, `vercel.json` | Node function and Vercel API/asset routing |
+
+
+## v2.1 integration boundaries
+
+`server/google.js` handles OAuth (PKCE, browser-bound expiring state), token refresh and official Meet/Docs endpoints. `server/integration-vault.js` encrypts personal connection tokens, OAuth attempts and temporary import previews using AES-256-GCM. Firebase stores opaque payloads under `privateIntegrations/{uid}`, separate from workspace collections. This collection is never included in workspace/catalog APIs; the deny-all Firestore browser rules apply to it. Local development uses a private ignored `.data/integrations.json` file.
+
+Only server-fetched previews can become trusted Google sources. They are bound to the requesting UID, current Google connection and workspace; imports recheck write permission. Existing meeting grounding, AI quota, deduplication and task-review flows apply. Source labels distinguish a document/notes from native transcript entries. Google source metadata is stored on the meeting and exported in reports.
+
+`server/recap-email.js` builds a recap from persisted meeting data and approved tasks. The client submits recipients, a preview fingerprint and idempotency UUID, not arbitrary email body/from/HTML. A workspace transaction validates the fingerprint, role, limit and send reservation before SMTP. Sender and SMTP credentials remain server-only. Outcome histories live on meeting records; uncertain outcomes are not auto-retried. Email recipients are Bcc. SMTP outcomes are acceptance statuses, not delivery receipts.
+
+Google imports are user initiated. There are no Meet bots, background polling, webhook subscriptions, Calendar scopes or restricted Drive read scopes in this phase.

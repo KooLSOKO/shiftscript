@@ -473,6 +473,9 @@ try {
   });
   await nav("Task tracker");
   await page
+    .getByRole("button", { name: "Show task filters", exact: true })
+    .click();
+  await page
     .getByLabel("Due date", { exact: true })
     .selectOption("Custom range");
   assert.ok(

@@ -1,116 +1,17 @@
-ShiftScript v2 — 9 October 2026
-Local/mock checks; no live service credentials used.
+ShiftScript v2.1 — 10 October 2026
+Node.js 24.19.0. Google/Gemini/Firebase Auth/SMTP are mocked in service tests.
+No private credentials from chat were used. No real email was sent.
 
+npm run check: PASS — 41 tests, 0 failures; Vite production build passed (306 modules).
 
-> shiftscript@2.0.0 check
-> npm test && npm run build
+Browser checks:
+browser-smoke.js: PASS — sample workflow, approval/rejection, edits, persistence, board, voice, mobile.
+accounts-browser.js: PASS — simulated signup, names, workspace setup, reset, account isolation, mobile.
+collaboration-browser.js: PASS — shared projects/workspaces, drafts, bulk review, tasks/checklists/notes, filters, exports, invitations, membership and mobile. Stale-write 409 is expected.
+integrations-browser.js: PASS — mocked Google Meet artifacts and Docs link, source review, task approval, Earny email preview/send, no pending tasks in email, phone layouts at 320/390/430 px, tablet 768 px, landscape 844 px, desktop 1440 px, dialog bounds, 44 px task status controls, 16 px phone fields, collapsible filters, drawer keyboard close/focus and no page overflow or JavaScript errors.
 
+Screenshots visually inspected: Google import, mobile task cards and recap dialog.
 
-> shiftscript@2.0.0 test
-> node --test tests/*.test.js
+Not verified live: Google consent and personal Gmail Meet API eligibility, Docs sharing, Zoho SMTP/inbox delivery, Firebase IAM, Gemini API quotas and Vercel deployment. Follow docs/UPDATE-v2.1.md.
 
-API error: 401 Error
-Firebase verification: Error
-API error: 401 Error
-✔ signup access is configured by the server; workspace routes require verified tokens (42.808721ms)
-API error: 409 Error
-API error: 404 Error
-✔ workspace creation and rename preserve meetings and isolate different accounts (26.338094ms)
-API error: 400 ZodError
-API error: 400 ZodError
-API error: 400 ZodError
-API error: 400 ZodError
-API error: 400 ZodError
-API error: 400 ZodError
-✔ clients cannot choose an owner uid or another user's workspace id (18.013905ms)
-API error: 403 Error
-✔ private mode retains the email allowlist and public mode enables new accounts (7.579009ms)
-✔ workspace metadata persists after restarting the local store (23.868673ms)
-✔ Firestore workspace metadata merges without overwriting an existing quota or meetings (1.314443ms)
-API error: 403 Error
-API error: 404 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 400 Error
-API error: 400 Error
-✔ invitations bind verified email, enforce roles and revoke member access (108.046788ms)
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-API error: 403 Error
-✔ viewer reads/export data but cannot change any workspace workflow (59.734315ms)
-API error: 400 Error
-API error: 403 Error
-✔ extra workspaces and projects isolate records; meeting moves preserve task origins (27.2307ms)
-API error: 409 Error
-API error: 409 Error
-✔ drafts are private, persistent and reject stale save/delete versions (22.387103ms)
-API error: 404 Error
-API error: 400 Error
-✔ bulk review commits edited owners/dates atomically, remains idempotent and never auto-approves (36.544089ms)
-API error: 409 Error
-API error: 400 Error
-API error: 400 ZodError
-✔ manual tasks preserve checklists, notes and retries; stale edits fail; removed assignees retain history (30.548095ms)
-✔ legacy local data migrates in place without losing meetings, tasks or quota (2.716708ms)
-✔ Firestore membership migration and transactions read before writes and preserve unrelated documents (2.577418ms)
-API error: 403 Error
-✔ revocation during analysis prevents the result from being saved (14.800428ms)
-✔ task filters combine ownership, project, priority, source, date range and stable sorting (8.482076ms)
-✔ CSV quotes commas, accents, checklists and rejects spreadsheet formula execution (0.476599ms)
-✔ PDF uses embedded fonts and paginates long reports; report builders preserve evidence and statuses (219.128035ms)
-✔ Gemini sends strict JSON contract, configured model, no storage and bounded timeout (0.94142ms)
-✔ Gemini quota errors are readable and never leak upstream key strings (0.572995ms)
-✔ malformed or refused Gemini output does not become tasks (4.851719ms)
-✔ audio MIME, encoding, file signatures and size boundaries (44.744281ms)
-✔ transcription passes audio to Gemini and preserves editable text (1.834938ms)
-✔ audio API -> reviewed transcript -> stored meeting source; no raw audio persisted (51.666974ms)
-✔ full workflow: notes, approval, editing, status, progress, refresh and duplicate prevention (96.266436ms)
-API error: 400 ZodError
-API error: 400 ZodError
-API error: 422 Error
-API error: 404 Error
-✔ invalid inputs, missing records and unsupported sample transcript (16.952104ms)
-✔ ambiguous dates remain unresolved; explicit dates and tomorrow are anchored (0.501686ms)
-✔ fabricated evidence fails; unknown owners and unsupported deadlines are cleared (1.057815ms)
-API error: 503 Error
-✔ hosted mode cannot use ephemeral local storage (5.036808ms)
-ℹ tests 29
-ℹ suites 0
-ℹ pass 29
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 810.317685
-
-> shiftscript@2.0.0 build
-> vite build
-
-vite v7.3.7 building client environment for production...
-transforming...
-✓ 304 modules transformed.
-rendering chunks...
-computing gzip size...
-dist/index.html                            0.67 kB │ gzip:   0.39 kB
-dist/assets/index-iBdjOJ1F.css            31.37 kB │ gzip:   7.80 kB
-dist/assets/purify.es-BPuvlvQ_.js         29.05 kB │ gzip:  11.09 kB
-dist/assets/index.es-DVtgGQUW.js         158.97 kB │ gzip:  53.06 kB
-dist/assets/html2canvas.esm-DXEQVQnt.js  201.04 kB │ gzip:  47.43 kB
-dist/assets/jspdf.es.min-CaAb1LmC.js     386.19 kB │ gzip: 126.39 kB
-dist/assets/index-CHMYCpOw.js            409.67 kB │ gzip: 123.91 kB
-✓ built in 2.60s
-
-
-> shiftscript@2.0.0 test:ui
-> node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js
-
-PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, no overflow, mocked voice upload/transcription/review/source, no page errors.
-PASS: simulated signup, password mismatch, names, workspace creation/rename, refresh, account isolation, reset, wrong password, sign-in, mobile overflow.
-PASS: projects, private draft/reload, bulk assignment/approval, manual tasks/checklists/notes, combined filters, PDF/CSV downloads, share-link clipboard, verified invitation join, member edits, viewer read-only, workspace isolation/switching, mobile layouts, no page errors.
+Dependency audit: 12 existing findings (8 moderate, 4 high). The new SMTP dependency was updated to Nodemailer 10.1.0; the final npm audit reports no Nodemailer advisory. See docs/TESTING.md for the existing dependency findings.

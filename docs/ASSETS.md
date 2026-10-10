@@ -23,3 +23,6 @@ Final creative prompt/specification:
 ## Motion
 
 CSS supplies gentle entrance, hover, dialog, toast and microphone-wave effects. `prefers-reduced-motion: reduce` disables animated transitions. No animation library or external font dependency is required.
+
+
+v2.1 adds the original `Video` icon in `src/components/Icons.jsx` and `public/icons/Video.svg`, using the same rounded outlines and ice-blue secondary fill. No Google logo is copied. New mobile screenshots document import, recap review, task cards and the task editor with fictional data.
