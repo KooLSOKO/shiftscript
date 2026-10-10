@@ -8,7 +8,11 @@ import {
   meetingReport,
   taskReport,
 } from "../src/features/exports.js";
-import { defaultFilters, filterTasks } from "../src/features/task-filters.js";
+import {
+  defaultFilters,
+  filterTasks,
+  isAssignedTo,
+} from "../src/features/task-filters.js";
 const tasks = [
   {
     id: "t1",
@@ -76,6 +80,66 @@ test("task filters combine ownership, project, priority, source, date range and 
   assert.deepEqual(view({ sort: "due" }), ["t1", "t2", "t3"]);
   assert.deepEqual(view({ sort: "priority" }), ["t1", "t2", "t3"]);
   assert.deepEqual(view({ due: "Next 7 days" }), []);
+});
+test("my tasks matches each user's full name, first name or surname, with account assignments taking precedence", () => {
+  const victor = { uid: "victor", name: "  Victor   Soko " };
+  for (const owner of ["Victor", "soko", "VICTOR SOKO", "  Victor  Soko "])
+    assert(isAssignedTo({ owner, ownerUid: null }, victor), owner);
+  for (const owner of ["Kopano", "Sokoto", "Victor Soko Jr", "", null])
+    assert.equal(isAssignedTo({ owner }, victor), false);
+  assert(isAssignedTo({ owner: "Old name", ownerUid: "victor" }, victor));
+  assert.equal(
+    isAssignedTo({ owner: "Victor", ownerUid: "kopano" }, victor),
+    false,
+  );
+  const kopano = { uid: "kopano", name: "Kopano Mokoena" };
+  assert(isAssignedTo({ owner: "Mokoena" }, kopano));
+  assert(isAssignedTo({ owner: "Kopano" }, kopano));
+  assert.equal(isAssignedTo({ owner: "Soko" }, kopano), false);
+  assert(
+    isAssignedTo(
+      { owner: "Thandi Nkosi" },
+      { uid: "thandi", name: "Thandi Nomsa Nkosi" },
+    ),
+  );
+  assert(
+    isAssignedTo(
+      { owner: "josé" },
+      { uid: "jose", name: "Jose\u0301 Dlamini" },
+    ),
+  );
+  assert.equal(
+    isAssignedTo(
+      { owner: "test@example.com" },
+      { uid: "email", name: "test@example.com" },
+    ),
+    false,
+  );
+  assert.equal(
+    isAssignedTo({ owner: "Victor" }, { name: "Victor Soko" }),
+    false,
+  );
+});
+test("name matching applies to the Me filter while preserving combined filters and explicit owner choices", () => {
+  const list = [
+    { ...tasks[0], id: "first", owner: "Victor", ownerUid: null },
+    { ...tasks[1], id: "surname", owner: "Soko", ownerUid: null },
+    { ...tasks[2], id: "another-account", owner: "Soko", ownerUid: "other" },
+  ];
+  const actor = { uid: "victor", name: "Victor Soko" };
+  const ids = (options) =>
+    filterTasks(
+      list,
+      { ...defaultFilters, ...options },
+      actor,
+      "2026-10-09",
+    ).map((t) => t.id);
+  assert.deepEqual(ids({ owner: "Me" }), ["surname", "first"]);
+  assert.deepEqual(ids({ owner: "Me", priority: "High", project: "p1" }), [
+    "first",
+  ]);
+  assert.deepEqual(ids({ owner: "Me", status: "Blocked" }), []);
+  assert.deepEqual(ids({ owner: "Soko" }), ["another-account", "surname"]);
 });
 test("CSV quotes commas, accents, checklists and rejects spreadsheet formula execution", () => {
   const csv = tasksCsv(tasks, [{ id: "p1", name: "Portfolio" }]);

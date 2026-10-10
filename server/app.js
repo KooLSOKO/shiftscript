@@ -81,7 +81,7 @@ export function createApp({
       googleReady: googleClient.ready,
       emailReady: mailer.ready,
       invitationEmailReady: Boolean(mailer.ready && publicOrigin),
-      version: "2.3.0",
+      version: "2.3.1",
     }),
   );
   // OAuth returns through a top-level navigation, without a Firebase bearer header.

@@ -10,6 +10,27 @@ export const defaultFilters = {
   source: "All",
   sort: "newest",
 };
+const normalizeName = (value) =>
+  typeof value === "string"
+    ? value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase()
+    : "";
+
+export function isAssignedTo(task, actor) {
+  if (!actor?.uid) return false;
+  // An explicit account assignment takes precedence over a name match.
+  if (task.ownerUid) return task.ownerUid === actor.uid;
+  const name = normalizeName(actor.name);
+  const owner = normalizeName(task.owner);
+  if (!name || !owner || name.includes("@")) return false;
+  const parts = name.split(" ");
+  const aliases = new Set([
+    name,
+    parts[0],
+    parts.at(-1),
+    `${parts[0]} ${parts.at(-1)}`,
+  ]);
+  return aliases.has(owner);
+}
 export function filterTasks(tasks, f, actor, date) {
   const end = new Date(date + "T12:00:00Z");
   end.setUTCDate(end.getUTCDate() + 7);
@@ -22,7 +43,7 @@ export function filterTasks(tasks, f, actor, date) {
         return false;
       if (f.status !== "All" && t.status !== f.status) return false;
       if (f.priority !== "All" && t.priority !== f.priority) return false;
-      if (f.owner === "Me" && t.ownerUid !== actor.uid) return false;
+      if (f.owner === "Me" && !isAssignedTo(t, actor)) return false;
       if (f.owner !== "All" && f.owner !== "Me" && t.owner !== f.owner)
         return false;
       if (

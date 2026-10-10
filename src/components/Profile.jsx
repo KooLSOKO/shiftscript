@@ -5,6 +5,7 @@ import {
   ArrowRight,
   LogOut,
 } from "./Icons.jsx";
+import { isAssignedTo } from "../features/task-filters.js";
 
 export default function Profile({
   user,
@@ -19,7 +20,7 @@ export default function Profile({
 }) {
   const name = user?.displayName || actor.name || "Workspace member";
   const email = user?.email || actor.email;
-  const assigned = tasks.filter((task) => task.ownerUid === actor.uid);
+  const assigned = tasks.filter((task) => isAssignedTo(task, actor));
   const active = assigned.filter((task) => task.status !== "Completed");
   const initials = name
     .split(/\s+/)
@@ -82,7 +83,8 @@ export default function Profile({
             <ListTodo size={20} /> Your work
           </h2>
           <p className="muted">
-            Tasks assigned to your account in this workspace.
+            Tasks linked to your account or matching your name in this
+            workspace.
           </p>
           <div className="profile-work">
             <div>

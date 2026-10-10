@@ -113,9 +113,9 @@ export default function App() {
       previous?.focus();
     };
   }, [menu]);
-  const actor = catalog.actor || {
-    uid: user?.uid || "local-demo",
-    name: user?.displayName || "ShiftScript demo",
+  const actor = {
+    ...(catalog.actor || { uid: user?.uid || "local-demo" }),
+    name: user?.displayName || catalog.actor?.name || "ShiftScript demo",
   };
   async function refreshCatalog() {
     const result = await api("/workspaces", { workspace: false });

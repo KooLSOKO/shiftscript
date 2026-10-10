@@ -74,3 +74,7 @@ The v2.1 final audit still reports those 12 existing findings. The new SMTP depe
 ## v2.3 checks
 
 Browser smoke checks the four labelled bottom-navigation buttons, the Meetings active state, artwork decoding, and 44px minimum tap targets with no overflow at 320, 360, 390 and 414px. The accounts browser suite checks signed-in name/email isolation for two users, workspace memberships and profile rendering on desktop and mobile. The existing collaboration and integration suites continue to exercise invitation email, Meet imports and recaps.
+
+## v2.3.1 assignment matching
+
+My tasks matches full/first/last name for name-only owners, with explicit account ownership taking precedence. Unit tests cover matching and rejection cases plus combined filters. The accounts browser test checks Profile counts and the actual View my tasks shortcut for a user whose server actor name differs from their current display name.

@@ -1,6 +1,6 @@
 {
-  "version": "2.3.0",
-  "root": "ShiftScript-v2.3",
+  "version": "2.3.1",
+  "root": "ShiftScript-v2.3.1",
   "files": [
     {
       "path": ".env.example",
@@ -24,7 +24,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "fd88aa7402bfce48cb82eda075e54ff2f6828c4e75d84535e3e326be055a0bc7"
+      "sha256": "8b6b1a4275ba34083c34f6664e65f446578b18174d23de08aeb46f4125c4eb12"
     },
     {
       "path": "api/index.js",
@@ -56,7 +56,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "7dcc99d2b1e7f3efa5e8dac35519a7948471645570339217ea339232b45adaee"
+      "sha256": "3fecf90e8853462c056aec02b6283696326fe5de5f0f3eb308708c0bd3345828"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -71,6 +71,10 @@
       "sha256": "ff0f0da44d71ff3ecf7157c4c0fd4178d6fe6c84c3a98eba5c1709e0b01e1573"
     },
     {
+      "path": "docs/UPDATE-v2.3.1.md",
+      "sha256": "51ecbb8ae0d6ba79f232d6015be42ce3ab01caf2179fb3fdd7271b9efa173078"
+    },
+    {
       "path": "docs/UPDATE-v2.3.md",
       "sha256": "72a70466bddf5004fd0628d7f67a0d121d96b1c9f356306dd8b387b014489398"
     },
@@ -80,7 +84,7 @@
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "25f1a60051b3623c4b04858cb1daeae4e5b81469cf77aae2b58ec0c19f25d567"
+      "sha256": "1cba9e3f743fa9e7f4a5b2d13c98a3acd3910ea4a30d7fece753e606ff74f57a"
     },
     {
       "path": "docs/screenshots/board-desktop.png",
@@ -104,7 +108,7 @@
     },
     {
       "path": "docs/screenshots/dashboard-recap-mobile.png",
-      "sha256": "533ffb57e21cd86427fa7ea78d882550965a238b02fb55f0f73635f8156d9091"
+      "sha256": "9c15be83944bb97fb3e8e1a3d9a7a81cb4bb29344bafcce77c98848217d077b7"
     },
     {
       "path": "docs/screenshots/draft-desktop.png",
@@ -128,7 +132,7 @@
     },
     {
       "path": "docs/screenshots/google-import-mobile.png",
-      "sha256": "df0f323b27da1de4e68542a6402182854c0f778df29f6763fb9d33185c08cdf0"
+      "sha256": "8abadc3ec543ff7fd0409509f3ff5cbae97c5b478c2923a7ce6a9d3abc4fa685"
     },
     {
       "path": "docs/screenshots/invitation-email-desktop.png",
@@ -136,11 +140,11 @@
     },
     {
       "path": "docs/screenshots/invitation-email-mobile.png",
-      "sha256": "9ff65d8926152180a09a2117203b675b6dcf7d420d55096779b6e54edf4ca0a0"
+      "sha256": "36d5a65c204bb11bd2b98ef75075a2bb9553f4bf70484dff949344f5f3572db2"
     },
     {
       "path": "docs/screenshots/manual-task-desktop.png",
-      "sha256": "0fa0199da273a931a22319111e06022600939883adcc53b479f6575e13db3363"
+      "sha256": "10ce128358b0fc820b0a639f0eec5dec1aabf3157b865fa25140ba957cc7c11d"
     },
     {
       "path": "docs/screenshots/meeting-mobile.png",
@@ -164,11 +168,11 @@
     },
     {
       "path": "docs/screenshots/profile-desktop.png",
-      "sha256": "b34bd17606d4a84511bfaf7972e65a80db88f52c3f75b24359f933188d2d5209"
+      "sha256": "7ca29895ace88ac04de50a222216e05a2da3d5ec07c65165c7b59ade2c642708"
     },
     {
       "path": "docs/screenshots/profile-mobile.png",
-      "sha256": "347af7d845e9ef7a880e65986d1c3b946c3e751ff1883e956d98f8a5a0e65cc6"
+      "sha256": "807bf833c51bf0e9c3a0a44f91bb4bf5450f01419d608dc6dbae2f900382fc6b"
     },
     {
       "path": "docs/screenshots/projects-desktop.png",
@@ -240,11 +244,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "e0480dfc72e4164a539518134a9219ed35e2098204d9b8ad976d424765e7f15e"
+      "sha256": "cf13aa61f75e9b28b8579432d7ecca8667ac0cb1b42dca521897914987cbc05d"
     },
     {
       "path": "package.json",
-      "sha256": "ce465e1cafc34ff87c51b333c394e19e053543e94b70b2d70061d71ed3d7aaa2"
+      "sha256": "d54b314089ea75e7fd5cea46fdfeb5f5c9befadbcf4b4133cfdb2dc2a0a00b77"
     },
     {
       "path": "public/art/google-meet.webp",
@@ -476,7 +480,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "fa569a9c3085230ba9bb2c6e0a4cf55364e8e77e419f1afc3344bd13905378fb"
+      "sha256": "6015192eebbe2dad2aef5857d8f50fadd480f532f08ff40a233e9c0174a97d32"
     },
     {
       "path": "server/audio.js",
@@ -532,7 +536,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "f26904a3af3412cc83610fa77c5719257064bc1fd42306196a11079ad51cce08"
+      "sha256": "8300a58a4390e6846dfcc544a1822b52543851ad66da958dda8047ed97f9a37e"
     },
     {
       "path": "src/components/Account.jsx",
@@ -572,7 +576,7 @@
     },
     {
       "path": "src/components/Profile.jsx",
-      "sha256": "79c354b49f5fdfe162d26a20ec45dc5844374399b4fa191785f9ea0f6430f60e"
+      "sha256": "9231769a5edb7924e6b882c93cc88101428dd3b2515f00f979ce0ab14943ac62"
     },
     {
       "path": "src/components/Projects.jsx",
@@ -608,7 +612,7 @@
     },
     {
       "path": "src/features/task-filters.js",
-      "sha256": "5800cf06ad438b214d14f0f1a81c597808db244dcd60d1469580556be756b45d"
+      "sha256": "b327da378c13214b7a51eafdb461450cc23f257bed264abc86751fdcc6ea796e"
     },
     {
       "path": "src/firebase-config.js",
@@ -628,7 +632,7 @@
     },
     {
       "path": "tests/accounts-browser.js",
-      "sha256": "76f48f9827b8a5c205303a91d3eab05d97ac6ca221c7567936b7b96306a5cfe1"
+      "sha256": "777c1cd83f6e503546780e88d3ae24995a1f354ce653e18f937be6f8e6379bde"
     },
     {
       "path": "tests/accounts.test.js",
@@ -648,7 +652,7 @@
     },
     {
       "path": "tests/exports-filters.test.js",
-      "sha256": "290f34801c1479e6a3a8ec537f5cbb505bcfc50e55e77745dae0895c264de13a"
+      "sha256": "0f8584bc2e8260d28498f01b1903ceff42e060adda478edc6ed3ef18587d57c5"
     },
     {
       "path": "tests/gemini-audio.test.js",

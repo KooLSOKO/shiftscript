@@ -151,9 +151,33 @@ try {
     .getByRole("button", { name: "Workspace settings", exact: true })
     .click();
   await page.getByLabel("Workspace name", { exact: true }).fill("Soko Studio");
-  await page.getByLabel("Your full name", { exact: true }).fill("Soko");
+  await page.getByLabel("Your full name", { exact: true }).fill("Victor Soko");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await page.getByText("Workspace settings saved.", { exact: true }).waitFor();
+  users.get("soko").tasks = [
+    ["first", "Victor", null, "To Do"],
+    ["surname", "Soko", null, "To Do"],
+    ["full", "Victor Soko", null, "To Do"],
+    ["linked", "Old name", "soko", "Completed"],
+    ["other-person", "Kopano", null, "To Do"],
+    ["other-account", "Victor", "kopano", "To Do"],
+  ].map(([id, owner, ownerUid, status]) => ({
+    id,
+    owner,
+    ownerUid,
+    status,
+    title: "Profile test " + id,
+    description: "Profile assignment test",
+    deadline: "",
+    dueDate: null,
+    priority: "Med",
+    projectId: null,
+    meetingId: null,
+    createdAt: "2026-10-10T08:00:00Z",
+    updatedAt: "2026-10-10T08:00:00Z",
+    checklist: [],
+    notes: [],
+  }));
   await page.reload();
   await page
     .getByRole("button", { name: "Workspace settings", exact: true })
@@ -170,7 +194,9 @@ try {
     .getByRole("button", { name: "View your profile", exact: true })
     .click();
   const profile = page.getByRole("region", { name: "Personal profile" });
-  await profile.getByRole("heading", { name: "Soko", exact: true }).waitFor();
+  await profile
+    .getByRole("heading", { name: "Victor Soko", exact: true })
+    .waitFor();
   await profile.getByText("soko@example.test", { exact: true }).waitFor();
   assert.equal(
     await profile.getByText("kopano@example.test", { exact: true }).count(),
@@ -180,6 +206,28 @@ try {
     path: "docs/screenshots/profile-desktop.png",
     fullPage: true,
   });
+  assert.deepEqual(
+    await profile.locator(".profile-work strong").allTextContents(),
+    ["3", "1"],
+  );
+  await profile
+    .getByRole("button", { name: "View my tasks", exact: true })
+    .click();
+  assert.equal(
+    await page.getByLabel("Owner", { exact: true }).inputValue(),
+    "Me",
+  );
+  for (const id of ["first", "surname", "full", "linked"])
+    await page
+      .getByRole("button", { name: "Profile test " + id, exact: true })
+      .waitFor();
+  for (const id of ["other-person", "other-account"])
+    assert.equal(
+      await page
+        .getByRole("button", { name: "Profile test " + id, exact: true })
+        .count(),
+      0,
+    );
   await page.getByRole("button", { name: "Overview", exact: true }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page

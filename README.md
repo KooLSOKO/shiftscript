@@ -1,6 +1,6 @@
 # Latest update
 
-See [UPDATE-v2.3](docs/UPDATE-v2.3.md) for mobile navigation, profiles, artwork, SEO and deployment instructions.
+See [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) for name-aware My tasks and deployment instructions. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
 # ShiftScript v2.3
 
