@@ -76,11 +76,34 @@ const notify = () => { persist(); callbacks.forEach(fn => fn(auth.currentUser));
 export const getAuth = () => auth;
 export class GoogleAuthProvider { setCustomParameters(parameters) { window.testGoogleParameters = parameters; } }
 export async function signInWithPopup(_a, provider) {
+  sessionStorage.setItem("test-popup-count",String(Number(sessionStorage.getItem("test-popup-count")||0)+1));
   const code = localStorage.getItem('test-google-error');
   if(code) throw Object.assign(new Error(),{code});
   const fresh = localStorage.getItem('test-google-new') === 'true';
   const u = fresh ? {uid:'google-new',email:'google-new@example.test',displayName:'Lerato Dlamini',emailVerified:true}
     : JSON.parse(localStorage.getItem('test-accounts') || '{}')['soko@example.test'];
+  auth.currentUser=hydrate(u); notify(); return {user:auth.currentUser};
+}
+export async function signInWithRedirect() {
+  const code=localStorage.getItem('test-google-start-error');
+  if(code) throw Object.assign(new Error(),{code});
+  sessionStorage.setItem('test-redirect-starts',String(Number(sessionStorage.getItem('test-redirect-starts')||0)+1));
+  sessionStorage.setItem('test-redirect-user',localStorage.getItem('test-google-new')==='true'
+    ? JSON.stringify({uid:'google-new',email:'google-new@example.test',displayName:'Lerato Dlamini',emailVerified:true})
+    : JSON.stringify(JSON.parse(localStorage.getItem('test-accounts')||'{}')['soko@example.test']));
+  location.replace(location.href);
+  await new Promise(()=>{});
+}
+export async function getRedirectResult() {
+  sessionStorage.setItem('test-return-count',String(Number(sessionStorage.getItem('test-return-count')||0)+1));
+  await new Promise(resolve=>setTimeout(resolve,350));
+  if(localStorage.getItem('test-google-timeout')==='true') await new Promise(()=>{});
+  const code=localStorage.getItem('test-google-return-error');
+  if(code) throw Object.assign(new Error(),{code});
+  if(localStorage.getItem('test-google-cancel')==='true') return null;
+  const u=JSON.parse(sessionStorage.getItem('test-redirect-user')||'null');
+  sessionStorage.removeItem('test-redirect-user');
+  if(!u) return null;
   auth.currentUser=hydrate(u); notify(); return {user:auth.currentUser};
 }
 export const onAuthStateChanged = (_a, fn) => { callbacks.add(fn); queueMicrotask(() => fn(auth.currentUser)); return () => callbacks.delete(fn); };
@@ -563,8 +586,13 @@ try {
     viewport,
     reducedMotion = "no-preference",
     signup = false,
+    userAgent,
   ) {
-    const context = await browser.newContext({ viewport, reducedMotion });
+    const context = await browser.newContext({
+      viewport,
+      reducedMotion,
+      ...(userAgent ? { userAgent } : {}),
+    });
     await context.addInitScript(() => {
       localStorage.setItem(
         "shiftscript:cookie-preferences:v1",
@@ -884,9 +912,136 @@ try {
   );
   await changed.context.close();
 
+  // Same-tab provider handoff is simulated; the real UI handles the full reload.
+  for (const userAgent of [
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36",
+  ]) {
+    const mobile = await transitionPage(
+      { width: 390, height: 844 },
+      "no-preference",
+      false,
+      userAgent,
+    );
+    const original = mobile.page.url();
+    await mobile.page
+      .getByRole("button", { name: "Continue with Google", exact: true })
+      .click();
+    await mobile.page
+      .getByRole("heading", { name: "Finishing Google sign-in…", exact: true })
+      .waitFor();
+    await opening(mobile.page).waitFor();
+    await mobile.page
+      .getByRole("heading", { name: "Less follow-up. More follow-through." })
+      .waitFor();
+    await opening(mobile.page).waitFor({ state: "detached" });
+    assert.equal(mobile.context.pages().length, 1);
+    assert.equal(mobile.page.url(), original);
+    assert.deepEqual(
+      await mobile.page.evaluate(() => ({
+        popup: sessionStorage.getItem("test-popup-count"),
+        start: sessionStorage.getItem("test-redirect-starts"),
+        returns: sessionStorage.getItem("test-return-count"),
+        pending: sessionStorage.getItem("shiftscript:google-auth-pending:v1"),
+        animations: window.authTransitionStarts,
+      })),
+      { popup: null, start: "1", returns: "1", pending: null, animations: 1 },
+    );
+    assert(
+      await mobile.page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    await mobile.page.screenshot({
+      path: "docs/screenshots/google-return-mobile.png",
+      fullPage: true,
+    });
+    await mobile.context.close();
+  }
+  for (const scenario of ["cancel", "return-error", "start-error", "timeout"]) {
+    const mobile = await transitionPage(
+      { width: 320, height: 844 },
+      "reduce",
+      false,
+      "iPhone",
+    );
+    if (scenario === "timeout") mobile.page.setDefaultTimeout(20000);
+    await mobile.page.evaluate(
+      (scenario) =>
+        localStorage.setItem(
+          scenario === "timeout"
+            ? "test-google-timeout"
+            : scenario === "cancel"
+              ? "test-google-cancel"
+              : scenario === "return-error"
+                ? "test-google-return-error"
+                : "test-google-start-error",
+          ["cancel", "timeout"].includes(scenario)
+            ? "true"
+            : "auth/unauthorized-domain",
+        ),
+      scenario,
+    );
+    await mobile.page
+      .getByRole("button", { name: "Continue with Google", exact: true })
+      .click();
+    await mobile.page
+      .getByText(
+        scenario === "timeout"
+          ? "Google sign-in took too long."
+          : scenario === "cancel"
+            ? "Google sign-in was not completed."
+            : scenario === "return-error"
+              ? "Google sign-in is not authorised for this domain."
+              : "This website is not authorised for Google sign-in yet.",
+        { exact: false },
+      )
+      .waitFor();
+    assert(
+      await mobile.page
+        .getByRole("button", { name: "Continue with Google", exact: true })
+        .isEnabled(),
+    );
+    assert.equal(
+      await mobile.page.evaluate(() =>
+        sessionStorage.getItem("shiftscript:google-auth-pending:v1"),
+      ),
+      null,
+    );
+    assert.equal(mobile.context.pages().length, 1);
+    await mobile.context.close();
+  }
+  users.delete("google-new");
+  const signupMobile = await transitionPage(
+    { width: 390, height: 844 },
+    "reduce",
+    true,
+    "iPhone",
+  );
+  await signupMobile.page.evaluate(() =>
+    localStorage.setItem("test-google-new", "true"),
+  );
+  await signupMobile.page
+    .getByRole("button", { name: "Continue with Google", exact: true })
+    .click();
+  await signupMobile.page
+    .getByRole("heading", {
+      name: "Give your work a place to land.",
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(
+    await signupMobile.page
+      .getByLabel("Your full name", { exact: true })
+      .inputValue(),
+    "Lerato Dlamini",
+  );
+  assert.match(signupMobile.page.url(), /mode=signup/);
+  await signupMobile.context.close();
+
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated email and Google sign-in, returning workspace preservation, Google onboarding/name, cancellation and configuration errors, account isolation, reset, mobile overflow and policy links; blue auth handoff at 320/390/768/1440/landscape, Google/email success, signup onboarding, once per explicit auth, restored sessions, focus/inert/scroll cleanup, Escape, slow/error recovery and changing reduced motion.",
+    "PASS: same-tab iPhone/Android Google redirect, callback/cancellation/start-error/timeout recovery, Google signup return; simulated email and Google sign-in, returning workspace preservation, Google onboarding/name, cancellation and configuration errors, account isolation, reset, mobile overflow and policy links; blue auth handoff at 320/390/768/1440/landscape, Google/email success, signup onboarding, once per explicit auth, restored sessions, focus/inert/scroll cleanup, Escape, slow/error recovery and changing reduced motion.",
   );
 } catch (e) {
   await page.screenshot({

@@ -1,10 +1,12 @@
 import AuthTransition from "./components/AuthTransition.jsx";
+import { hasGoogleReturn, clearGoogleReturn } from "./auth-flow.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Icons from "./components/Icons.jsx";
 import {
   api,
   auth,
   onAuthStateChanged,
+  completeGoogleRedirect,
   signOut,
   setApiWorkspace,
   statuses,
@@ -68,7 +70,7 @@ const emptyData = () => ({
 export default function App() {
   const [config, setConfig] = useState(null),
     [user, setUser] = useState(undefined),
-    [registering, setRegistering] = useState(false),
+    [registering, setRegistering] = useState(hasGoogleReturn),
     [catalog, setCatalog] = useState({
       workspaces: [],
       invitations: [],
@@ -104,6 +106,7 @@ export default function App() {
     [undo, setUndo] = useState(null),
     [undoBusy, setUndoBusy] = useState(false);
   const [authTransition, setAuthTransition] = useState(null);
+  const [googleReturning, setGoogleReturning] = useState(hasGoogleReturn);
   const authSequence = useRef(0);
   function beginAuthTransition() {
     setAuthTransition({ id: ++authSequence.current });
@@ -299,9 +302,68 @@ export default function App() {
         setError("Could not connect to the API. " + e.message);
         setLoading(false);
       });
+    let active = true;
     const unsub = auth ? onAuthStateChanged(auth, setUser) : () => {};
-    if (!auth) setUser(null);
-    return unsub;
+    let returnTimer;
+    if (auth && googleReturning) {
+      const finish = () => {
+        clearTimeout(returnTimer);
+        clearGoogleReturn();
+        setGoogleReturning(false);
+        setRegistering(false);
+      };
+      returnTimer = setTimeout(() => {
+        if (!active) return;
+        active = false;
+        setUser(auth.currentUser || null);
+        setError(
+          "Google sign-in took too long. Please try again or use your email.",
+        );
+        finish();
+      }, 15000);
+      completeGoogleRedirect()
+        .then(async (result) => {
+          if (!active) return;
+          if (result) await result.user.getIdToken();
+          if (!active) return;
+          if (result) {
+            setUser(result.user);
+            beginAuthTransition();
+          } else {
+            setUser(auth.currentUser || null);
+            setError(
+              "Google sign-in was not completed. Please try again or use your email.",
+            );
+          }
+          finish();
+        })
+        .catch((e) => {
+          if (!active) return;
+          setUser(auth.currentUser || null);
+          setError(
+            e.code === "auth/unauthorized-domain"
+              ? "Google sign-in is not authorised for this domain. Contact meetings@earny.co.za."
+              : "Google sign-in couldn't finish. Please try again or use your email.",
+          );
+          finish();
+        });
+    }
+    function restored(event) {
+      if (event.persisted && hasGoogleReturn()) window.location.reload();
+    }
+    window.addEventListener("pageshow", restored);
+    if (!auth) {
+      setUser(null);
+      clearGoogleReturn();
+      setGoogleReturning(false);
+      setRegistering(false);
+    }
+    return () => {
+      active = false;
+      clearTimeout(returnTimer);
+      unsub();
+      window.removeEventListener("pageshow", restored);
+    };
   }, []);
   useEffect(() => {
     if (!config || registering) return;
@@ -502,6 +564,8 @@ export default function App() {
     />
   );
   function renderApp() {
+    if (googleReturning)
+      return <WorkspaceLoading message="Finishing Google sign-in…" />;
     if (!config || (config.authRequired && user === undefined))
       return (
         <WorkspaceLoading

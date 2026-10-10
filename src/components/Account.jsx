@@ -9,7 +9,13 @@ import {
   signOut,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
 } from "../lib.js";
+import {
+  preferGoogleRedirect,
+  startGoogleReturn,
+  clearGoogleReturn,
+} from "../auth-flow.js";
 import { RefreshCw } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import PolicyLinks from "./PolicyLinks.jsx";
@@ -86,6 +92,7 @@ export default function AccountAccess({
     [name, setName] = useState(""),
     [confirm, setConfirm] = useState(""),
     [busy, setBusy] = useState(false),
+    [googleBusy, setGoogleBusy] = useState(false),
     [notice, setNotice] = useState("");
   const signup = mode === "signup",
     reset = mode === "reset";
@@ -99,17 +106,27 @@ export default function AccountAccess({
   async function googleSignIn() {
     if (!auth || busy) return;
     setBusy(true);
+    setGoogleBusy(true);
     setRegistering(true);
     setError("");
     setNotice("");
+    let leaving = false;
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       // Basic Firebase identity only. Meet permissions belong to the separate connection flow.
+      if (preferGoogleRedirect()) {
+        startGoogleReturn();
+        leaving = true;
+        await signInWithRedirect(auth, provider);
+        return;
+      }
       const result = await signInWithPopup(auth, provider);
       await result.user.getIdToken(true);
       onAuthenticated?.();
     } catch (e) {
+      leaving = false;
+      clearGoogleReturn();
       if (
         ["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(
           e.code,
@@ -123,12 +140,16 @@ export default function AccountAccess({
           e.code === "auth/operation-not-allowed"
             ? "Google sign-in is not enabled yet. Enable the Google provider in Firebase Authentication → Sign-in method."
             : messages[e.code] ||
+                (!e.code ? e.message : null) ||
                 "Google sign-in couldn't finish. Please try again.",
         );
       }
     } finally {
-      setRegistering(false);
-      setBusy(false);
+      if (!leaving) {
+        setRegistering(false);
+        setBusy(false);
+        setGoogleBusy(false);
+      }
     }
   }
   async function submit(e) {
@@ -196,7 +217,7 @@ export default function AccountAccess({
             onClick={googleSignIn}
           >
             <img src="/icons/Google.svg" width="20" height="20" alt="" />
-            Continue with Google
+            {googleBusy ? "Opening Google…" : "Continue with Google"}
           </button>
           <p className="hint google-identity-hint">
             Sign in or create your account. Connect Meet separately inside your
@@ -430,9 +451,11 @@ export function WorkspaceSetup({ user, onSaved }) {
         Name your workspace. Any meetings you already have will stay right here.
       </p>
       <WorkspaceForm user={user} onSaved={onSaved} />
-      <button className="text-button mt-6" onClick={() => signOut(auth)}>
-        Sign out
-      </button>
+      {auth?.currentUser && (
+        <button className="text-button mt-6" onClick={() => signOut(auth)}>
+          Sign out
+        </button>
+      )}
     </AccountFrame>
   );
 }
@@ -445,11 +468,13 @@ export function WorkspaceSettings({ user, workspace, onSaved, onClose }) {
   );
 }
 
-export function WorkspaceLoading({ error, onRetry }) {
+export function WorkspaceLoading({ error, onRetry, message }) {
   return (
     <AccountFrame>
       <h2>
-        {error ? "We couldn't open your workspace." : "Opening your workspace…"}
+        {error
+          ? "We couldn't open your workspace."
+          : message || "Opening your workspace…"}
       </h2>
       {error ? (
         <>
@@ -463,9 +488,11 @@ export function WorkspaceLoading({ error, onRetry }) {
       ) : (
         <RefreshCw className="spin" />
       )}
-      <button className="text-button mt-6" onClick={() => signOut(auth)}>
-        Sign out
-      </button>
+      {auth?.currentUser && (
+        <button className="text-button mt-6" onClick={() => signOut(auth)}>
+          Sign out
+        </button>
+      )}
     </AccountFrame>
   );
 }

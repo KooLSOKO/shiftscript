@@ -4228,6 +4228,7 @@ textarea {
   grid-area: 2 / 1;
 }
 .source-stick {
+  --stick-travel: 17px;
   grid-area: 2 / 2;
   width: 136px;
   height: 136px;
@@ -4276,8 +4277,8 @@ textarea {
     inset 0 3px 3px #ffffff70,
     inset 0 -3px 3px #173f9c;
   transition:
-    transform 220ms ease-out,
-    box-shadow 220ms ease-out;
+    transform 360ms cubic-bezier(0.22, 1.35, 0.36, 1),
+    box-shadow 300ms ease-out;
 }
 .source-stick-inside {
   position: relative;
@@ -4321,16 +4322,16 @@ textarea {
   box-shadow: 0 0 4px #fff;
 }
 .source-stick[data-direction="up"] .source-stick-knob {
-  transform: translateY(-5px) rotateX(8deg);
+  transform: translateY(calc(-1 * var(--stick-travel))) rotateX(24deg);
 }
 .source-stick[data-direction="right"] .source-stick-knob {
-  transform: translateX(5px) rotateY(8deg);
+  transform: translateX(var(--stick-travel)) rotateY(24deg);
 }
 .source-stick[data-direction="down"] .source-stick-knob {
-  transform: translateY(5px) rotateX(-8deg);
+  transform: translateY(var(--stick-travel)) rotateX(-24deg);
 }
 .source-stick[data-direction="left"] .source-stick-knob {
-  transform: translateX(-5px) rotateY(-8deg);
+  transform: translateX(calc(-1 * var(--stick-travel))) rotateY(-24deg);
 }
 /* Sliding icon panel inspired by Uiverse / AKAspidey01. */
 .disconnect-button {
@@ -4387,6 +4388,7 @@ textarea {
     gap: 4px;
   }
   .source-stick {
+    --stick-travel: 13px;
     width: 104px;
     height: 104px;
   }

@@ -1,5 +1,6 @@
 import { firebaseWebConfig } from "./firebase-config.js";
 import { initializeApp } from "firebase/app";
+import { googleAuthDomain } from "./auth-flow.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -11,12 +12,17 @@ import {
   sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
 const config = {
   ...firebaseWebConfig,
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseWebConfig.apiKey,
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseWebConfig.authDomain,
+  authDomain: googleAuthDomain(
+    window.location.hostname,
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    firebaseWebConfig.authDomain,
+  ),
   projectId:
     import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseWebConfig.projectId,
   appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseWebConfig.appId,
@@ -33,7 +39,12 @@ export {
   sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
 };
+// Firebase consumes the result once. Share it across StrictMode effects.
+let redirectResult;
+export const completeGoogleRedirect = () =>
+  (redirectResult ||= getRedirectResult(auth));
 let selectedWorkspace = null;
 export const setApiWorkspace = (value) => {
   selectedWorkspace = value;

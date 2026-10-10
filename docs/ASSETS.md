@@ -88,3 +88,7 @@ The login/signup handoff is an original SVG path and CSS dash animation inspired
 ## v3.0.10 interactive controls
 
 MeetingSourcePicker adapts the Uiverse GreyD097 dial as scoped React/CSS with Earny cobalt, four native accessible choices and a bounded pointer drag area. DisconnectButton adapts AKAspidey01's sliding icon panel, using the existing custom LogOut icon. Both use code-native visuals, with no external images, scripts or new dependencies. Attribution is retained in source comments.
+
+## Directional travel refinement (v3.0.11)
+
+The existing Uiverse / GreyD097-inspired selector uses 17px desktop/13px phone travel, 24-degree tilt and a spring easing curve. All four selected directions share the same motion geometry. The control keeps the existing Earny blue palette, custom icons and reduced-motion static selection; no new raster assets are needed.

@@ -121,7 +121,12 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
           data-direction={chosen.direction}
           data-disabled={disabled || undefined}
           onPointerDown={(e) => {
-            if (disabled || (e.pointerType === "mouse" && e.button !== 0))
+            if (
+              disabled ||
+              !e.isPrimary ||
+              gesture.current ||
+              (e.pointerType === "mouse" && e.button !== 0)
+            )
               return;
             gesture.current = {
               x: e.clientX,
@@ -131,9 +136,11 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
             e.currentTarget.setPointerCapture(e.pointerId);
           }}
           onPointerMove={(e) => {
-            if (!disabled && gesture.current) setPreview(offset(e));
+            if (!disabled && gesture.current?.pointerId === e.pointerId)
+              setPreview(offset(e));
           }}
           onPointerUp={(e) => {
+            if (gesture.current?.pointerId !== e.pointerId) return;
             const id = offset(e);
             gesture.current = null;
             setPreview(null);
@@ -141,11 +148,13 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
               e.currentTarget.releasePointerCapture(e.pointerId);
             if (id) select(id, true);
           }}
-          onPointerCancel={() => {
+          onPointerCancel={(e) => {
+            if (gesture.current?.pointerId !== e.pointerId) return;
             gesture.current = null;
             setPreview(null);
           }}
-          onLostPointerCapture={() => {
+          onLostPointerCapture={(e) => {
+            if (gesture.current?.pointerId !== e.pointerId) return;
             gesture.current = null;
             setPreview(null);
           }}

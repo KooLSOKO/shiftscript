@@ -15,6 +15,14 @@
   },
   "rewrites": [
     {
+      "source": "/__/auth/:path*",
+      "destination": "https://shiftscriptza.firebaseapp.com/__/auth/:path*"
+    },
+    {
+      "source": "/__/firebase/init.json",
+      "destination": "https://shiftscriptza.firebaseapp.com/__/firebase/init.json"
+    },
+    {
       "source": "/app",
       "destination": "/index.html"
     },
@@ -47,7 +55,7 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg|landing.css|brand.css|cookie-consent.css|cookie-consent.js|robots.txt|sitemap.xml).*)",
+      "source": "/((?!__/auth/|__/firebase/|api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg|landing.css|brand.css|cookie-consent.css|cookie-consent.js|robots.txt|sitemap.xml).*)",
       "destination": "/index.html"
     }
   ],
@@ -71,10 +79,28 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
-        },
+        }
+      ]
+    },
+    {
+      "source": "/((?!__/auth/).*)",
+      "headers": [
         {
           "key": "X-Frame-Options",
           "value": "DENY"
+        }
+      ]
+    },
+    {
+      "source": "/__/auth/:path*",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         }
       ]
     }

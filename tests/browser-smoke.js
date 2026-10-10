@@ -90,6 +90,7 @@ try {
     await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
     /keep this draft/,
   );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1050 });
     for (const radio of await sourcePicker.getByRole("radio").all()) {
@@ -125,15 +126,29 @@ try {
         await sourceChoice(mode).getAttribute("aria-checked"),
         "true",
       );
+      const shift = await page
+        .locator(".source-stick-knob")
+        .evaluate(async (el) => {
+          await Promise.all(
+            el.getAnimations().map((a) => a.finished.catch(() => {})),
+          );
+          const matrix = new DOMMatrix(getComputedStyle(el).transform);
+          return { x: matrix.m41, y: matrix.m42 };
+        });
+      const axis = dx ? shift.x : shift.y,
+        direction = dx || dy;
+      assert(
+        Math.sign(axis) === Math.sign(direction) && Math.abs(axis) >= 12,
+        `Dial movement too small: ${JSON.stringify(shift)}`,
+      );
     }
     if (width === 390 || width === 1440) {
-      await page
-        .locator(".meeting-source-picker")
-        .screenshot({
-          path: `docs/screenshots/source-picker-${width === 390 ? "mobile" : "desktop"}.png`,
-        });
+      await page.locator(".meeting-source-picker").screenshot({
+        path: `docs/screenshots/source-picker-${width === 390 ? "mobile" : "desktop"}.png`,
+      });
     }
   }
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 1050 });
   await page.locator(".source-stick").scrollIntoViewIfNeeded();
   const touchBox = await page.locator(".source-stick").boundingBox();
@@ -150,6 +165,40 @@ try {
   await touchSession.send("Input.dispatchTouchEvent", {
     type: "touchMove",
     touchPoints: [{ x: tx + 38, y: ty, id: 1 }],
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  assert.equal(
+    await sourceChoice("Voice").getAttribute("aria-checked"),
+    "true",
+  );
+  // A second finger lifting must not cancel the primary finger's drag.
+  await sourceChoice("Text").click();
+  await page.locator(".source-stick").scrollIntoViewIfNeeded();
+  const multiBox = await page.locator(".source-stick").boundingBox();
+  const primary = {
+    x: multiBox.x + multiBox.width / 2,
+    y: multiBox.y + multiBox.height / 2,
+    id: 1,
+  };
+  const secondary = { x: primary.x + 14, y: primary.y + 14, id: 2 };
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [primary],
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [primary, secondary],
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [secondary],
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ ...primary, x: primary.x + 38 }],
   });
   await touchSession.send("Input.dispatchTouchEvent", {
     type: "touchEnd",

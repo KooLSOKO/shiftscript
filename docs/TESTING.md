@@ -131,3 +131,7 @@ The dashboard browser suite checks compact completed Board cards at 320/390/768/
 ## v3.0.10 source controls
 
 The browser smoke suite checks four directional choices, keyboard focus, all mouse drag directions at 320/390/768/1440px, native touch drag, retained draft/audio and disabled selection during permission requests/transcription. The integration suite checks Google and previous-meeting sources, the blue Disconnect button dimensions, keyboard focus expansion, reduced motion and one mocked disconnect request. The built experience suite covers processing and navigation.
+
+## v3.0.11 authentication and directional regression
+
+`npm run check` includes mobile-device detection, pending-return expiration/storage failures, auth-domain selection and Firebase helper routing/header checks. The account browser suite simulates full-page Google returns on iPhone/Android, checks a single tab, a single redirect result, a single welcome transition, cancellation/errors and Google signup name preservation. The source selector browser checks measure actual transform travel at phone/tablet/desktop widths and exercise native touch drag. `npm run test:ui` covers all nine browser suites. Live OAuth acceptance still requires the callback configuration in UPDATE-v3.0.11.md.
