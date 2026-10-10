@@ -1,4 +1,4 @@
-# ShiftScript v2 architecture
+# ShiftScript v3 architecture
 
 ## Pipeline and trust
 
@@ -44,7 +44,7 @@ Limits: 20 members plus pending invitations per workspace, 20 memberships per us
 
 Catalog queries use default single-field array indexes on `workspace.memberUids` and `workspace.inviteEmails`. Reads/transactions load a bounded workspace. Larger deployments need pagination, narrower transactions and job locking. Concurrent unseen duplicate meetings may both call Gemini before one record wins. Workspace-creation membership limits are a soft precheck under simultaneous requests.
 
-No realtime subscriptions, presence, scheduled reminders, workspace deletion or owner transfer are included. Explicit refresh loads colleagues' changes. Google Meet imports and optional invitation/recap emails are described below.
+There are no realtime subscriptions, presence, workspace deletion or owner transfer. Visible workspaces poll every two minutes when no dialog is open; explicit refresh is also available. Optional daily reminders are described below. Google Meet imports and optional invitation/recap emails are described below.
 
 ## Input and exports
 
@@ -85,3 +85,16 @@ Google imports are user initiated. There are no Meet bots, background polling, w
 `server/invitation-email.js` builds an escaped Earny invitation with a canonical join link, role and expiry. `/members/invitations/:id/email` is owner-only and accepts only an idempotency UUID. A transaction reserves the send and quota before SMTP, checks membership and invitation again before sending, and records accepted/rejected/uncertain status. A failed send keeps the invitation. Resends have a 60-second cooldown, 20 attempts per invitation and 20 sends per workspace/day (UTC), independent of the AI-request quota. SMTP acceptance is not inbox delivery. Revocation during SMTP never revives the invitation.
 
 `NewMeeting.jsx` keeps its text/voice draft when users switch between text/voice, recent Google Meet sources and saved meeting transcripts. Embedded `GoogleMeet.jsx` loads accessible recent records, supports search/pagination, preview and trusted import, and marks imported artifacts. Opening a saved meeting saves the local text draft first. Reusing a transcript keeps its source date for relative deadline accuracy and requires another processing/review flow; it does not copy existing tasks. Empty drafts created while opening the modal are cleared after a successful Google import, while unrelated text drafts are kept.
+
+
+## v3 personal and productivity data
+
+`privateProfiles/{uid}` holds personal name/aliases/avatar, reminder preferences, scoped saved views, read-notification IDs, personal Calendar confirmations and bounded digest attempt history. Requests derive UID from the verified Firebase token. Profile names/aliases are mirrored to that user's member entries so reviewers can suggest an account; account IDs override name matching. The local store persists profiles in its ignored database; the in-memory profile adapter is for explicitly injected test stores.
+
+Workspace subcollections now also contain `agendas` (50), `activity` (last 200 events) and `undoRecords` (bounded five-minute snapshots). Task documents add optional `schedule` and `dependencyIds`. Graph checks reject cycles, missing/foreign prerequisites and completion while waiting. Bulk edits and schedules are limited to 25 versioned tasks, applied atomically. Undo is author-bound, time-limited and conditional on every affected task's latest version; deletion/restore keeps proposal links consistent.
+
+`shared/identity.js` unifies full/first/surname/nickname matching. `shared/scheduling.js` validates IANA wall times, resolves to UTC, rejects DST gaps and chooses the first occurrence in an ambiguous DST hour. `shared/productivity.js` provides notifications and follow-up comparisons. Agenda generation reads existing work without an AI call. Actual transcript processing remains independent and pending proposals still require review. Agenda snapshots and previous-meeting references participate in meeting cache identity.
+
+`api/reminders.js` exposes the same Express app with a longer 300-second Vercel function budget. An exact rewrite keeps it ahead of the general API function; `0 6 * * *` schedules production cron at 06:00 UTC. CRON_SECRET is checked with a timing-safe comparison before cron work. Current Auth verification/email/disabled status, profile consent and workspace membership are rechecked. A per-user/per-local-day transaction reserves each attempt before SMTP; uncertain attempts do not automatically replay. The job queries at most 100 opted-in profiles, considers 20 per run and uses four workers with a 240-second dispatch budget. It requires Fluid compute for the 300-second Hobby duration. Queued/paginated delivery is a future scaling task.
+
+Daily digests use the existing Earny mailer and only the opted-in verified recipient. No new Calendar access is requested: saved schedules open event drafts and manual confirmations stay private. Calendar data does not sync automatically.

@@ -66,6 +66,7 @@ export default function TaskFilters({
             onChange={(e) => change("status", e.target.value)}
           >
             <option>All</option>
+            <option>Active</option>
             {statuses.map((s) => (
               <option key={s}>{s}</option>
             ))}
@@ -158,6 +159,18 @@ export default function TaskFilters({
             <option value="due">Due date</option>
             <option value="priority">Priority</option>
             <option value="title">Title</option>
+          </select>
+        </label>
+        <label>
+          Dependencies
+          <select
+            aria-label="Dependencies"
+            value={value.dependency || "All"}
+            onChange={(e) => change("dependency", e.target.value)}
+          >
+            <option value="All">All tasks</option>
+            <option value="waiting">Waiting on other tasks</option>
+            <option value="ready">No unfinished dependencies</option>
           </select>
         </label>
         {value.due === "Custom range" && (

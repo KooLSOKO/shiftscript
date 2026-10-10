@@ -413,6 +413,9 @@ export default function GoogleMeet({
                         ...form,
                         projectId: form.projectId || null,
                         previewId: preview.previewId,
+                        ...(initialForm?.preparation
+                          ? { preparation: initialForm.preparation }
+                          : {}),
                       }),
                     });
                     await onCreated(v.meeting);

@@ -1,8 +1,8 @@
 # Latest update
 
-See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
+See **[UPDATE-v3](docs/UPDATE-v3.md)** for all seven productivity features, QoL updates, Mac installation and optional daily Earny reminders. The new reminder function requires Fluid compute on Vercel. See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
-# ShiftScript v2.3
+# ShiftScript v3.0
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -10,11 +10,11 @@ A corporate blue meeting workspace: turn a transcript or voice recording into st
 
 ## Existing project: start here
 
-Read **[docs/UPDATE-v2.2.md](docs/UPDATE-v2.2.md)** for invitation emails, recent meetings inside New meeting, usability improvements and Mac deployment commands. For Google Meet and Zoho setup, see **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)**. This is a complete source project. Your Firebase Web configuration is included; private credentials are excluded.
+Read **[docs/UPDATE-v3.md](docs/UPDATE-v3.md)** for the complete v3 update, Mac deployment commands and reminder setup. For Google Meet and Zoho setup, see **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)**. This is a complete source project. Your Firebase Web configuration is included; private credentials are excluded.
 
 ## New project in VS Code
 
-Open the extracted **ShiftScript-v2.1** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
+Open the extracted **ShiftScript-v3.0** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
 
 ```bash
 npm ci
@@ -30,6 +30,10 @@ The default is a fictional sample with local storage and no paid/live API calls.
 
 Google Meet/Docs notes imports, speaker-labelled transcripts when available, optional Earny recap emails through Zoho, and improved mobile navigation, task cards, touch controls and filters. Read [docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md) for the required server variables and live test steps. The integration tests use mocked services; your personal Google account and Zoho delivery still need a live check.
 
+## New in v3.0
+
+Notifications and optional daily Earny digests; saved single/bulk Calendar schedules; editable profiles/photos/aliases; confirmed owner suggestions; saved meeting agendas and follow-through comparisons; workspace activity; task dependencies. Quick dates, bulk edits, five-minute undo, personal saved views, workspace search, mobile actions and dashboard attention shortcuts are included. Follow [UPDATE-v3](docs/UPDATE-v3.md) before deploying the reminder function.
+
 ## What is included
 
 - Editable pasted / `.txt` transcripts, audio upload and microphone recording.
@@ -41,7 +45,7 @@ Google Meet/Docs notes imports, speaker-labelled transcripts when available, opt
 - Filtered PDF/CSV task exports and PDF/JSON meeting exports.
 - Projects, multiple workspaces, email-bound invitation links, Owner/Member/Viewer roles.
 - Signup, full names, sign-in, password reset and email verification for invitations.
-- 42 original native SVG icons, corporate cobalt, vivid urgency badges and reduced-motion-aware animations.
+- 46 original native SVG icons, corporate cobalt, vivid urgency badges and reduced-motion-aware animations.
 
 ## Connect Gemini
 
@@ -64,7 +68,7 @@ Text: paste or upload `.txt`, maximum 100,000 characters (file limit 400 KB). Go
 
 Audio: upload MP3, WAV, M4A, AAC, OGG, FLAC or WebM, or **Record voice** on localhost/HTTPS. Recording stops after five minutes; files must be **2.5 MB or smaller**. Trim/compress longer recordings. Gemini transcribes first; you correct speaker names and unclear words, then process the text for tasks. Raw audio is not persisted. Unidentified speaker labels do not establish a real person's identity.
 
-Use fictional or approved meeting content. Review provider data terms before sending sensitive recordings/transcripts. Meeting platform connections are deferred.
+Use fictional or approved meeting content. Review provider data terms before sending sensitive recordings/transcripts. Google imports use generated notes/transcript artifacts; real-time recording bots are outside this release.
 
 ## Connect Firebase
 

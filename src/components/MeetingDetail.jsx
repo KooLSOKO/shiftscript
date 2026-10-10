@@ -13,6 +13,8 @@ import {
   Mail,
 } from "./Icons.jsx";
 import Fields from "./Fields.jsx";
+import { ownerCandidates } from "../../shared/identity.js";
+import { MeetingFollowUp } from "./MeetingPreparation.jsx";
 import Priority from "./Priority.jsx";
 import RecapEmail from "./RecapEmail.jsx";
 export default function MeetingDetail({
@@ -25,6 +27,10 @@ export default function MeetingDetail({
   onBack,
   onTask,
   onError,
+  tasks = [],
+  meetings = [],
+  onPrepare,
+  onMeeting,
 }) {
   const [email, setEmail] = useState(false);
   const [edits, setEdits] = useState({}),
@@ -125,6 +131,24 @@ export default function MeetingDetail({
           <span className="badge">Voice source · {m.source.name}</span>
         )}
       </div>
+      {!readOnly && (
+        <button className="button small mb-4" onClick={() => onPrepare(m.id)}>
+          Prepare follow-up meeting
+        </button>
+      )}
+      <MeetingFollowUp
+        meeting={m}
+        meetings={meetings}
+        tasks={tasks}
+        onTask={onTask}
+        onMeeting={onMeeting}
+      />
+      {m.preparation?.agenda && (
+        <details className="panel agenda-preview mb-5">
+          <summary>Meeting agenda</summary>
+          <pre>{m.preparation.agenda}</pre>
+        </details>
+      )}
       {m.source?.kind?.startsWith("google-") && (
         <div className="source-banner">
           <span className="badge">
@@ -370,6 +394,44 @@ export default function MeetingDetail({
                     <span className="badge">{p.reviewStatus}</span>
                   )}
                 </div>
+                {isPending &&
+                  !v.ownerUid &&
+                  ownerCandidates(v.owner, workspace?.members || []).length >
+                    0 && (
+                    <div className="owner-suggestion mb-3">
+                      {ownerCandidates(v.owner, workspace?.members || [])
+                        .length === 1 ? (
+                        <button
+                          className="text-button"
+                          disabled={busy || readOnly}
+                          onClick={() => {
+                            const member = ownerCandidates(
+                              v.owner,
+                              workspace.members,
+                            )[0];
+                            setEdits({
+                              ...edits,
+                              [p.id]: {
+                                ...v,
+                                ownerUid: member.uid,
+                                owner: member.name,
+                              },
+                            });
+                          }}
+                        >
+                          Suggested account:{" "}
+                          {ownerCandidates(v.owner, workspace.members)[0].name}{" "}
+                          · Confirm owner
+                        </button>
+                      ) : (
+                        <p className="form-error">
+                          More than one member matches “{v.owner}”. Review
+                          details and choose the correct account before
+                          approval.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 <blockquote className="evidence">“{p.evidence}”</blockquote>
                 {isPending && !readOnly && (
                   <>

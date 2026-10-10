@@ -7,9 +7,17 @@
     "api/index.js": {
       "maxDuration": 60,
       "includeFiles": "examples/**"
+    },
+    "api/reminders.js": {
+      "maxDuration": 300,
+      "includeFiles": "examples/**"
     }
   },
   "rewrites": [
+    {
+      "source": "/api/reminders",
+      "destination": "/api/reminders"
+    },
     {
       "source": "/api/:path*",
       "destination": "/api/index"
@@ -36,6 +44,12 @@
           "value": "DENY"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/reminders",
+      "schedule": "0 6 * * *"
     }
   ]
 }

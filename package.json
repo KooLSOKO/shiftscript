@@ -1,6 +1,6 @@
 {
   "name": "shiftscript",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,8 +13,8 @@
     "start": "node server/index.js",
     "test": "node --test tests/*.test.js",
     "check": "npm test && npm run build",
-    "test:ui": "node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js",
-    "format": "prettier --write src server tests"
+    "test:ui": "node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js && node tests/productivity-browser.js",
+    "format": "prettier --write src server shared api tests"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

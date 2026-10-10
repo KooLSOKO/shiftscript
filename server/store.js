@@ -2,7 +2,15 @@ import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { firebase } from "./firebase.js";
 import { invitationExpired } from "./invitation-email.js";
-export const collections = ["meetings", "tasks", "projects", "drafts"];
+export const collections = [
+  "meetings",
+  "tasks",
+  "projects",
+  "drafts",
+  "activity",
+  "undoRecords",
+  "agendas",
+];
 export function hydrate(record = {}, id) {
   const s = { ...record, quota: record.quota || {} };
   for (const key of collections) s[key] = record[key] || [];
@@ -89,6 +97,32 @@ export class LocalStore {
       Object.entries((await this.readDatabase()).workspaces),
       actor,
     );
+  }
+  async getProfile(uid) {
+    await this.queue;
+    return (await this.readDatabase()).profiles?.[uid] || {};
+  }
+  async mutateProfile(uid, operation) {
+    const run = this.queue.then(async () => {
+      const db = await this.readDatabase();
+      db.profiles ||= {};
+      const profile = (db.profiles[uid] ||= {}),
+        result = operation(profile);
+      await mkdir(dirname(this.path), { recursive: true });
+      await writeFile(this.path + ".tmp", JSON.stringify(db, null, 2), {
+        mode: 0o600,
+      });
+      await rename(this.path + ".tmp", this.path);
+      return result;
+    });
+    this.queue = run.catch(() => {});
+    return run;
+  }
+  async reminderProfiles() {
+    await this.queue;
+    return Object.entries((await this.readDatabase()).profiles || {})
+      .filter(([, p]) => p.preferences?.emailReminders)
+      .map(([uid, profile]) => ({ ...profile, uid }));
   }
 }
 export class FirebaseStore {
@@ -200,5 +234,30 @@ export class FirebaseStore {
       if (Object.keys(patch).length) tx.set(r.root, patch, { merge: true });
       return result;
     });
+  }
+  async getProfile(uid) {
+    return (
+      (
+        await this.services().db.collection("privateProfiles").doc(uid).get()
+      ).data() || {}
+    );
+  }
+  async mutateProfile(uid, operation) {
+    const ref = this.services().db.collection("privateProfiles").doc(uid);
+    return this.services().db.runTransaction(async (tx) => {
+      const profile = (await tx.get(ref)).data() || {},
+        result = operation(profile);
+      tx.set(ref, profile);
+      return result;
+    });
+  }
+  async reminderProfiles() {
+    return (
+      await this.services()
+        .db.collection("privateProfiles")
+        .where("preferences.emailReminders", "==", true)
+        .limit(100)
+        .get()
+    ).docs.map((doc) => ({ ...doc.data(), uid: doc.id }));
   }
 }

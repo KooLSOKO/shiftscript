@@ -10,11 +10,14 @@ import {
 } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import Fields from "./Fields.jsx";
+import { waitingOn } from "../../shared/productivity.js";
 const editorFields = (task) => ({
   ...fields(task),
   status: task.status,
   projectId: task.projectId || null,
   checklist: task.checklist || [],
+  dependencyIds: task.dependencyIds || [],
+  schedule: task.schedule || null,
 });
 export default function TaskEditor({
   task,
@@ -25,6 +28,8 @@ export default function TaskEditor({
   onSaved,
   onSource,
   onCalendar,
+  tasks = [],
+  onDeleted,
 }) {
   const [value, setValue] = useState(
     task
@@ -33,6 +38,8 @@ export default function TaskEditor({
           status: task.status,
           projectId: task.projectId || null,
           checklist: task.checklist || [],
+          dependencyIds: task.dependencyIds || [],
+          schedule: task.schedule || null,
         }
       : {
           title: "",
@@ -45,6 +52,8 @@ export default function TaskEditor({
           status: "To Do",
           projectId: null,
           checklist: [],
+          dependencyIds: [],
+          schedule: null,
         },
   );
   const [busy, setBusy] = useState(false),
@@ -73,7 +82,7 @@ export default function TaskEditor({
       version.current = result.task.updatedAt;
       baseline.current = JSON.stringify(editorFields(result.task));
       setValue(editorFields(result.task));
-      await onSaved(result.task);
+      await onSaved(result);
       if (!task) onClose();
       else setSuccess("Changes saved.");
     } catch (e) {
@@ -92,7 +101,7 @@ export default function TaskEditor({
         body: JSON.stringify({ text: note }),
       });
       setNote("");
-      await onSaved();
+      await onSaved(result);
       if (JSON.stringify(editorFields(result.task)) === baseline.current)
         version.current = result.task.updatedAt;
       setSuccess("Progress update saved.");
@@ -158,7 +167,14 @@ export default function TaskEditor({
                 onChange={(e) => setValue({ ...value, status: e.target.value })}
               >
                 {statuses.map((s) => (
-                  <option key={s}>{s}</option>
+                  <option
+                    key={s}
+                    disabled={
+                      s === "Completed" && waitingOn(value, tasks).length > 0
+                    }
+                  >
+                    {s}
+                  </option>
                 ))}
               </select>
             </label>
@@ -179,6 +195,44 @@ export default function TaskEditor({
                 ))}
               </select>
             </label>
+          </div>
+          <div className="note-section">
+            <h3>Waiting on other tasks</h3>
+            <p className="hint">
+              Finish these dependencies before completing this task.
+            </p>
+            <div className="dependency-picker">
+              {tasks
+                .filter((item) => item.id !== task?.id)
+                .map((item) => (
+                  <label key={item.id}>
+                    <input
+                      type="checkbox"
+                      checked={value.dependencyIds.includes(item.id)}
+                      onChange={(e) =>
+                        setValue({
+                          ...value,
+                          dependencyIds: e.target.checked
+                            ? [...value.dependencyIds, item.id].slice(0, 10)
+                            : value.dependencyIds.filter(
+                                (id) => id !== item.id,
+                              ),
+                        })
+                      }
+                    />
+                    {item.title}
+                    <span className="hint">{item.status}</span>
+                  </label>
+                ))}
+              {!tasks.filter((item) => item.id !== task?.id).length && (
+                <p className="hint">Add another task to set a dependency.</p>
+              )}
+            </div>
+            {waitingOn(value, tasks).length > 0 && (
+              <p className="hint">
+                Waiting on {waitingOn(value, tasks).length} unfinished task(s).
+              </p>
+            )}
           </div>
           <div className="note-section">
             <h3>
@@ -319,6 +373,36 @@ export default function TaskEditor({
         <p className="success-text" role="status">
           {success}
         </p>
+      )}
+      {task && !readOnly && (
+        <button
+          className="text-button danger mt-4"
+          disabled={busy}
+          onClick={async () => {
+            if (
+              !window.confirm(
+                "Delete this task? You can undo this for five minutes.",
+              )
+            )
+              return;
+            setBusy(true);
+            try {
+              const result = await api("/tasks/" + task.id, {
+                method: "DELETE",
+                body: JSON.stringify({ expectedUpdatedAt: version.current }),
+              });
+              await onDeleted(result);
+              onClose();
+            } catch (error) {
+              setError(error.message);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <Trash size={16} />
+          Delete task
+        </button>
       )}
     </Modal>
   );

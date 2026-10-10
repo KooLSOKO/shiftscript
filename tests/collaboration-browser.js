@@ -100,7 +100,9 @@ async function pageFor(uid, verified = true) {
         response.request().method(),
         response.url(),
         response.request().headers()["x-workspace-id"],
-        await response.text(),
+        await response
+          .text()
+          .catch(() => "Response body unavailable after navigation"),
       );
   });
   await page.route(

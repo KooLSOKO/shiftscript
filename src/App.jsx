@@ -31,6 +31,17 @@ import Priority from "./components/Priority.jsx";
 import Profile from "./components/Profile.jsx";
 import TabArtwork from "./components/TabArtwork.jsx";
 import TaskCalendar from "./components/TaskCalendar.jsx";
+import {
+  Notifications,
+  GlobalSearch,
+  ActivityFeed,
+  SavedViews,
+  NeedsAttention,
+} from "./components/ProductivityPanels.jsx";
+import TaskBulkActions from "./components/TaskBulkActions.jsx";
+import CalendarBatch from "./components/CalendarBatch.jsx";
+import MeetingPreparation from "./components/MeetingPreparation.jsx";
+import { taskNotifications, waitingOn } from "../shared/productivity.js";
 const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
@@ -39,9 +50,12 @@ const tabs = [
   ["board", "Board", Icons.Columns3],
   ["projects", "Projects", Icons.Folder],
   ["team", "Team & workspace", Icons.Users],
+  ["activity", "Activity", Icons.History],
   ["profile", "Profile", Icons.UserCircle],
 ];
 const emptyData = () => ({
+  activity: [],
+  agendas: [],
   meetings: [],
   tasks: [],
   projects: [],
@@ -76,7 +90,16 @@ export default function App() {
     [filters, setFilters] = useState({ ...defaultFilters }),
     [meetingSearch, setMeetingSearch] = useState(""),
     [meetingProject, setMeetingProject] = useState("All"),
-    [pdfBusy, setPdfBusy] = useState(false);
+    [pdfBusy, setPdfBusy] = useState(false),
+    [personal, setPersonal] = useState(null),
+    [selectedIds, setSelectedIds] = useState([]),
+    [calendarBatchIds, setCalendarBatchIds] = useState([]),
+    [searchOpen, setSearchOpen] = useState(false),
+    [notificationsOpen, setNotificationsOpen] = useState(false),
+    [preparation, setPreparation] = useState(null),
+    [preparedAgenda, setPreparedAgenda] = useState(null),
+    [undo, setUndo] = useState(null),
+    [undoBusy, setUndoBusy] = useState(false);
   const current = useRef({ uid: null, workspaceId: null }),
     generation = useRef(0);
   useEffect(() => {
@@ -117,15 +140,29 @@ export default function App() {
   }, [menu]);
   const actor = {
     ...(catalog.actor || { uid: user?.uid || "local-demo" }),
-    name: user?.displayName || catalog.actor?.name || "ShiftScript demo",
+    name:
+      (personal?.customName && personal.name) ||
+      user?.displayName ||
+      catalog.actor?.name ||
+      "ShiftScript demo",
+    aliases: personal?.aliases || [],
   };
+  function patchPersonal(patch) {
+    if (current.current.uid === actor.uid)
+      setPersonal((previous) => ({ ...previous, ...patch }));
+  }
   async function refreshCatalog() {
-    const result = await api("/workspaces", { workspace: false });
+    const [result, profile] = await Promise.all([
+      api("/workspaces", { workspace: false }),
+      api("/profile", { workspace: false }),
+    ]);
     if (
       (config?.authRequired ? auth?.currentUser?.uid : "local-demo") ===
       result.actor.uid
-    )
+    ) {
       setCatalog(result);
+      setPersonal(profile.profile);
+    }
     return result;
   }
   async function reload(id = current.current.workspaceId) {
@@ -148,6 +185,13 @@ export default function App() {
     setEmailMeetingId(null);
     setTaskId(null);
     setCalendarTaskId(null);
+    setSelectedIds([]);
+    setCalendarBatchIds([]);
+    setSearchOpen(false);
+    setNotificationsOpen(false);
+    setPreparation(null);
+    setPreparedAgenda(null);
+    setUndo(null);
     setNewMeeting(false);
     setSettings(false);
     setFilters({ ...defaultFilters });
@@ -240,6 +284,14 @@ export default function App() {
       setApiWorkspace(null);
       setData(emptyData());
       setCatalog({ workspaces: [], invitations: [], actor: null });
+      setPersonal(null);
+      setSelectedIds([]);
+      setCalendarBatchIds([]);
+      setSearchOpen(false);
+      setNotificationsOpen(false);
+      setPreparation(null);
+      setPreparedAgenda(null);
+      setUndo(null);
       setWorkspaceId(null);
       setLoadedFor(null);
       setLoading(false);
@@ -261,6 +313,91 @@ export default function App() {
     const timer = setTimeout(() => setToast(""), 5500);
     return () => clearTimeout(timer);
   }, [toast]);
+  useEffect(() => {
+    function key(event) {
+      if (
+        !workspaceId ||
+        loading ||
+        document.querySelector('dialog[open], [role="dialog"]')
+      )
+        return;
+      const typing =
+        /^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName) ||
+        event.target?.isContentEditable;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+      } else if (
+        !typing &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "n" &&
+        data.role !== "viewer"
+      ) {
+        event.preventDefault();
+        setNewMeeting(true);
+      }
+    }
+    document.addEventListener("keydown", key);
+    return () => document.removeEventListener("keydown", key);
+  }, [workspaceId, loading, data.role]);
+  useEffect(() => {
+    if (!undo) return;
+    const timer = setTimeout(
+      () => setUndo(null),
+      Math.max(0, undo.expires - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [undo]);
+  useEffect(() => {
+    if (!workspaceId || !data.workspace) return;
+    const timer = setInterval(() => {
+      if (
+        document.visibilityState === "visible" &&
+        !document.querySelector('dialog[open], [role="dialog"]')
+      )
+        reload().catch(() => {});
+    }, 120000);
+    return () => clearInterval(timer);
+  }, [workspaceId, Boolean(data.workspace)]);
+  async function taskSaved(result) {
+    const id = workspaceId,
+      uid = actor.uid;
+    if (current.current.uid !== uid || current.current.workspaceId !== id)
+      return;
+    await reload(id);
+    if (current.current.workspaceId !== id) return;
+    if (result?.undoToken)
+      setUndo({
+        token: result.undoToken,
+        workspaceId: id,
+        expires: Date.now() + 300000,
+      });
+  }
+  function toggleSelected(id) {
+    setSelectedIds((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : previous.length < 25
+          ? [...previous, id]
+          : previous,
+    );
+  }
+  function taskView(value) {
+    setFilters({ ...defaultFilters, ...value });
+    setTab("tasks");
+    setMeetingId(null);
+  }
+  const notices = taskNotifications(data.tasks, actor, personal?.preferences),
+    unread = notices.filter(
+      (item) =>
+        !personal?.readNotifications?.includes(workspaceId + ":" + item.id),
+    ).length;
+  const selected = data.tasks.filter((task) => selectedIds.includes(task.id)),
+    calendarBatch = data.tasks.filter((task) =>
+      calendarBatchIds.includes(task.id),
+    );
   const readOnly = data.role === "viewer",
     meeting = data.meetings.find((m) => m.id === meetingId),
     emailMeeting = data.meetings.find((m) => m.id === emailMeetingId),
@@ -276,7 +413,7 @@ export default function App() {
     completed = data.tasks.filter((t) => t.status === "Completed"),
     blocked = data.tasks.filter((t) => t.status === "Blocked"),
     active = data.tasks.filter((t) => t.status !== "Completed"),
-    name = user?.displayName || actor.name;
+    name = actor.name;
   const visibleMeetings = data.meetings.filter(
     (m) =>
       (meetingProject === "All" ||
@@ -294,7 +431,7 @@ export default function App() {
   }
   async function changeStatus(t, status) {
     try {
-      await api("/tasks/" + t.id, {
+      const result = await api("/tasks/" + t.id, {
         method: "PATCH",
         body: JSON.stringify({
           ...fields(t),
@@ -302,7 +439,7 @@ export default function App() {
           expectedUpdatedAt: t.updatedAt,
         }),
       });
-      await reload();
+      await taskSaved(result);
       setToast("Task status saved.");
     } catch (e) {
       setError(e.message);
@@ -411,6 +548,7 @@ export default function App() {
           {tabs.map(([id, label, Icon]) => (
             <button
               key={id}
+              aria-label={label}
               className={"nav-item " + (tab === id ? "selected" : "")}
               onClick={() => {
                 setTab(id);
@@ -439,7 +577,11 @@ export default function App() {
         </div>
         <div className="sidebar-foot">
           <span className="avatar dark">
-            {name?.slice(0, 2).toUpperCase() || "SS"}
+            {personal?.avatar ? (
+              <img src={personal.avatar} alt="" />
+            ) : (
+              name?.slice(0, 2).toUpperCase() || "SS"
+            )}
           </span>
           <div>
             <strong>{name}</strong>
@@ -485,6 +627,23 @@ export default function App() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              className="icon-button"
+              aria-label="Search workspace"
+              onClick={() => setSearchOpen(true)}
+            >
+              <Icons.Search size={20} />
+            </button>
+            <button
+              className="icon-button notification-trigger"
+              aria-label={
+                "Notifications" + (unread ? ": " + unread + " unread" : "")
+              }
+              onClick={() => setNotificationsOpen(true)}
+            >
+              <Icons.Bell size={21} />
+              {unread > 0 && <span>{Math.min(unread, 99)}</span>}
+            </button>
             <button
               className="icon-button profile-trigger"
               aria-label="View your profile"
@@ -560,6 +719,7 @@ export default function App() {
                       projects: "Make room for the bigger picture.",
                       team: "Good work happens together.",
                       google: "From Google Meet to a clear next step.",
+                      activity: "Keep up with your workspace.",
                       profile: "Your profile.",
                     }[tab]}
               </h1>
@@ -579,6 +739,7 @@ export default function App() {
                       team: "Manage your people, permissions and workspace.",
                       google:
                         "Bring in your notes. Review the work. Keep moving.",
+                      activity: "See who changed what, and follow the work.",
                       profile:
                         "Your account, your work and the places you belong.",
                     }[tab]}
@@ -622,6 +783,14 @@ export default function App() {
                   onMyWork={() => {
                     setFilters({ ...defaultFilters, owner: "Me" });
                     setTab("tasks");
+                  }}
+                  personal={personal}
+                  remindersReady={config.remindersReady}
+                  onProfileSaved={async (profile) => {
+                    if (current.current.uid !== actor.uid) return;
+                    setPersonal(profile);
+                    await refreshCatalog();
+                    await reload();
                   }}
                   onSignOut={() => signOut(auth)}
                 />
@@ -701,6 +870,18 @@ export default function App() {
                       </article>
                     ))}
                   </section>
+                  <NeedsAttention
+                    data={data}
+                    onTasks={taskView}
+                    onMeetings={() => {
+                      setTab("meetings");
+                      setMeetingId(
+                        data.meetings.find((m) =>
+                          m.proposals.some((p) => p.reviewStatus === "pending"),
+                        )?.id || null,
+                      );
+                    }}
+                  />
                   <div className="overview-grid">
                     <section className="panel">
                       <div className="section-heading">
@@ -812,6 +993,20 @@ export default function App() {
                   </div>
                 </>
               )}
+              {tab === "activity" && (
+                <ActivityFeed
+                  activity={data.activity}
+                  onTask={(id) =>
+                    data.tasks.some((task) => task.id === id)
+                      ? setTaskId(id)
+                      : setToast(
+                          "This task was deleted. Its change remains in history.",
+                        )
+                  }
+                  onMeeting={openMeeting}
+                  onProject={(id) => taskView({ project: id })}
+                />
+              )}
               {tab === "google" && (
                 <GoogleMeet
                   key={workspaceId + ":" + actor.uid}
@@ -835,6 +1030,10 @@ export default function App() {
                   <MeetingDetail
                     key={meeting.id}
                     meeting={meeting}
+                    tasks={data.tasks}
+                    meetings={data.meetings}
+                    onMeeting={openMeeting}
+                    onPrepare={(id) => setPreparation({ meetingId: id })}
                     emailReady={config.emailReady}
                     workspace={data.workspace}
                     projects={data.projects}
@@ -846,6 +1045,40 @@ export default function App() {
                   />
                 ) : (
                   <>
+                    {!readOnly && (
+                      <div className="agenda-list mb-4">
+                        <button
+                          className="button"
+                          onClick={() => setPreparation({})}
+                        >
+                          <Icons.NotebookPen size={18} />
+                          Prepare meeting agenda
+                        </button>
+                        {data.agendas
+                          ?.filter((item) => !item.meetingId)
+                          .slice(0, 8)
+                          .map((agenda) => (
+                            <button
+                              className="button small"
+                              key={agenda.id}
+                              onClick={() => {
+                                if (
+                                  data.draft?.transcript &&
+                                  !window.confirm(
+                                    "Start from this agenda and replace your current draft?",
+                                  )
+                                )
+                                  return;
+                                setPreparedAgenda(agenda);
+                                setNewMeeting(true);
+                              }}
+                            >
+                              <Icons.FileText size={16} />
+                              {agenda.title}
+                            </button>
+                          ))}
+                      </div>
+                    )}
                     <div className="panel meeting-filters">
                       <label>
                         Search meetings
@@ -905,6 +1138,27 @@ export default function App() {
                     projects={data.projects}
                     count={filtered.length}
                   />
+                  <SavedViews
+                    filters={filters}
+                    personal={personal}
+                    workspaceId={workspaceId}
+                    onChange={setFilters}
+                    onSaved={(views) => patchPersonal({ savedViews: views })}
+                  />
+                  {!readOnly && (
+                    <TaskBulkActions
+                      selected={selected}
+                      filtered={filtered}
+                      members={data.workspace?.members || []}
+                      projects={data.projects}
+                      onSelect={setSelectedIds}
+                      onClear={() => setSelectedIds([])}
+                      onSaved={taskSaved}
+                      onCalendar={() =>
+                        setCalendarBatchIds(selected.map((task) => task.id))
+                      }
+                    />
+                  )}
                   <div className="export-toolbar">
                     <p className="hint">
                       Exports include {filtered.length}{" "}
@@ -932,6 +1186,9 @@ export default function App() {
                         <table className="task-table">
                           <thead>
                             <tr>
+                              {!readOnly && (
+                                <th className="selection-cell">Select</th>
+                              )}
                               <th>Task</th>
                               <th>Owner</th>
                               <th>Due date</th>
@@ -943,6 +1200,19 @@ export default function App() {
                           <tbody>
                             {filtered.map((t) => (
                               <tr key={t.id}>
+                                {!readOnly && (
+                                  <td
+                                    data-label="Select"
+                                    className="selection-cell"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      aria-label={"Select " + t.title}
+                                      checked={selectedIds.includes(t.id)}
+                                      onChange={() => toggleSelected(t.id)}
+                                    />
+                                  </td>
+                                )}
                                 <td data-label="Task">
                                   <button
                                     className="card-title"
@@ -964,7 +1234,13 @@ export default function App() {
                                     onClick={() => setCalendarTaskId(t.id)}
                                   >
                                     <Icons.CalendarDays size={15} />
-                                    Add to Calendar
+                                    {personal?.calendarMarks?.some(
+                                      (mark) =>
+                                        mark.workspaceId === workspaceId &&
+                                        mark.taskId === t.id,
+                                    )
+                                      ? "Marked added to Calendar"
+                                      : "Add to Calendar"}
                                   </button>
                                 </td>
                                 <td data-label="Owner">{t.owner}</td>
@@ -973,6 +1249,17 @@ export default function App() {
                                   className={overdue(t) ? "late" : ""}
                                 >
                                   {formatDate(t.dueDate)}
+                                  {!t.schedule && (
+                                    <small className="saved-schedule">
+                                      Not scheduled
+                                    </small>
+                                  )}
+                                  {t.schedule && (
+                                    <small className="saved-schedule">
+                                      Scheduled {t.schedule.date} ·{" "}
+                                      {t.schedule.time}
+                                    </small>
+                                  )}
                                 </td>
                                 <td data-label="Priority">
                                   <Priority value={t.priority} />
@@ -987,9 +1274,46 @@ export default function App() {
                                     }
                                   >
                                     {statuses.map((s) => (
-                                      <option key={s}>{s}</option>
+                                      <option
+                                        key={s}
+                                        disabled={
+                                          s === "Completed" &&
+                                          waitingOn(t, data.tasks).length > 0
+                                        }
+                                      >
+                                        {s}
+                                      </option>
                                     ))}
                                   </select>
+                                  {waitingOn(t, data.tasks).length > 0 && (
+                                    <span className="badge dependency-badge">
+                                      Waiting on{" "}
+                                      {waitingOn(t, data.tasks).length} task(s)
+                                    </span>
+                                  )}
+                                  <div className="mobile-task-actions">
+                                    <button
+                                      className="button small"
+                                      onClick={() => setTaskId(t.id)}
+                                    >
+                                      <Icons.Edit size={15} />
+                                      Details
+                                    </button>
+                                    <button
+                                      className="button small"
+                                      disabled={
+                                        readOnly ||
+                                        t.status === "Completed" ||
+                                        waitingOn(t, data.tasks).length > 0
+                                      }
+                                      onClick={() =>
+                                        changeStatus(t, "Completed")
+                                      }
+                                    >
+                                      <Icons.Check size={15} />
+                                      Done
+                                    </button>
+                                  </div>
                                 </td>
                                 <td data-label="Project / source">
                                   <p className="hint">
@@ -1037,6 +1361,23 @@ export default function App() {
                             .filter((t) => t.status === s)
                             .map((t) => (
                               <article className="task-card" key={t.id}>
+                                {!readOnly && (
+                                  <label className="check-option">
+                                    <input
+                                      type="checkbox"
+                                      aria-label={"Select " + t.title}
+                                      checked={selectedIds.includes(t.id)}
+                                      onChange={() => toggleSelected(t.id)}
+                                    />
+                                    Select
+                                  </label>
+                                )}
+                                {waitingOn(t, data.tasks).length > 0 && (
+                                  <span className="badge dependency-badge">
+                                    Waiting on {waitingOn(t, data.tasks).length}{" "}
+                                    task(s)
+                                  </span>
+                                )}
                                 <Priority value={t.priority} />
                                 <button
                                   className="card-title"
@@ -1053,6 +1394,17 @@ export default function App() {
                                   <span>{t.owner}</span>
                                   <span className={overdue(t) ? "late" : ""}>
                                     {formatDate(t.dueDate)}
+                                    {!t.schedule && (
+                                      <small className="saved-schedule">
+                                        Not scheduled
+                                      </small>
+                                    )}
+                                    {t.schedule && (
+                                      <small className="saved-schedule">
+                                        Scheduled {t.schedule.date} ·{" "}
+                                        {t.schedule.time}
+                                      </small>
+                                    )}
                                   </span>
                                 </div>
                                 <button
@@ -1074,7 +1426,15 @@ export default function App() {
                                   }
                                 >
                                   {statuses.map((s) => (
-                                    <option key={s}>{s}</option>
+                                    <option
+                                      key={s}
+                                      disabled={
+                                        s === "Completed" &&
+                                        waitingOn(t, data.tasks).length > 0
+                                      }
+                                    >
+                                      {s}
+                                    </option>
                                   ))}
                                 </select>
                               </article>
@@ -1153,14 +1513,18 @@ export default function App() {
           actorId={actor.uid}
           projects={data.projects}
           draft={data.draft}
+          agendas={data.agendas}
+          preparedAgenda={preparedAgenda}
           meetings={data.meetings}
           workspace={data.workspace}
           onOpenExisting={async (m) => {
             setNewMeeting(false);
+            setPreparedAgenda(null);
             openMeeting(m.id);
           }}
           onClose={async () => {
             setNewMeeting(false);
+            setPreparedAgenda(null);
             try {
               await reload();
             } catch (e) {
@@ -1170,6 +1534,7 @@ export default function App() {
           onCreated={async (m) => {
             await reload();
             setNewMeeting(false);
+            setPreparedAgenda(null);
             openMeeting(m.id);
             setToast("Meeting processed. Review the proposed tasks.");
           }}
@@ -1191,7 +1556,9 @@ export default function App() {
           members={data.workspace?.members || []}
           readOnly={readOnly}
           onClose={() => setTaskId(null)}
-          onSaved={() => reload()}
+          tasks={data.tasks}
+          onDeleted={taskSaved}
+          onSaved={taskSaved}
           onCalendar={() => {
             setTaskId(null);
             setCalendarTaskId(task.id);
@@ -1206,6 +1573,11 @@ export default function App() {
         <TaskCalendar
           key={calendarTask.id}
           task={calendarTask}
+          readOnly={readOnly}
+          onSaved={taskSaved}
+          personal={personal}
+          workspaceId={workspaceId}
+          onMarks={(marks) => patchPersonal({ calendarMarks: marks })}
           onClose={() => setCalendarTaskId(null)}
         />
       )}
@@ -1221,6 +1593,91 @@ export default function App() {
           }}
           onClose={() => setSettings(false)}
         />
+      )}
+      {searchOpen && (
+        <GlobalSearch
+          data={data}
+          onTask={setTaskId}
+          onMeeting={openMeeting}
+          onProject={(id) => taskView({ project: id })}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
+      {notificationsOpen && (
+        <Notifications
+          data={data}
+          actor={actor}
+          personal={personal}
+          onRead={(ids) => patchPersonal({ readNotifications: ids })}
+          onTask={setTaskId}
+          onClose={() => setNotificationsOpen(false)}
+        />
+      )}
+      {calendarBatch.length > 0 && (
+        <CalendarBatch
+          tasks={calendarBatch}
+          personal={personal}
+          workspaceId={workspaceId}
+          onMarks={(marks) => patchPersonal({ calendarMarks: marks })}
+          readOnly={readOnly}
+          onSaved={taskSaved}
+          onClose={() => setCalendarBatchIds([])}
+        />
+      )}
+      {preparation && !readOnly && (
+        <MeetingPreparation
+          data={data}
+          initialMeetingId={preparation.meetingId}
+          onSaved={reload}
+          onClose={() => setPreparation(null)}
+          onUse={(agenda) => {
+            if (
+              data.draft?.transcript &&
+              !window.confirm(
+                "Start from this agenda and replace your current draft?",
+              )
+            )
+              return;
+            setPreparedAgenda(agenda);
+            setPreparation(null);
+            setNewMeeting(true);
+          }}
+        />
+      )}
+      {undo && (
+        <div className="undo-banner" role="status">
+          <span>Task changes saved. Undo available for 5 minutes.</span>
+          <button
+            className="button small"
+            disabled={undoBusy}
+            onClick={async () => {
+              setUndoBusy(true);
+              try {
+                await api("/undo/" + undo.token, {
+                  workspace: undo.workspaceId,
+                  method: "POST",
+                });
+                setUndo(null);
+                setTaskId(null);
+                await reload();
+                setToast("Changes undone.");
+              } catch (error) {
+                setError(error.message);
+              } finally {
+                setUndoBusy(false);
+              }
+            }}
+          >
+            Undo
+          </button>
+          <button
+            className="icon-button"
+            aria-label="Dismiss undo"
+            onClick={() => setUndo(null)}
+          >
+            <Icons.X size={16} />
+          </button>
+        </div>
       )}
       {switcherView}
     </div>

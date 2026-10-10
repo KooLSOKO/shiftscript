@@ -261,3 +261,16 @@ export const Video = frame(
     <path d="m15 10 6-3v10l-6-3M7 10h4M7 14h2" />
   </>,
 );
+
+export const Bell = frame(
+  <>
+    <path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5z" fill={soft} />
+    <path d="M10 21h4M12 2v2" />
+  </>,
+);
+export const History = frame(
+  <>
+    <circle cx="12" cy="12" r="9" fill={soft} />
+    <path d="M12 7v5l4 2M3 3v5h5" />
+  </>,
+);

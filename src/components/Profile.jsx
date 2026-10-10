@@ -5,6 +5,7 @@ import {
   ArrowRight,
   LogOut,
 } from "./Icons.jsx";
+import ProfileSettings from "./ProfileSettings.jsx";
 import { isAssignedTo } from "../features/task-filters.js";
 
 export default function Profile({
@@ -17,8 +18,11 @@ export default function Profile({
   onWorkspaces,
   onMyWork,
   onSignOut,
+  personal,
+  remindersReady,
+  onProfileSaved,
 }) {
-  const name = user?.displayName || actor.name || "Workspace member";
+  const name = actor.name || user?.displayName || "Workspace member";
   const email = user?.email || actor.email;
   const assigned = tasks.filter((task) => isAssignedTo(task, actor));
   const active = assigned.filter((task) => task.status !== "Completed");
@@ -37,7 +41,7 @@ export default function Profile({
         </div>
         <div className="profile-content">
           <span className="avatar profile-avatar" aria-hidden="true">
-            {initials}
+            {personal?.avatar ? <img src={personal.avatar} alt="" /> : initials}
           </span>
           <p className="eyebrow">YOUR ACCOUNT</p>
           <h2>{name}</h2>
@@ -78,6 +82,14 @@ export default function Profile({
         </div>
       </article>
       <div className="profile-side">
+        <ProfileSettings
+          key={actor.uid}
+          personal={personal}
+          actor={actor}
+          user={user}
+          remindersReady={remindersReady}
+          onSaved={onProfileSaved}
+        />
         <section className="panel profile-section">
           <h2>
             <ListTodo size={20} /> Your work

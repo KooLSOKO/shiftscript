@@ -34,6 +34,7 @@ export function newWorkspace(workspaceId, input, actor) {
       {
         uid: actor.uid,
         name: input.ownerName || actor.name,
+        aliases: actor.aliases || [],
         email: actor.email,
         role: "owner",
         joinedAt: createdAt,

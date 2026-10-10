@@ -34,6 +34,8 @@ export default function NewMeeting({
   onClose,
   onCreated,
   onOpenExisting,
+  agendas = [],
+  preparedAgenda,
 }) {
   const key = `shiftscript:draft:${actorId}:${workspaceId}`;
   const initial = useRef(null);
@@ -54,13 +56,26 @@ export default function NewMeeting({
             "transcript",
             "source",
             "projectId",
+            "preparation",
           ].includes(k),
         ),
       ),
       modifiedAt: draft.updatedAt,
     };
-    initial.current =
-      local && (!server || local.modifiedAt > server.modifiedAt)
+    initial.current = preparedAgenda
+      ? {
+          ...blank(),
+          title: preparedAgenda.title,
+          date: preparedAgenda.date,
+          type: preparedAgenda.type,
+          projectId: preparedAgenda.projectId,
+          preparation: {
+            agendaId: preparedAgenda.id,
+            parentMeetingId: preparedAgenda.parentMeetingId,
+            agenda: preparedAgenda.agenda,
+          },
+        }
+      : local && (!server || local.modifiedAt > server.modifiedAt)
         ? local.form
         : server?.form || blank();
   }
@@ -88,6 +103,7 @@ export default function NewMeeting({
                   "transcript",
                   "source",
                   "projectId",
+                  "preparation",
                 ].includes(k),
               ),
             ),
@@ -308,6 +324,44 @@ export default function NewMeeting({
         <Save size={16} />
         {saveState}
       </p>
+      {agendas.length > 0 && (
+        <label className="block mb-4">
+          Saved agenda
+          <select
+            aria-label="Saved agenda"
+            value={form.preparation?.agendaId || ""}
+            onChange={(e) => {
+              const agenda = agendas.find((item) => item.id === e.target.value);
+              if (!agenda) return setForm(({ preparation, ...rest }) => rest);
+              setForm((p) => ({
+                ...p,
+                preparation: {
+                  agendaId: agenda.id,
+                  parentMeetingId: agenda.parentMeetingId,
+                  agenda: agenda.agenda,
+                },
+              }));
+            }}
+          >
+            <option value="">No agenda attached</option>
+            {agendas.map((agenda) => (
+              <option key={agenda.id} value={agenda.id}>
+                {agenda.title} · {agenda.date}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {form.preparation && (
+        <details className="agenda-preview mb-4">
+          <summary>View meeting agenda</summary>
+          <pre>{form.preparation.agenda}</pre>
+          <p className="hint">
+            The agenda is context for follow-up review. Paste the actual meeting
+            transcript below for processing.
+          </p>
+        </details>
+      )}
       <div
         className="meeting-source-tabs"
         role="group"
@@ -498,6 +552,7 @@ export default function NewMeeting({
                       date: "2026-10-09",
                       type: "Project review",
                       projectId: p.projectId,
+                      ...(p.preparation ? { preparation: p.preparation } : {}),
                       transcript: config.sampleTranscript,
                     }));
                     setError("");

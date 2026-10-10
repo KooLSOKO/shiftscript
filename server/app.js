@@ -10,10 +10,21 @@ import {
   INVITATION_DAYS,
 } from "./invitation-email.js";
 import { LocalStore, FirebaseStore, hydrate } from "./store.js";
+import { ownerCandidates } from "../shared/identity.js";
 import { firebase } from "./firebase.js";
 import { analyze, sampleTranscript } from "./analyze.js";
 import { transcribe, validateAudio, MAX_AUDIO_BYTES } from "./audio.js";
 import { defaultModel } from "./gemini.js";
+import {
+  MemoryProfiles,
+  installPersonalRoutes,
+  installWorkspaceRoutes,
+  installReminderRoute,
+  recordChanges,
+  validateDependencies,
+  assertCompletion,
+  stamp,
+} from "./productivity.js";
 import {
   meetingInput,
   meetingId,
@@ -54,6 +65,9 @@ export function createApp({
   provider = process.env.AI_PROVIDER || "sample",
   signupEnabled = process.env.PUBLIC_SIGNUP_ENABLED === "true",
   verifyToken = (token) => firebase().auth.verifyIdToken(token, true),
+  profileStore,
+  cronSecret = process.env.CRON_SECRET,
+  reminderIdentity = (uid) => firebase().auth.getUser(uid),
 } = {}) {
   const app = express(),
     production =
@@ -62,6 +76,10 @@ export function createApp({
     store || (storage === "firebase" ? new FirebaseStore() : new LocalStore());
   const googleClient = google || new GoogleIntegration({ storage });
   const publicOrigin = invitationOrigin(appUrl);
+  const profiles =
+    profileStore ||
+    (typeof repo.getProfile === "function" ? repo : new MemoryProfiles());
+  const remindersReady = Boolean(cronSecret && publicOrigin && mailer.ready);
   app.disable("x-powered-by");
   app.use(express.json({ limit: "3.5mb" }));
   app.use("/api", (_req, res, next) => {
@@ -81,9 +99,18 @@ export function createApp({
       googleReady: googleClient.ready,
       emailReady: mailer.ready,
       invitationEmailReady: Boolean(mailer.ready && publicOrigin),
-      version: "2.4.0",
+      remindersReady,
+      version: "3.0.0",
     }),
   );
+  installReminderRoute(app, {
+    profiles,
+    repo,
+    mailer,
+    secret: cronSecret,
+    origin: publicOrigin,
+    lookupIdentity: reminderIdentity,
+  });
   // OAuth returns through a top-level navigation, without a Firebase bearer header.
   app.get("/api/google/callback", async (req, res) => {
     if (!googleClient.ready)
@@ -155,6 +182,9 @@ export function createApp({
         };
       }
       req.uid = req.actor.uid;
+      const personal = await profiles.getProfile(req.uid);
+      req.actor.name = personal.name || req.actor.name;
+      req.actor.aliases = personal.aliases || [];
       next();
     } catch (e) {
       next(e);
@@ -162,12 +192,19 @@ export function createApp({
   });
   const read = async (workspaceId) =>
     hydrate(await repo.list(workspaceId), workspaceId);
-  const mutate = (req, operation, permission = "write") =>
+  const mutate = (req, operation, permission = "write", options = {}) =>
     repo.mutate(req.workspaceId, (raw) => {
       // Check permissions again within the transaction so revocation cannot race a write.
       const s = hydrate(raw, req.workspaceId);
       authorize(s, req.actor, req.workspaceId, permission);
+      const before = structuredClone(s);
       const result = operation(s);
+      req.undoToken = recordChanges(
+        s,
+        before,
+        req.actor,
+        options.undo !== false,
+      );
       Object.assign(raw, s);
       return result;
     });
@@ -179,6 +216,13 @@ export function createApp({
       invitations: [],
     };
   }
+  installPersonalRoutes(app, {
+    profiles,
+    repo,
+    catalog,
+    mailer,
+    remindersReady,
+  });
   app.get("/api/workspaces", async (req, res) => {
     const d = await catalog(req.actor);
     if (storage === "local" && !d.workspaces.some((w) => w.id === "local-demo"))
@@ -253,6 +297,7 @@ export function createApp({
           w.members.push({
             uid: req.uid,
             name: req.actor.name,
+            aliases: req.actor.aliases || [],
             email: req.actor.email,
             role: invitation.role,
             joinedAt: now(),
@@ -298,8 +343,11 @@ export function createApp({
         b.createdAt.localeCompare(a.createdAt),
       ),
       tasks: d.tasks.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      activity: d.activity.slice().reverse(),
+      agendas: d.agendas.slice().reverse(),
     });
   });
+  installWorkspaceRoutes(app, { read, mutate, profiles });
   app.patch("/api/workspace", async (req, res) => {
     const input = workspaceInput.parse(req.body);
     const workspace = await mutate(
@@ -625,6 +673,18 @@ export function createApp({
       data = await read(req.workspaceId);
     authorize(data, req.actor, req.workspaceId, "write");
     checkProject(data, input.projectId);
+    if (
+      input.preparation?.parentMeetingId &&
+      !data.meetings.some(
+        (meeting) => meeting.id === input.preparation.parentMeetingId,
+      )
+    )
+      fail(400, "The previous meeting is not in this workspace.");
+    if (
+      input.preparation?.agendaId &&
+      !data.agendas.some((agenda) => agenda.id === input.preparation.agendaId)
+    )
+      fail(400, "This agenda is not in this workspace.");
     const existing = data.meetings.find((m) => m.id === meetingKey);
     if (existing) return res.json({ meeting: existing, cached: true });
     if (data.meetings.length >= 50)
@@ -664,6 +724,13 @@ export function createApp({
       if (current) return current;
       if (s.meetings.length >= 50)
         fail(409, "Workspace meeting limit reached.");
+      if (meeting.preparation?.agendaId) {
+        const agenda = s.agendas.find(
+          (item) => item.id === meeting.preparation.agendaId,
+        );
+        if (!agenda) fail(409, "The agenda is no longer available.");
+        agenda.meetingId = meeting.id;
+      }
       s.meetings.push(meeting);
       return meeting;
     });
@@ -848,6 +915,14 @@ export function createApp({
     const { decision, ...value } = input,
       fields = taskFields(value, s);
     if (decision === "approved") {
+      if (
+        !fields.ownerUid &&
+        ownerCandidates(fields.owner, s.workspace?.members || []).length > 1
+      )
+        fail(
+          400,
+          "More than one member matches this owner. Choose the correct account before approval.",
+        );
       if (s.tasks.length >= 250)
         fail(409, "Workspace task limit reached (250).");
       const taskId = hash(meeting.id + ":" + p.id);
@@ -931,6 +1006,8 @@ export function createApp({
         createdBy: req.uid,
       };
       s.tasks.push(task);
+      validateDependencies(s.tasks);
+      assertCompletion(task, s.tasks);
       return task;
     });
     res.status(201).json({ task });
@@ -950,13 +1027,16 @@ export function createApp({
           409,
           "This task changed since you opened it. Close and reopen it to load the latest version.",
         );
+      const previous = structuredClone(t);
       Object.assign(t, taskFields(input, s, t), {
-        updatedAt: now(),
+        updatedAt: stamp(t.updatedAt),
         updatedBy: req.uid,
       });
+      validateDependencies(s.tasks);
+      assertCompletion(t, s.tasks, previous);
       return t;
     });
-    res.json({ task });
+    res.json({ task, undoToken: req.undoToken });
   });
   app.post("/api/tasks/:id/notes", async (req, res) => {
     const note = noteInput.parse(req.body);
@@ -972,10 +1052,10 @@ export function createApp({
         authorUid: req.uid,
         authorName: req.actor.name,
       });
-      t.updatedAt = now();
+      t.updatedAt = stamp(t.updatedAt);
       return t;
     });
-    res.status(201).json({ task });
+    res.status(201).json({ task, undoToken: req.undoToken });
   });
   app.use("/api", (_req, res) =>
     res.status(404).json({ error: "API route not found." }),

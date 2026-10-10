@@ -82,3 +82,12 @@ My tasks matches full/first/last name for name-only owners, with explicit accoun
 ## v2.4 Calendar scheduling
 
 Calendar unit tests validate explicit dates/times, DST gaps and UTC conversion. Account browser tests check scheduling a task with no date, a pre-filled due date, mobile fitting at 320px, correct event parameters and fallback links. Browser navigation is intercepted; no live Google event is created.
+
+
+## v3.0 productivity checks
+
+`npm run check` passes 69 unit/API tests plus the production build. `npm run test:ui` passes all five suites; the new productivity browser suite uses isolated local data and API/browser port 3013/5183. It checks notification read state, dependency completion controls, quick due dates, bulk changes/undo, saved views/search, persisted single/batch Calendar schedules, manual Calendar marks with popup interception, profile aliases and resized photo upload, saved agendas/follow-through comparison, activity and 390/320px task/profile layouts.
+
+New API checks cover profile persistence/isolation and invalid avatars; duplicate-owner confirmation; dependency cycles/foreign IDs; atomic stale-batch rejection; viewer restrictions; undo authorship/expiry/concurrent edits and restored meeting links; schedules and DST gaps; private views/marks; agenda references/idempotency; Firestore private profile transactions; verified consent and current membership; simultaneous cron calls and uncertain SMTP outcomes. Fake SMTP captures recipients and body without sending email. Current identity and consent are tested independently of token claims.
+
+All five browser suites and 69 API checks passed on the packaged source. No hosted Firebase, Google, SMTP or Vercel changes were made by these tests. Vercel cron timing, real SMTP acceptance/inbox delivery and actual Google event saving remain deployment checks. See UPDATE-v3.md for the full checklist.

@@ -169,3 +169,23 @@ test("audio API -> reviewed transcript -> stored meeting source; no raw audio pe
   const raw = JSON.stringify(await repo.list());
   assert.ok(!raw.includes(wav().data));
 });
+
+test("meeting preparation stays separate from Gemini discussion evidence", async () => {
+  let sent;
+  await analyze(
+    {
+      ...meeting,
+      preparation: {
+        parentMeetingId: "prior",
+        agenda: "A future promise that was not spoken.",
+      },
+    },
+    "gemini",
+    async (payload) => {
+      sent = JSON.parse(payload.input);
+      return structuredClone(sampleAnalysis);
+    },
+  );
+  assert.equal(sent.preparation, undefined);
+  assert.equal(sent.transcript, meeting.transcript);
+});

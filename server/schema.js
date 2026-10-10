@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { MAX_TRANSCRIPT_CHARS } from "../shared/limits.js";
+import { calendarRange } from "../shared/scheduling.js";
 export const statuses = [
   "To Do",
   "In Progress",
@@ -16,6 +17,22 @@ export const date = z
     const d = new Date(v + "T12:00:00Z");
     return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
   }, "Use a valid calendar date");
+export const scheduleInput = z
+  .object({
+    date,
+    time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    duration: z.number().int(),
+    timeZone: z.string().min(1).max(80),
+  })
+  .strict()
+  .refine((value) => {
+    try {
+      calendarRange(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Choose a valid date, time, duration and time zone");
 export const meetingInput = z
   .object({
     title: z.string().trim().min(3).max(120),
@@ -39,6 +56,21 @@ export const meetingInput = z
     projectId: z
       .string()
       .regex(/^[A-Za-z0-9_-]{1,128}$/)
+      .nullable()
+      .optional(),
+    preparation: z
+      .object({
+        agendaId: z
+          .string()
+          .regex(/^[A-Za-z0-9_-]{1,128}$/)
+          .optional(),
+        parentMeetingId: z
+          .string()
+          .regex(/^[A-Za-z0-9_-]{1,128}$/)
+          .nullable(),
+        agenda: z.string().max(4000),
+      })
+      .strict()
       .nullable()
       .optional(),
     source: z
@@ -86,6 +118,11 @@ export const taskPatch = reviewSchema
   .omit({ decision: true })
   .extend({
     status: z.enum(statuses),
+    dependencyIds: z
+      .array(z.string().regex(/^[A-Za-z0-9_-]{1,128}$/))
+      .max(10)
+      .optional(),
+    schedule: scheduleInput.nullable().optional(),
     projectId: z
       .string()
       .regex(/^[A-Za-z0-9_-]{1,128}$/)
@@ -160,6 +197,7 @@ export const meetingId = (i) =>
       i.type,
       normalize(i.transcript),
       ...(i.projectId ? [i.projectId] : []),
+      ...(i.preparation ? [i.preparation] : []),
     ]),
   );
 export function resolveDeadline(wording, meetingDate) {

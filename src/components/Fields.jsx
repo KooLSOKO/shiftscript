@@ -1,6 +1,11 @@
 import { priorities } from "../lib.js";
+import { quickDates } from "../../shared/productivity.js";
+import { ownerCandidates } from "../../shared/identity.js";
 export default function Fields({ value, onChange, members = [] }) {
   const change = (key, v) => onChange({ ...value, [key]: v });
+  const candidates = !value.ownerUid
+    ? ownerCandidates(value.owner, members)
+    : [];
   return (
     <div className="field-grid">
       <label className="col-span-full">
@@ -63,6 +68,36 @@ export default function Fields({ value, onChange, members = [] }) {
           </select>
         </label>
       )}
+      {candidates.length > 0 && (
+        <div className="owner-suggestion col-span-full">
+          {candidates.length === 1 ? (
+            <>
+              <p className="hint">
+                Suggested workspace member: {candidates[0].name}. Confirm to
+                link this task to their account.
+              </p>
+              <button
+                type="button"
+                className="button small"
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    owner: candidates[0].name,
+                    ownerUid: candidates[0].uid,
+                  })
+                }
+              >
+                Assign to {candidates[0].name}
+              </button>
+            </>
+          ) : (
+            <p className="hint">
+              {candidates.length} people match “{value.owner}”. Choose the
+              correct Workspace assignee before approving.
+            </p>
+          )}
+        </div>
+      )}
       <label>
         Priority
         <select
@@ -88,9 +123,21 @@ export default function Fields({ value, onChange, members = [] }) {
         Confirmed due date
         <input
           type="date"
+          aria-label="Confirmed due date"
           value={value.dueDate || ""}
           onChange={(e) => change("dueDate", e.target.value || null)}
         />
+        <span className="quick-dates">
+          {quickDates().map(([label, date]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => change("dueDate", date)}
+            >
+              {label}
+            </button>
+          ))}
+        </span>
       </label>
     </div>
   );

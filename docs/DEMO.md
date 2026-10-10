@@ -13,3 +13,6 @@
 9. Create another workspace and switch to show isolated data.
 
 Close: “This demonstrates the core transcript-to-action workflow. A later phase can connect Meet, Teams and Zoom. Today's build focuses on reliable review, traceable work and useful collaboration.”
+
+
+For the v3 walkthrough, see the final section of [UPDATE-v3.md](UPDATE-v3.md). Demonstrate Profile, My tasks/notifications, bulk edit + Undo, dependencies, saved Calendar scheduling, a follow-up agenda, transcript review and Activity.

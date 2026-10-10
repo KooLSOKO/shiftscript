@@ -1,10 +1,16 @@
 {
-  "version": "2.4.0",
-  "root": "ShiftScript-v2.4",
+  "version": "3.0.0",
+  "root": "ShiftScript-v3.0",
+  "verification": {
+    "unitApiTests": 69,
+    "browserSuites": 5,
+    "productionBuild": "passed",
+    "liveIntegrations": "simulated; deployment check required"
+  },
   "files": [
     {
       "path": ".env.example",
-      "sha256": "24fd30436cb8130f981371ec957ac3b3694907044e9b5edaefb1d82989f74ef1"
+      "sha256": "ef5b1c714159ba5b92890aa61b35d7e6480ef52d99f9344314fe878cf8d16066"
     },
     {
       "path": ".firebaserc",
@@ -24,15 +30,19 @@
     },
     {
       "path": "README.md",
-      "sha256": "d0e1512c89bbe06427642fcae3bda377bb660ba4378259a6e0f39880731cece0"
+      "sha256": "aed251ed26231bed7a63dc50e9120ab55e6bd87d01c04010f88f7794cc1a61de"
     },
     {
       "path": "api/index.js",
       "sha256": "a56fed10cfb661420fb7c8a8050f614a7f9ab4e2e98e88fef9508d51752fa536"
     },
     {
+      "path": "api/reminders.js",
+      "sha256": "a56fed10cfb661420fb7c8a8050f614a7f9ab4e2e98e88fef9508d51752fa536"
+    },
+    {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "247f2cd6b67973ea42c3a403dc76bae48b0fc8b0c7cce20a89c10ae885f9422b"
+      "sha256": "d8758ee4e34c9b1af0c01e229fb40ef44205d49f3f0ee9f9df72d3e874fda504"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -40,11 +50,11 @@
     },
     {
       "path": "docs/ASSETS.md",
-      "sha256": "224d01b5a5b3a95887fee52e64c1efebc871f7b105ecbaa610140f62b108c0c0"
+      "sha256": "0f2088cd8a6bbea0a8d1d2bb125ac47f74a88280d1f69c779a52826ffc3d1e69"
     },
     {
       "path": "docs/DEMO.md",
-      "sha256": "fd9cc4a476d25a343dfc4d9424431b3d54494a6c93cdd3a94bcd99793e2abbec"
+      "sha256": "bd75083a1bd3327b4f79d50493a733645222a15be1ccde230d995fee93866bbe"
     },
     {
       "path": "docs/DEVELOPMENT-UPDATE.md",
@@ -56,7 +66,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "4dd8c9db845b355a26372880f31592966d72866e300eb7901b160667e2795046"
+      "sha256": "248a992cf49c57fad0571bfff58edc900b58594ab22895e65fa8dafeeefebf54"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -87,120 +97,148 @@
       "sha256": "5701c53054acdb28a6b36ce2045786593ccef391a0bf9d16ab57d3a7e142a335"
     },
     {
+      "path": "docs/UPDATE-v3.md",
+      "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
+    },
+    {
       "path": "docs/check-results.txt",
-      "sha256": "966fbfd62d3f2cd7a0ae6714579ce57752d7d9e19de90a18b2b90d17164ebcdd"
+      "sha256": "f8d70cae419f46db7468347b6d955be7847a401790e1defbd7c9a19d4aca1bac"
+    },
+    {
+      "path": "docs/screenshots/activity-desktop.png",
+      "sha256": "256c9bc8faf1312051917c66e425d937407925cc65a9550a975978473d04bcaa"
+    },
+    {
+      "path": "docs/screenshots/agenda-desktop.png",
+      "sha256": "056e737448435dabcb46203f9f54b548ee8dcfb4c1ca6c15b61fd4d3f259fb82"
     },
     {
       "path": "docs/screenshots/board-desktop.png",
-      "sha256": "2d2625cf5d8ad211d2da0b931a343d3bf1c4e524bc7bf550612288ac8aa4b5e0"
+      "sha256": "a5ea383c8d9278cb8b878e2a6da794deae75b1040409909e25848f3df495486b"
     },
     {
       "path": "docs/screenshots/calendar-desktop.png",
-      "sha256": "06d9ec882af278017b9928d01a286e5bde431f5d77b2a88f9c93126900d9fe77"
+      "sha256": "29e22fcb10cd3d2b8d3e67041a6a83a9db4e9e89b3c764a21c278d40510915ac"
     },
     {
       "path": "docs/screenshots/calendar-mobile.png",
-      "sha256": "b549640572a0cc1099f30590fa7d339781dfc5b4deb75b907e4eff5cfdba4108"
+      "sha256": "7378db2e3b9d517b272e9df6abf14531fbbb8ce1eefb0ee71cc35913e60540e4"
     },
     {
       "path": "docs/screenshots/dashboard-desktop.png",
-      "sha256": "fe140ae67a8cdeba0406fe963417fbfe3ddce2b83ba822018e6cfd69b43d565e"
+      "sha256": "0d7fafdc687c4994a7176b5f23f1a8e533d8b076ed1479e83025c1017f6b63e6"
     },
     {
       "path": "docs/screenshots/dashboard-email-desktop.png",
-      "sha256": "74b31ae17ea0f779a96efbdd8b3c8016baeccd81d2b3bcc28adebbc5bad682d1"
+      "sha256": "dd471d4bb95dc317c51000767007776075ef4a6b2e5648f3fec0ddbd1674537d"
     },
     {
       "path": "docs/screenshots/dashboard-email-mobile.png",
-      "sha256": "f485ac618b8be801e3f3eb9a1194ebc197d4a3162f2445d78eaccae9a44e3519"
+      "sha256": "37786d63793c4f90ae83df78a3be8111f0f080c9b438190afe442581fcaea75c"
     },
     {
       "path": "docs/screenshots/dashboard-mobile.png",
-      "sha256": "ebde8fd34d825019df99c9d6345136862a504362256cfd32c485c03b5892162f"
+      "sha256": "1fd48d799b64c005626c13bf183c365559c1211f736759cd2e2ce04ab4eb571a"
     },
     {
       "path": "docs/screenshots/dashboard-recap-mobile.png",
-      "sha256": "9c15be83944bb97fb3e8e1a3d9a7a81cb4bb29344bafcce77c98848217d077b7"
+      "sha256": "4693b93950563f90ea380bcd09fd9cae87a9577d202f70429519007603731686"
     },
     {
       "path": "docs/screenshots/draft-desktop.png",
-      "sha256": "7a9b6ed908a09278081026a34d4c15ff47804a9d372a10eebd169a7c1ce8cb2b"
+      "sha256": "b0b20254bf625f0142ef31430b66f10f59eee2ea95e9d1fe6afe36e4ad31ad7b"
     },
     {
       "path": "docs/screenshots/email-recap-mobile.png",
-      "sha256": "05e2a985a0efa16a8d3ce0f1d145e1ac3e08e091a3169fde13a4077f78c3be66"
+      "sha256": "895f39d28e33fe8da1878fbccbbd01b0fa8576cc988b06753c44f631f9996c49"
     },
     {
       "path": "docs/screenshots/filters-desktop.png",
-      "sha256": "e793e70464b69ec8eb4a40805b1d435af526ce1a354bb8bcd70879b0ace43d0e"
+      "sha256": "16572e0f5220a7af6b67bc65fc7a8cc17a17a415a74cd4742f8c96797a931832"
     },
     {
       "path": "docs/screenshots/filters-mobile.png",
-      "sha256": "65ca1b97dbae731e6c475cbf80e326a6bd104eb82476c06958500c2dd8b9766a"
+      "sha256": "da9ecf6c8f2e1b8276bd355610ec99877906ff9e1110f7468a4f655c4b33163b"
     },
     {
       "path": "docs/screenshots/google-import-desktop.png",
-      "sha256": "8cb32a8db63e014bc288f0263e27cbfb17eb103fc4179d30fc23e229eca43f65"
+      "sha256": "a37634551e32653773e15f15efd596bf7b5e6469ea36bc832a92144611ffd1e0"
     },
     {
       "path": "docs/screenshots/google-import-mobile.png",
-      "sha256": "df0f323b27da1de4e68542a6402182854c0f778df29f6763fb9d33185c08cdf0"
+      "sha256": "77ac0d0682c0e64862b3d7c088095439bb15afe46a4ad5c921ad0fee21e61b16"
     },
     {
       "path": "docs/screenshots/invitation-email-desktop.png",
-      "sha256": "b841c83a107c7a062d93009796b69afb7a6334a45cbe6d48f1813e7b6a333133"
+      "sha256": "eca744b36e84d04fb492574a175491304041bc1a4104f38cd4c18588642b3c76"
     },
     {
       "path": "docs/screenshots/invitation-email-mobile.png",
-      "sha256": "9ff65d8926152180a09a2117203b675b6dcf7d420d55096779b6e54edf4ca0a0"
+      "sha256": "5506f23f9f3e07ae41bb69db70c6a5d2912c871af06191c7dfc176498c9a1388"
     },
     {
       "path": "docs/screenshots/manual-task-desktop.png",
-      "sha256": "792939bd1f2f00384daa466f86ccb68dc00ec9ac3b15bad580752aba2e85fd7d"
+      "sha256": "425e344bad26bde678da9aa359f74f10399bd137be953f3f4a6d118645bae8f2"
     },
     {
       "path": "docs/screenshots/meeting-mobile.png",
-      "sha256": "7fd637ae83dcb787f999262a6254b6a3cf8f1cc2a5a855e7290c20c54dbb1a98"
+      "sha256": "0cf9245b80089f1fdc36a7688bab96b1c02935183c2a20351c8fa8d7064769e5"
     },
     {
       "path": "docs/screenshots/meeting-review-desktop.png",
-      "sha256": "837a8fe5bb1c01b43e146327df64168e0aafc3dbe94cef6ef52b3c18dcae7055"
+      "sha256": "5298556825060eb25c665f3438690d463fb9f14c186f216a9fe74c0d9efb9d53"
     },
     {
       "path": "docs/screenshots/meetings-navigation-mobile.png",
-      "sha256": "8a77fee933280431822332f9757e55d0ac3e2316967495b1e63976270d020836"
+      "sha256": "130ff6101297d78dd4b0ef07c230e4cf3bf18b9f3b9fd422cbd95ed7c2b8e049"
     },
     {
       "path": "docs/screenshots/new-meeting-google-desktop.png",
-      "sha256": "91df2626ddd419e7d2ace10529df6793094f76f46d6a421f94daed8179aa124a"
+      "sha256": "34094e3414c141211996ccb111131f48e88e47642228065c5dd4886054cb05dc"
     },
     {
       "path": "docs/screenshots/new-meeting-google-mobile.png",
-      "sha256": "39bfdcc66c9578e4912716e0697f57ac6a743c9443ef368a218aab49c571e6fc"
+      "sha256": "77ac0d0682c0e64862b3d7c088095439bb15afe46a4ad5c921ad0fee21e61b16"
+    },
+    {
+      "path": "docs/screenshots/productivity-desktop.png",
+      "sha256": "03f4da6a8868c5ce747eb923e3ac452f920fd787dcdfa26917ae3132377025f3"
+    },
+    {
+      "path": "docs/screenshots/productivity-mobile.png",
+      "sha256": "bb394152b929539f9627eab7a1190212e9425dc5fda1f1de116060adb5d4b911"
     },
     {
       "path": "docs/screenshots/profile-desktop.png",
-      "sha256": "7ca29895ace88ac04de50a222216e05a2da3d5ec07c65165c7b59ade2c642708"
+      "sha256": "a4901be7c93e7ebea7e13b747b7a2e90764b4f12ca28e7b9e01ec4166d264c65"
     },
     {
       "path": "docs/screenshots/profile-mobile.png",
-      "sha256": "807bf833c51bf0e9c3a0a44f91bb4bf5450f01419d608dc6dbae2f900382fc6b"
+      "sha256": "a232f596bf3d51c5025c06d830555c9e6ada0fa032e5a2c71ea17328274064f5"
+    },
+    {
+      "path": "docs/screenshots/profile-settings-desktop.png",
+      "sha256": "7dc156e00a17b4f90d67911ecc4b280bd1df469efdbcc62731ccd8f5e7a104d0"
+    },
+    {
+      "path": "docs/screenshots/profile-settings-mobile.png",
+      "sha256": "84943f535a36c5752a3e82f06f1a8f26e626576d0a012eb1d123be742d5adb12"
     },
     {
       "path": "docs/screenshots/projects-desktop.png",
-      "sha256": "eb2caafea49cac0d40b7776d4613dc9f6f54b71d13250167b92e0513f5f75c5d"
+      "sha256": "343b14152eead41e3bc6bf3985bab5de45bc317a55338c4344912c5dee2cbbfd"
     },
     {
       "path": "docs/screenshots/projects-mobile.png",
-      "sha256": "f07cbdafa712be4c8ff4ddc914d5989f7ec162c5b89415fa2a3b5cc892dd565c"
+      "sha256": "a3cf5ef65a7ed815b04984729bfc6e746951c5422c60cb2a4161ece9d56e7359"
     },
     {
       "path": "docs/screenshots/reuse-meeting-mobile.png",
-      "sha256": "b4bc369af12beed5311002bc0426f961f42675c0dd8a81b7e31f78dc87f9df06"
+      "sha256": "14a2c39f97ab9f42addae8ca25d3b8dc047fbec573cef931ad23e671f0f3366b"
     },
     {
       "path": "docs/screenshots/review-mobile-v21.png",
-      "sha256": "0857a5e0b700805e6ff8b57ff60ae9d270946e288686b4f3c48f7dd4dfeffbff"
+      "sha256": "1df62714d40dc68c32f7332a3ad65161c0fa3234776da7c34b324cb4f83e9c9e"
     },
     {
       "path": "docs/screenshots/signup-desktop.png",
@@ -208,23 +246,23 @@
     },
     {
       "path": "docs/screenshots/task-editor-mobile-v21.png",
-      "sha256": "032acdbcf35f642de9b65ba9c0f50de343293fae824a23fb49420a8b8b8d5387"
+      "sha256": "da0566580d7d685d932bfae74857133907b8844356ad75f0bca46db2a7dc5fd5"
     },
     {
       "path": "docs/screenshots/tasks-mobile-v21.png",
-      "sha256": "0c107594df7fe303e342c0b3b49074dddf8075ff81692950ce13feda8405d466"
+      "sha256": "c59aacc93127be82d08c8f4fd7aeec04ab0b642becb5b5fc20b24799218d45cb"
     },
     {
       "path": "docs/screenshots/team-desktop.png",
-      "sha256": "b49b468f5e69ac395a92b548bd6f956f1b79bdeb14d570532341968603dc7eac"
+      "sha256": "b1799515cd6dcf1474e32970c93864e01ad00f1a415dfaa656c4cdb63278edd7"
     },
     {
       "path": "docs/screenshots/team-mobile.png",
-      "sha256": "928d6e15491db42906426ebf4ff2aba98c67ddb04150ae8c5245fba03d36dcff"
+      "sha256": "c93ab1c32c238e6392a5fcce733ffa86e513c35b7feb61397c18e78b6116e55e"
     },
     {
       "path": "docs/screenshots/voice-input-desktop.png",
-      "sha256": "d8661ca39bec26ec9e78b187c5b73d2b6f78842d38495b5bb64fce17fa4da709"
+      "sha256": "42a835c4464d125d5272ca61badba908a3a664fa03e7157510cd06d9f9c3cac2"
     },
     {
       "path": "docs/screenshots/workspace-setup-desktop.png",
@@ -256,11 +294,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "f873d1f1af2f3660c29d035b88dcffc07aa844ade9eac14724afbacd3031b70b"
+      "sha256": "4d37cac7f4985604feb8834d8e66fc62f4603fd406d63f6488016a16b25eb382"
     },
     {
       "path": "package.json",
-      "sha256": "81da0a196e180406835aecef1ba1f47a52955720e0c4603ebcf9e965f84b6821"
+      "sha256": "3d55e356d7978ec58f324ed6a46b4d9f76bee4a52564e459b594b83ce9bd88fa"
     },
     {
       "path": "public/art/google-meet.webp",
@@ -321,6 +359,10 @@
     {
       "path": "public/icons/ArrowUpRight.svg",
       "sha256": "89d95aedea59ba0be59b63241c3ef789b7d3808570a11773dfca8f75317ca4f6"
+    },
+    {
+      "path": "public/icons/Bell.svg",
+      "sha256": "a2e600c57028d410d9d188c7557a9b6e7eddece698085828c755dd18c9e70d1c"
     },
     {
       "path": "public/icons/Briefcase.svg",
@@ -393,6 +435,10 @@
     {
       "path": "public/icons/Headphones.svg",
       "sha256": "fcc6e372e9b0cbe65557a915fb98dda60367f16fb24c5c1ddfe88a6ce8d36b0f"
+    },
+    {
+      "path": "public/icons/History.svg",
+      "sha256": "ecf1dbabfb71da79178aa1401382d0976f224d9d5f5b90fee2b2019663d5e766"
     },
     {
       "path": "public/icons/Layers.svg",
@@ -488,11 +534,11 @@
     },
     {
       "path": "server/analyze.js",
-      "sha256": "053e893e4a8dee4c3046a04a2cb72d8e2c2a062d7fa17fb5382ebdb4a7395bc9"
+      "sha256": "5df530f3987ce82415f607c64f83af837b5dd9bec03cdb4a2c5f57d34a3c53a8"
     },
     {
       "path": "server/app.js",
-      "sha256": "f6fef5786a9d2bec04f075f216aaf7267799546ee7575432aa6c0c160ddd9bea"
+      "sha256": "4553d40801205ee2d248a5137eefe43fc347af8ff7ed7f6aa58dffd6b37d52f3"
     },
     {
       "path": "server/audio.js",
@@ -500,7 +546,7 @@
     },
     {
       "path": "server/collaboration.js",
-      "sha256": "cd3bf0fde05f95057e142423d220669a91081b0252fe03b0d354063edfd5e4f4"
+      "sha256": "79d96ef76f15756077c5ce72f7587169ee31bff1cd57d29b4300e5637f50ca30"
     },
     {
       "path": "server/firebase.js",
@@ -527,28 +573,44 @@
       "sha256": "64a7e5f82d000e6b0f18fe90e360968d309362dcc4787ce7a958d96147756517"
     },
     {
+      "path": "server/productivity.js",
+      "sha256": "02e97395de782e3036cf78910a9a2e68067aba9a65d33b51443dec60d1a1a0f6"
+    },
+    {
       "path": "server/recap-email.js",
       "sha256": "098a9d9ae7cb5ea10a7ca98d1b3b27ace861180a40c3f773595460f998ecdac6"
     },
     {
       "path": "server/schema.js",
-      "sha256": "e775a2c97579c6f11d58a112030bb7cc341a4338c88355595826d3e2805a64f0"
+      "sha256": "6a054606caa856033efe9fbc62afd90f0358cdbfa53023f242a6f9d37207eb20"
     },
     {
       "path": "server/store.js",
-      "sha256": "ab6048ce9a98f7eb935c43ed8ed5a3b1ce445ca97f0788d274730c858da0e9ee"
+      "sha256": "b3fe79c4b2056732d9ad3aa037248d5e0924f0debd3d65253313e03e53302f47"
+    },
+    {
+      "path": "shared/identity.js",
+      "sha256": "4df939b3adb195174aefa84c26c86955db3cd1e7b4e2b39a8914d635ed1ec40e"
     },
     {
       "path": "shared/limits.js",
       "sha256": "a58878be478ef7c52689fbe92ff85bc68069dfd057ed1c50c62e0480d0438fe0"
     },
     {
+      "path": "shared/productivity.js",
+      "sha256": "f047b57cd215e0e227916803f7ec50c431b76e4817c86ac6687b8d60dedf6025"
+    },
+    {
       "path": "shared/recipients.js",
       "sha256": "d260d32d902dbbb1f00b8b5663a1ce5ac4a669ae4351c284b8a03f3bf869e7db"
     },
     {
+      "path": "shared/scheduling.js",
+      "sha256": "76f162fd536fe9665ac51f9e28516c54c2d1c78b0239d39954ed5bd01016b980"
+    },
+    {
       "path": "src/App.jsx",
-      "sha256": "9c7a5f70bfd07b227658270a4e5b4e18cf274a15eb37ddb8df4c114959e3ad0a"
+      "sha256": "dc5de825a37b9a904f52e6afa38523cac1d23ddc6f206928bd60d674168f11ac"
     },
     {
       "path": "src/components/Account.jsx",
@@ -559,20 +621,28 @@
       "sha256": "3b54ab609b4a5f0541ed10ff0812c67404cb7acfe81ee884024d46d7d0f7339e"
     },
     {
+      "path": "src/components/CalendarBatch.jsx",
+      "sha256": "b5b4151c26a2cf376680e19c4fc419b3e352549d58b4d6daa652a5533bf7474b"
+    },
+    {
       "path": "src/components/Fields.jsx",
-      "sha256": "96693743f2176f6f83b99623f98c22d7a998f6e8856a5f2b65a9068c6569076e"
+      "sha256": "d8a14b43d7391e9f3665813b431f0a16a9de206a211b1228ff2da6d7ff99dcbf"
     },
     {
       "path": "src/components/GoogleMeet.jsx",
-      "sha256": "d79313e730570cb52ec2ecf36b290764d02424575689c7ff3a07cfc5743208c6"
+      "sha256": "c1b701766df284379cb0bdefadc99b61a419d3b0627577a2b60d5dbe979a51a1"
     },
     {
       "path": "src/components/Icons.jsx",
-      "sha256": "af487abef7467d1ead90785c2321c975eb76d1b48cf5f8db8f6f4b26e6ac5882"
+      "sha256": "c67c9101320821907a4284623c30ff66614ae203813e365831ce1aff031afb3b"
     },
     {
       "path": "src/components/MeetingDetail.jsx",
-      "sha256": "68f0339aa16595295eaf0bb82d74882a656b48e4337345a72145ead13eda1853"
+      "sha256": "3360100e768c191e1aaaafcb442635962b035abca6f387f3c1a6409703a09ae0"
+    },
+    {
+      "path": "src/components/MeetingPreparation.jsx",
+      "sha256": "aa38230cf2598da56d5aa74e09b69b077edd40a5486936d68f8026455ebe46ed"
     },
     {
       "path": "src/components/Modal.jsx",
@@ -580,15 +650,23 @@
     },
     {
       "path": "src/components/NewMeeting.jsx",
-      "sha256": "299a5f6a36fee95dfc7c184a4b430037b4f86b77a7c78db5d42c574a6f9044be"
+      "sha256": "0a464da8042a533a468e87a7c833bf6b02ddae65ab33674abab9a476065a1503"
     },
     {
       "path": "src/components/Priority.jsx",
       "sha256": "6686665c0ca573a01f6917ca89d5016c9b6c93ee1944abfe8b6dee0cd9bbfecf"
     },
     {
+      "path": "src/components/ProductivityPanels.jsx",
+      "sha256": "b0e7707d2ae2433f11aceef70030f13973f3b08127cc89b528285c1ab7ae94a5"
+    },
+    {
       "path": "src/components/Profile.jsx",
-      "sha256": "9231769a5edb7924e6b882c93cc88101428dd3b2515f00f979ce0ab14943ac62"
+      "sha256": "974a6f4c3dc50012f56f104b173565805e402110fce911d94e5b21768d46adb1"
+    },
+    {
+      "path": "src/components/ProfileSettings.jsx",
+      "sha256": "a6f7862bb70ff64c5b33072c857ca8312c006ed088f8ce0eec68a1effe6e7a48"
     },
     {
       "path": "src/components/Projects.jsx",
@@ -607,16 +685,20 @@
       "sha256": "9d3c24267610194037b0b5ab3c3ee5278e98c513ed795bba7409e6c5e74d77ea"
     },
     {
+      "path": "src/components/TaskBulkActions.jsx",
+      "sha256": "0eb4c96810486db0bef6c16861b19a6099b395f599e8fdcd32061d01791bdf2b"
+    },
+    {
       "path": "src/components/TaskCalendar.jsx",
-      "sha256": "dc6e18cde108d135cc9d55b464ca94f7ed3a59adabb8637e1961c09ab73d4a11"
+      "sha256": "d362c82af5bbc615f697126ed0c6a2eba3d290fb3dfb12187749fc1dd0c871db"
     },
     {
       "path": "src/components/TaskEditor.jsx",
-      "sha256": "fce37661a0ea422bedc32bc969a6730f3a7e52faadf0ec327c62eb1cba5704a9"
+      "sha256": "809009e4029231ddded280ea46fadd5b1d05b0d1d8c7cc6d66f68e104330bb2f"
     },
     {
       "path": "src/components/TaskFilters.jsx",
-      "sha256": "23750de9369fde0091e1ffecd3ed4f8b28847cec44f13b3e8bd7153cc659fe2d"
+      "sha256": "3c5c35784fab917f091606b0ae943462c1e5d4e6c0c562aa42291e94c047631e"
     },
     {
       "path": "src/components/Workspaces.jsx",
@@ -624,7 +706,7 @@
     },
     {
       "path": "src/features/calendar.js",
-      "sha256": "f991bd4b23b365032123d3773270305b9d3938397dd4cae56c19098b2a7a3f7f"
+      "sha256": "4b4c33e3a9ee4bba358583bb51f61bcae8ade09dd5747e46b2e913baed2bad03"
     },
     {
       "path": "src/features/exports.js",
@@ -632,7 +714,7 @@
     },
     {
       "path": "src/features/task-filters.js",
-      "sha256": "b327da378c13214b7a51eafdb461450cc23f257bed264abc86751fdcc6ea796e"
+      "sha256": "d99cf9a8148addc8e887d27fdfd66022a2cdc437390ef840df54ca9c72a24e1b"
     },
     {
       "path": "src/firebase-config.js",
@@ -648,7 +730,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "d2783ef20c8bd1ec00af6e7b45c11b5ec002e5bb961c0e1355b93f62111a8260"
+      "sha256": "580fae5122faf389838ccb888799a788fe5149ba351edbd9cd441cc26b2bc3d1"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -668,7 +750,7 @@
     },
     {
       "path": "tests/collaboration-browser.js",
-      "sha256": "6d34e370e2c14936d1010d124c8faa6b09ac8d347694b8d292abd60df50ed5f2"
+      "sha256": "ce279fb683beaf04e33edf0e8ccef89dd3c72bfa62c042c342c41b6cebecbdde"
     },
     {
       "path": "tests/collaboration.test.js",
@@ -680,7 +762,7 @@
     },
     {
       "path": "tests/gemini-audio.test.js",
-      "sha256": "9d4af6061b3fd1e6d6ae832af2e7371d5e1a68774c9e3b53d8bbcf827554d40f"
+      "sha256": "8407dff3493172eb0006ecb8bd1fefaf1ef74ae7625cc640635a5b7ac3b0a1a6"
     },
     {
       "path": "tests/integrations-browser.js",
@@ -699,12 +781,20 @@
       "sha256": "817912be3227dd9623c9aa69c7692240bc010ee2b6c3004892f7d3d724df6dde"
     },
     {
+      "path": "tests/productivity-browser.js",
+      "sha256": "20d199583d4f3f3bda989345d78a0b7d8e316425ad8dc8bd9f3d733161609332"
+    },
+    {
+      "path": "tests/productivity.test.js",
+      "sha256": "2653bb7bd105cdc665ff18474b939b35e0665eecd9f14f3dc1e699b974eb49c3"
+    },
+    {
       "path": "tests/workflow.test.js",
       "sha256": "88d14f25fe63de493c10a15d356d1eadfba709291c6b8ca153d569a8872d4580"
     },
     {
       "path": "vercel.json",
-      "sha256": "0a97bd046159e6d2f8f3062b6bb931b2e8547621116008c09288fa98bd47fb68"
+      "sha256": "d84375f993cba4ad8606069b4c11222b67f1e773cffa8b6ec36de556569ffe82"
     },
     {
       "path": "vite.config.js",
