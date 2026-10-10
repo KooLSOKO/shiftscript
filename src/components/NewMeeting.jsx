@@ -531,6 +531,20 @@ export default function NewMeeting({
                 </select>
               </label>
             </div>
+            <p className="hint mt-4 mb-4">
+              Audio and live transcript processing send your content to Gemini.
+              Confirm participant permission and{" "}
+              <a
+                className="text-button"
+                href="/privacy#ai"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                check AI data handling
+              </a>{" "}
+              before using private information. Use fictional or anonymised test
+              content with unpaid Gemini.
+            </p>
             <AudioInput
               config={config}
               disabled={busy}

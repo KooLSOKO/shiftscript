@@ -19,6 +19,7 @@ import AccountAccess, {
   WorkspaceLoading,
   WorkspaceSettings,
 } from "./components/Account.jsx";
+import PolicyLinks from "./components/PolicyLinks.jsx";
 import NewMeeting from "./components/NewMeeting.jsx";
 import MeetingDetail from "./components/MeetingDetail.jsx";
 import GoogleMeet from "./components/GoogleMeet.jsx";
@@ -1474,6 +1475,7 @@ export default function App() {
           )}
           <footer className="app-footer">
             ShiftScript · A clear next step, every time.
+            <PolicyLinks />
           </footer>
         </main>
       </div>

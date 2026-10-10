@@ -7,9 +7,12 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from "../lib.js";
 import { ArrowRight, RefreshCw } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
+import PolicyLinks from "./PolicyLinks.jsx";
 
 export function AccountFrame({ children }) {
   return (
@@ -21,7 +24,10 @@ export function AccountFrame({ children }) {
           <br />
           Put it in motion.
         </h1>
-        <p>Your next steps deserve a place to land.</p>
+        <p>
+          Turn meeting transcripts into clear summaries, decisions and reviewed
+          tasks for your team.
+        </p>
       </div>
       <section className="login-form">
         <div className="brand mb-8">
@@ -29,6 +35,7 @@ export function AccountFrame({ children }) {
           ShiftScript
         </div>
         {children}
+        <PolicyLinks />
       </section>
     </main>
   );
@@ -51,6 +58,14 @@ const messages = {
     "Couldn't connect. Check your internet connection and try again.",
   "auth/operation-not-allowed":
     "Email/password accounts are not enabled yet. Contact the workspace administrator.",
+  "auth/popup-blocked":
+    "Your browser blocked the Google sign-in window. Allow pop-ups for ShiftScript and try again. If you opened this inside another app, use Safari or Chrome.",
+  "auth/unauthorized-domain":
+    "This website is not authorised for Google sign-in yet. Ask Earny to add this domain in Firebase Authentication settings.",
+  "auth/account-exists-with-different-credential":
+    "This email uses a different sign-in method. Sign in with your existing method first, or contact meetings@earny.co.za for help. Your existing workspace has not been replaced.",
+  "auth/operation-not-supported-in-this-environment":
+    "Open ShiftScript in Safari or Chrome to use Google sign-in.",
 };
 
 export default function AccountAccess({
@@ -74,6 +89,40 @@ export default function AccountAccess({
     setNotice("");
     setPassword("");
     setConfirm("");
+  }
+  async function googleSignIn() {
+    if (!auth || busy) return;
+    setBusy(true);
+    setRegistering(true);
+    setError("");
+    setNotice("");
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      // Basic Firebase identity only. Meet permissions belong to the separate connection flow.
+      const result = await signInWithPopup(auth, provider);
+      await result.user.getIdToken(true);
+    } catch (e) {
+      if (
+        ["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(
+          e.code,
+        )
+      ) {
+        setNotice(
+          "Google sign-in was cancelled. You can try again or use your email.",
+        );
+      } else {
+        setError(
+          e.code === "auth/operation-not-allowed"
+            ? "Google sign-in is not enabled yet. Enable the Google provider in Firebase Authentication → Sign-in method."
+            : messages[e.code] ||
+                "Google sign-in couldn't finish. Please try again.",
+        );
+      }
+    } finally {
+      setRegistering(false);
+      setBusy(false);
+    }
   }
   async function submit(e) {
     e.preventDefault();
@@ -129,6 +178,26 @@ export default function AccountAccess({
             ? "We'll email you a link to choose a new password."
             : "Sign in to keep the conversation moving."}
       </p>
+      {auth && !reset && (
+        <>
+          <button
+            type="button"
+            className="button google-sign-in w-full"
+            disabled={busy}
+            onClick={googleSignIn}
+          >
+            <img src="/icons/Google.svg" width="20" height="20" alt="" />
+            Continue with Google
+          </button>
+          <p className="hint google-identity-hint">
+            Sign in or create your account. Connect Meet separately inside your
+            workspace.
+          </p>
+          <div className="account-divider" aria-hidden="true">
+            <span>or use email</span>
+          </div>
+        </>
+      )}
       {auth ? (
         <form onSubmit={submit}>
           <fieldset disabled={busy}>
@@ -251,6 +320,19 @@ export default function AccountAccess({
       <p className="hint mt-6">
         Your meetings and tasks stay in the workspace you choose.
       </p>
+      {!reset && (
+        <p className="hint account-policy-note">
+          By creating an account, you agree to the{" "}
+          <a href="/terms" target="_blank" rel="noopener noreferrer">
+            Terms of Service
+          </a>
+          . Read our{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer">
+            Privacy Policy
+          </a>{" "}
+          for how your information is handled.
+        </p>
+      )}
     </AccountFrame>
   );
 }

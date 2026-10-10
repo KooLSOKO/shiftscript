@@ -153,6 +153,20 @@ export default function GoogleMeet({
         </p>
       )}
       <section className="panel connection-panel">
+        <p className="hint mb-4">
+          Google permissions let ShiftScript retrieve the meeting source you
+          select. Processing sends it to Gemini and shares it with your
+          workspace.{" "}
+          <a
+            className="text-button"
+            href="/privacy#google"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read how Google data is handled
+          </a>
+          .
+        </p>
         <div className="section-heading">
           <h2>Your Google connection</h2>
           {connection?.connected && (
@@ -492,7 +506,15 @@ export default function GoogleMeet({
                 <p className="hint">
                   Processing saves this source in the shared workspace. Confirm
                   you have permission to share it. The preview expires after 15
-                  minutes.
+                  minutes.{" "}
+                  <a
+                    className="text-button"
+                    href="/privacy#ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Check AI data handling before processing private content.
+                  </a>
                 </p>
                 {config.provider !== "gemini" && (
                   <p className="form-error">

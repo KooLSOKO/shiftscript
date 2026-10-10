@@ -33,3 +33,7 @@ New generated scene assets are in `public/art/`. Overview retains `meeting-blue.
 
 
 v3.0 adds original `Bell` and `History` SVGs using the same 24px rounded outlines and ice-blue secondary fill. Profile photos are user uploads, centre-cropped to 160×160 and compressed as WebP in the browser; SVG uploads are rejected. New screenshots show fictional profiles, saved agendas, task tools and activity.
+
+## v3.0.1 public page assets
+
+Public policy pages reuse the cobalt/ice/navy palette and the original MessageSquare, Users and CalendarDays icon exports. Standalone SVG exports now include the SVG XML namespace so they decode correctly as external images. `public/icons/Google.svg` depicts the Google identity brand mark for the sign-in button; it is separate from Earny’s custom icon system. No new raster artwork was required.

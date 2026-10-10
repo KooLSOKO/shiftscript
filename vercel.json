@@ -14,6 +14,10 @@
     }
   },
   "rewrites": [
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" },
+    { "source": "/terms", "destination": "/terms/index.html" },
+    { "source": "/data-deletion", "destination": "/data-deletion/index.html" },
     {
       "source": "/api/reminders",
       "destination": "/api/reminders"
@@ -23,7 +27,7 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api/|assets/|art/|fonts/|icons/|favicon.svg).*)",
+      "source": "/((?!api/|assets/|art/|fonts/|icons/|policies/|about/|privacy/|terms/|data-deletion/|favicon.svg).*)",
       "destination": "/index.html"
     }
   ],

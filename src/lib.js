@@ -9,6 +9,8 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
 const config = {
   ...firebaseWebConfig,
@@ -29,6 +31,8 @@ export {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithPopup,
 };
 let selectedWorkspace = null;
 export const setApiWorkspace = (value) => {

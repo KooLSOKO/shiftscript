@@ -100,7 +100,7 @@ export function createApp({
       emailReady: mailer.ready,
       invitationEmailReady: Boolean(mailer.ready && publicOrigin),
       remindersReady,
-      version: "3.0.0",
+      version: "3.0.1",
     }),
   );
   installReminderRoute(app, {

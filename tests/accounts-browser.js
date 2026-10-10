@@ -24,7 +24,8 @@ const server = createApp({
   signupEnabled: true,
   store,
   verifyToken: async (uid) => {
-    if (!["soko", "kopano"].includes(uid)) throw new Error("Bad token");
+    if (!["soko", "kopano", "google-new"].includes(uid))
+      throw new Error("Bad token");
     return { uid, email: uid + "@example.test" };
   },
 }).listen(3010, "127.0.0.1");
@@ -67,6 +68,15 @@ const auth = { currentUser: hydrate(JSON.parse(localStorage.getItem('test-sessio
 const persist = () => localStorage.setItem('test-session', JSON.stringify(auth.currentUser));
 const notify = () => { persist(); callbacks.forEach(fn => fn(auth.currentUser)); };
 export const getAuth = () => auth;
+export class GoogleAuthProvider { setCustomParameters(parameters) { window.testGoogleParameters = parameters; } }
+export async function signInWithPopup(_a, provider) {
+  const code = localStorage.getItem('test-google-error');
+  if(code) throw Object.assign(new Error(),{code});
+  const fresh = localStorage.getItem('test-google-new') === 'true';
+  const u = fresh ? {uid:'google-new',email:'google-new@example.test',displayName:'Lerato Dlamini',emailVerified:true}
+    : JSON.parse(localStorage.getItem('test-accounts') || '{}')['soko@example.test'];
+  auth.currentUser=hydrate(u); notify(); return {user:auth.currentUser};
+}
 export const onAuthStateChanged = (_a, fn) => { callbacks.add(fn); queueMicrotask(() => fn(auth.currentUser)); return () => callbacks.delete(fn); };
 export async function createUserWithEmailAndPassword(_a, email, password) {
   const accounts = JSON.parse(localStorage.getItem('test-accounts') || '{}');
@@ -103,6 +113,63 @@ await page.addInitScript(() => {
 });
 try {
   await page.goto("http://127.0.0.1:5180");
+  const googleButton = page.getByRole("button", {
+    name: "Continue with Google",
+    exact: true,
+  });
+  await googleButton.waitFor();
+  assert.equal(
+    await page
+      .getByRole("navigation", { name: "ShiftScript policies" })
+      .getByRole("link", { name: "Privacy Policy", exact: true })
+      .getAttribute("href"),
+    "/privacy",
+  );
+  for (const [code, text] of [
+    ["auth/popup-closed-by-user", "Google sign-in was cancelled."],
+    ["auth/popup-blocked", "Your browser blocked the Google sign-in window."],
+    [
+      "auth/unauthorized-domain",
+      "This website is not authorised for Google sign-in yet.",
+    ],
+    ["auth/operation-not-allowed", "Google sign-in is not enabled yet."],
+    [
+      "auth/account-exists-with-different-credential",
+      "This email uses a different sign-in method.",
+    ],
+  ]) {
+    await page.evaluate(
+      (code) => localStorage.setItem("test-google-error", code),
+      code,
+    );
+    await googleButton.click();
+    await page.getByText(text, { exact: false }).waitFor();
+    assert(await googleButton.isEnabled());
+  }
+  await page.evaluate(() => localStorage.removeItem("test-google-error"));
+  assert.deepEqual(await page.evaluate(() => window.testGoogleParameters), {
+    prompt: "select_account",
+  });
+  await page.reload();
+  await googleButton.waitFor();
+  await page.screenshot({
+    path: "docs/screenshots/google-signin-desktop.png",
+    fullPage: true,
+  });
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    assert(await googleButton.isVisible());
+  }
+  await page.screenshot({
+    path: "docs/screenshots/google-signin-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page
     .getByRole("button", { name: "Create an account", exact: true })
     .click();
@@ -438,9 +505,41 @@ try {
     .getByRole("button", { name: "Open navigation", exact: true })
     .click();
   await page.getByText("Soko Studio", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await googleButton.click();
+  await page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  assert.equal(users.get("soko").meetings.length, 1);
+  assert.equal(users.get("soko").tasks.length, 6);
+  await page
+    .getByRole("button", { name: "Open navigation", exact: true })
+    .click();
+  await page.getByText("Soko Studio", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await page.evaluate(() => localStorage.setItem("test-google-new", "true"));
+  await googleButton.click();
+  await page
+    .getByRole("heading", { name: "Give your work a place to land." })
+    .waitFor();
+  assert.equal(
+    await page.getByLabel("Your full name", { exact: true }).inputValue(),
+    "Lerato Dlamini",
+  );
+  await page
+    .getByLabel("Workspace name", { exact: true })
+    .fill("Lerato Studio");
+  await page
+    .getByRole("button", { name: "Create workspace", exact: true })
+    .click();
+  await page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  assert.deepEqual(users.get("google-new").meetings, []);
+  assert.equal(users.get("google-new").workspace.ownerName, "Lerato Dlamini");
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated signup, password mismatch, names, workspace creation/rename, refresh, account isolation, reset, wrong password, sign-in, mobile overflow.",
+    "PASS: simulated email and Google sign-in, returning workspace preservation, Google onboarding/name, cancellation and configuration errors, account isolation, reset, mobile overflow and policy links.",
   );
 } catch (e) {
   await page.screenshot({

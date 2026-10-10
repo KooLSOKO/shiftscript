@@ -2191,9 +2191,71 @@ footer {
   align-self: start;
 }
 .app-footer {
+  flex-wrap: wrap;
   font-size: 11px;
   color: #657492;
   padding: 26px 0 8px;
+}
+.app-footer .policy-links {
+  width: 100%;
+  margin-top: 0;
+}
+.policy-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+  margin-top: 18px;
+  color: #526584;
+  font-size: 11px;
+}
+.policy-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.policy-links a:focus-visible,
+.account-policy-note a:focus-visible {
+  outline: 3px solid #7ca0ff;
+  outline-offset: 3px;
+}
+.google-sign-in {
+  justify-content: center;
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #747775;
+  min-height: 44px;
+  font-weight: 500;
+}
+.google-sign-in:hover {
+  background: #f7f9fc;
+}
+.google-identity-hint {
+  margin-top: 10px;
+}
+.account-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0;
+  color: #657492;
+  font-size: 11px;
+}
+.account-divider::before,
+.account-divider::after {
+  content: "";
+  height: 1px;
+  background: #d7dfee;
+  flex: 1;
+}
+.account-policy-note {
+  margin-top: 16px;
+}
+.account-policy-note a {
+  color: #2458e8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .proposal-check:focus-visible,
 .checklist-row input:focus-visible {
