@@ -145,7 +145,7 @@ try {
     .getByRole("button", { name: "Open navigation", exact: true })
     .click();
   await page.getByRole("button", { name: /^Meetings/ }).click();
-  await page.getByRole("button", { name: /Dashboard project review/ }).click();
+  await page.getByRole("button", { name: /^Dashboard project review/ }).click();
   await page
     .getByRole("heading", { name: "Meeting summary", exact: true })
     .waitFor();

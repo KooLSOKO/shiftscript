@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createHash } from "node:crypto";
+import { MAX_TRANSCRIPT_CHARS } from "../shared/limits.js";
 export const statuses = [
   "To Do",
   "In Progress",
@@ -27,7 +28,14 @@ export const meetingInput = z
       "Internal",
       "Other",
     ]),
-    transcript: z.string().trim().min(40).max(15000),
+    transcript: z
+      .string()
+      .trim()
+      .min(40)
+      .max(
+        MAX_TRANSCRIPT_CHARS,
+        "Transcript must be no longer than 100,000 characters.",
+      ),
     projectId: z
       .string()
       .regex(/^[A-Za-z0-9_-]{1,128}$/)
@@ -120,7 +128,12 @@ export const projectInput = z
 export const draftInput = meetingInput
   .extend({
     title: z.string().max(120),
-    transcript: z.string().max(15000),
+    transcript: z
+      .string()
+      .max(
+        MAX_TRANSCRIPT_CHARS,
+        "Draft must be no longer than 100,000 characters.",
+      ),
     expectedVersion: z.number().int().nonnegative().optional(),
   })
   .strict();

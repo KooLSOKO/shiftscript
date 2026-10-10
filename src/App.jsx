@@ -22,6 +22,7 @@ import AccountAccess, {
 import NewMeeting from "./components/NewMeeting.jsx";
 import MeetingDetail from "./components/MeetingDetail.jsx";
 import GoogleMeet from "./components/GoogleMeet.jsx";
+import RecapEmail from "./components/RecapEmail.jsx";
 import TaskEditor from "./components/TaskEditor.jsx";
 import TaskFilters from "./components/TaskFilters.jsx";
 import Projects from "./components/Projects.jsx";
@@ -65,6 +66,7 @@ export default function App() {
     [settings, setSettings] = useState(false),
     [newMeeting, setNewMeeting] = useState(false),
     [meetingId, setMeetingId] = useState(null),
+    [emailMeetingId, setEmailMeetingId] = useState(null),
     [taskId, setTaskId] = useState(null),
     [filters, setFilters] = useState({ ...defaultFilters }),
     [meetingSearch, setMeetingSearch] = useState(""),
@@ -138,6 +140,7 @@ export default function App() {
     setData(emptyData());
     setLoading(true);
     setMeetingId(null);
+    setEmailMeetingId(null);
     setTaskId(null);
     setNewMeeting(false);
     setSettings(false);
@@ -238,6 +241,7 @@ export default function App() {
       setNewMeeting(false);
       setTaskId(null);
       setMeetingId(null);
+      setEmailMeetingId(null);
       setSettings(false);
       setMenu(false);
       setToast("");
@@ -252,6 +256,7 @@ export default function App() {
   }, [toast]);
   const readOnly = data.role === "viewer",
     meeting = data.meetings.find((m) => m.id === meetingId),
+    emailMeeting = data.meetings.find((m) => m.id === emailMeetingId),
     task = data.tasks.find((t) => t.id === taskId),
     pending = data.meetings.reduce(
       (n, m) =>
@@ -677,6 +682,10 @@ export default function App() {
                               m={m}
                               projects={data.projects}
                               onOpen={() => openMeeting(m.id)}
+                              onEmail={
+                                !readOnly ? () => setEmailMeetingId(m.id) : null
+                              }
+                              emailReady={config?.emailReady}
                             />
                           ))
                       ) : (
@@ -829,6 +838,10 @@ export default function App() {
                             m={m}
                             projects={data.projects}
                             onOpen={() => openMeeting(m.id)}
+                            onEmail={
+                              !readOnly ? () => setEmailMeetingId(m.id) : null
+                            }
+                            emailReady={config?.emailReady}
                           />
                         ))
                       ) : (
@@ -1092,6 +1105,14 @@ export default function App() {
           }}
         />
       )}
+      {emailMeeting && !readOnly && (
+        <RecapEmail
+          key={workspaceId + ":" + emailMeeting.id}
+          meeting={emailMeeting}
+          reload={reload}
+          onClose={() => setEmailMeetingId(null)}
+        />
+      )}
       {(task || taskId === "new") && (
         <TaskEditor
           key={taskId}
@@ -1141,27 +1162,47 @@ function Empty({ icon: Icon, title, text, action, onClick }) {
     </div>
   );
 }
-function MeetingRow({ m, projects, onOpen }) {
+function MeetingRow({ m, projects, onOpen, onEmail, emailReady }) {
   const n = m.proposals.filter((p) => p.reviewStatus === "pending").length;
   return (
-    <button className="meeting-row" onClick={onOpen}>
-      <span className="meeting-icon">
-        <Icons.FileText size={21} />
-      </span>
-      <div>
-        <h3>{m.title}</h3>
-        <p>
-          {formatDate(m.date)} · {m.type}
-          {m.projectId
-            ? " · " +
-              (projects.find((p) => p.id === m.projectId)?.name || "Project")
-            : ""}
-        </p>
+    <div className="meeting-entry">
+      <button className="meeting-row" onClick={onOpen}>
+        <span className="meeting-icon">
+          <Icons.FileText size={21} />
+        </span>
+        <div>
+          <h3>{m.title}</h3>
+          <p>
+            {formatDate(m.date)} · {m.type}
+            {m.projectId
+              ? " · " +
+                (projects.find((p) => p.id === m.projectId)?.name || "Project")
+              : ""}
+          </p>
+        </div>
+        <span className={"badge " + (n ? "yellow" : "")}>
+          {n ? n + " to review" : m.proposals.length + " actions"}
+        </span>
+        <Icons.ArrowUpRight size={17} />
+      </button>
+      <div className="meeting-entry-recap">
+        <p className="meeting-summary-excerpt">{m.summary}</p>
+        {onEmail && (
+          <button
+            className="button small meeting-email"
+            disabled={!emailReady}
+            title={
+              emailReady
+                ? "Choose recipients and review the recap"
+                : "Earny email setup is required"
+            }
+            aria-label={"Email recap for " + m.title}
+            onClick={onEmail}
+          >
+            <Icons.Mail size={16} /> Email recap
+          </button>
+        )}
       </div>
-      <span className={"badge " + (n ? "yellow" : "")}>
-        {n ? n + " to review" : m.proposals.length + " actions"}
-      </span>
-      <Icons.ArrowUpRight size={17} />
-    </button>
+    </div>
   );
 }

@@ -72,7 +72,7 @@ export function createApp({
       aiReady: provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
       googleReady: googleClient.ready,
       emailReady: mailer.ready,
-      version: "2.1.0",
+      version: "2.1.1",
     }),
   );
   // OAuth returns through a top-level navigation, without a Firebase bearer header.

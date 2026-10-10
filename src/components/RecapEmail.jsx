@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../lib.js";
 import Modal from "./Modal.jsx";
 import { Mail, CheckCircle2 } from "./Icons.jsx";
+import { parseRecipients } from "../../shared/recipients.js";
+import { MAX_RECAP_RECIPIENTS } from "../../shared/limits.js";
 export default function RecapEmail({ meeting, onClose, reload }) {
   const [preview, setPreview] = useState(null),
     [addresses, setAddresses] = useState(""),
@@ -9,6 +11,7 @@ export default function RecapEmail({ meeting, onClose, reload }) {
     [error, setError] = useState(""),
     [sent, setSent] = useState(null);
   const requestId = useRef(crypto.randomUUID());
+  const recipientList = parseRecipients(addresses);
   useEffect(() => {
     let active = true;
     api("/meetings/" + meeting.id + "/email-preview")
@@ -24,13 +27,17 @@ export default function RecapEmail({ meeting, onClose, reload }) {
   }, [meeting.id]);
   async function send(e) {
     e.preventDefault();
+    if (
+      !preview ||
+      busy ||
+      recipientList.error ||
+      !recipientList.recipients.length
+    )
+      return;
     setBusy(true);
     setError("");
     try {
-      const recipients = addresses
-        .split(/[,;\n]/)
-        .map((v) => v.trim())
-        .filter(Boolean);
+      const recipients = recipientList.recipients;
       const v = await api("/meetings/" + meeting.id + "/email", {
         method: "POST",
         body: JSON.stringify({
@@ -84,9 +91,11 @@ export default function RecapEmail({ meeting, onClose, reload }) {
         </div>
       ) : preview ? (
         <form onSubmit={send}>
+          <h3 className="mt-4">{meeting.title}</h3>
           <label className="recap-recipients">
             Recipients
             <textarea
+              aria-label="Recipients"
               rows={2}
               required
               placeholder="name@example.com, another@example.com"
@@ -99,9 +108,18 @@ export default function RecapEmail({ meeting, onClose, reload }) {
             />
           </label>
           <p className="hint mt-2">
-            Up to 10 addresses, separated by commas or new lines. Recipient
-            addresses are hidden from each other.
+            Up to {MAX_RECAP_RECIPIENTS} addresses, separated by commas or new
+            lines. Recipient addresses are hidden from each other.
           </p>
+          {addresses.trim() && (
+            <p
+              className={recipientList.error ? "form-error" : "hint mt-2"}
+              role={recipientList.error ? "alert" : "status"}
+            >
+              {recipientList.error ||
+                `${recipientList.recipients.length} recipient(s) · duplicate addresses removed`}
+            </p>
+          )}
           <p className="badge mt-4">
             {preview.approvedCount} approved task(s) included ·{" "}
             {preview.pendingCount} pending excluded
@@ -119,7 +137,14 @@ export default function RecapEmail({ meeting, onClose, reload }) {
             >
               Cancel
             </button>
-            <button className="button primary" disabled={busy}>
+            <button
+              className="button primary"
+              disabled={
+                busy ||
+                !!recipientList.error ||
+                !recipientList.recipients.length
+              }
+            >
               <Mail size={17} />
               {busy ? "Sending…" : "Send recap"}
             </button>

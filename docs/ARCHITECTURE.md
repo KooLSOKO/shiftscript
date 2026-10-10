@@ -48,7 +48,7 @@ No realtime subscriptions, presence, scheduled reminders, automatic invitation d
 
 ## Input and exports
 
-Audio signature/base64 validation permits supported formats, at most 2.5 MB decoded. The JSON body limit is 3.5 MB. Transcripts allow 15,000 characters. Dates use ISO calendar strings; overdue comparisons use Africa/Johannesburg. Timestamps use UTC.
+Audio signature/base64 validation permits supported formats, at most 2.5 MB decoded, with 15,000-character transcription output. The JSON body limit is 3.5 MB. Pasted/uploaded text, private drafts and Google imports allow 100,000 characters, sent in full in one analysis request with the existing 45-second model timeout. Uploads allow 400 KB; there is no silent text truncation. The encrypted Google preview vault evicts older previews when its combined JSON exceeds 600 KB before encryption/base64 expansion, to stay below Firestore's per-document limit. Dates use ISO calendar strings; overdue comparisons use Africa/Johannesburg. Timestamps use UTC.
 
 PDF/CSV export runs in the browser for only the selected workspace/current filtered tasks. PDF dynamically loads jsPDF and bundled licensed DejaVu fonts, wraps text and paginates. CSV quotes cells and prefixes possible spreadsheet formula payloads. Meeting reports retain evidence and approval status. No external export service receives content.
 

@@ -135,7 +135,7 @@ Vercel should build the linked GitHub push automatically. If you add/change vari
 - This imports already-generated Google artifacts. It does not join calls as a bot, record live audio, activate note-taking automatically or run background polling/webhooks.
 - Google AI Pro provides eligible hosted-meeting note-taking; full transcript availability is separate. Notes do not guarantee full speaker attribution. The personal Gmail account's Meet REST access has not been verified live, so the Docs-link route is included.
 - Meet transcript entries have a limited retention window. Import promptly while Google makes them accessible.
-- Imports support 40–15,000 characters. Oversized sources are rejected rather than silently shortened; paste a shorter section in New meeting or use a shorter notes document.
+- Version 2.1.1 imports support 40–100,000 characters. Oversized sources are rejected rather than silently shortened. Voice transcription retains a separate 15,000-character output limit. See UPDATE-v2.1.1.md for the dashboard email update.
 - Previews expire after 15 minutes. They are scoped to the user, connection and workspace. Disconnect clears saved tokens and previews, but does not delete previously shared meetings/tasks or revoke Google's consent globally. Google account security settings can revoke consent.
 - The existing AI-request limit applies. Email sending is limited to 10 requests per workspace/day (UTC), 10 recipients per request and 100 send-history entries per meeting.
 - SMTP acceptance does not guarantee inbox delivery. Retry protection prevents the same send ID from being sent twice. If the outcome is uncertain, check recipients/Zoho mail logs before starting a new send. No automatic retry occurs.

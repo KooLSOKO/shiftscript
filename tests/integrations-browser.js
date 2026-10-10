@@ -11,6 +11,9 @@ import assert from "node:assert/strict";
 const directory = await mkdtemp(join(tmpdir(), "shift-google-mobile-"));
 const store = new LocalStore(join(directory, "workspace.json"));
 const transcript =
+  "Kiya: We reviewed the portfolio layout and discussed the launch.\n".repeat(
+    300,
+  ) +
   "Kiya: Kopano, please publish your portfolio tomorrow.\nKopano: I will publish my portfolio tomorrow.\nKiya: I will review the mobile layout by Friday.";
 const source = {
   kind: "google-notes",
@@ -19,6 +22,7 @@ const source = {
   documentId: "portfolio-document",
 };
 let sent = 0;
+const sentRecipients = [];
 await store.mutate("local-demo", (s) => {
   s.workspace = newWorkspace(
     "local-demo",
@@ -74,6 +78,7 @@ const server = createApp({
     ready: true,
     send: async (recipients) => {
       sent++;
+      sentRecipients.push(recipients);
       return { accepted: recipients, rejected: [] };
     },
   },
@@ -162,6 +167,8 @@ try {
     .getByRole("button", { name: "Gemini notes 1 · Preview", exact: true })
     .click();
   await page.getByRole("heading", { name: "Review your import" }).waitFor();
+  assert(transcript.length > 15000);
+  assert.equal(await page.locator(".import-text pre").innerText(), transcript);
   await page
     .getByLabel("Meeting title", { exact: true })
     .fill("Kopano portfolio review");
@@ -222,6 +229,82 @@ try {
     .waitFor();
   assert.equal(sent, 1);
   await page.getByRole("button", { name: "Done", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Go to Overview", exact: true })
+    .click();
+  const emailButton = page.getByRole("button", {
+    name: "Email recap for Kopano portfolio review",
+    exact: true,
+  });
+  await emailButton.waitFor();
+  for (const width of [320, 390, 430, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    await widthCheck("Dashboard email " + width);
+    assert((await emailButton.boundingBox()).height >= 44);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await screen("dashboard-email-desktop");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await screen("dashboard-email-mobile");
+  await emailButton.click();
+  await page
+    .getByLabel("Recipients", { exact: true })
+    .fill("kopano@example.test, invalid-address");
+  assert(
+    await page
+      .getByRole("button", { name: "Send recap", exact: true })
+      .isDisabled(),
+  );
+  assert.equal(sent, 1);
+  await page
+    .getByLabel("Recipients", { exact: true })
+    .fill(" kopano@example.test, kiya@example.test, KOPANO@example.test ");
+  await page
+    .getByText("2 recipient(s) · duplicate addresses removed")
+    .waitFor();
+  await page
+    .getByText("1 approved task(s) included · 1 pending excluded")
+    .waitFor();
+  await widthCheck("Dashboard recap modal");
+  await screen("dashboard-recap-mobile");
+  await page.getByRole("button", { name: "Send recap", exact: true }).click();
+  await page
+    .getByRole("heading", { name: "Recap accepted by the mail server" })
+    .waitFor();
+  assert.equal(sent, 2);
+  assert.deepEqual(sentRecipients[1], [
+    "kopano@example.test",
+    "kiya@example.test",
+  ]);
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await page.getByRole("button", { name: "New meeting", exact: true }).click();
+  await page
+    .getByLabel("Upload transcript", { exact: true })
+    .setInputFiles({
+      name: "long-meeting.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from(transcript),
+    });
+  assert.equal(
+    await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
+    transcript,
+  );
+  await page
+    .getByLabel("Meeting transcript", { exact: true })
+    .fill("x".repeat(100001));
+  await page
+    .getByText(
+      "This transcript exceeds 100,000 characters. Shorten it or split it into separate meetings before processing.",
+    )
+    .waitFor();
+  assert.equal(
+    (await page.getByLabel("Meeting transcript", { exact: true }).inputValue())
+      .length,
+    100001,
+    "Pasted text is never silently truncated",
+  );
+  await page.getByLabel("Meeting transcript", { exact: true }).fill(transcript);
+  await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.getByRole("button", { name: "Go to Tasks", exact: true }).click();
   await page.getByLabel("Status for Publish the portfolio").waitFor();
   for (const width of [320, 390, 430, 768]) {

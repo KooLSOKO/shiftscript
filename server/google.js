@@ -2,6 +2,7 @@ import { randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
 import { IntegrationVault } from "./integration-vault.js";
 import { fail } from "./collaboration.js";
+import { MAX_TRANSCRIPT_CHARS } from "../shared/limits.js";
 const scopes = [
   "https://www.googleapis.com/auth/meetings.space.readonly",
   "https://www.googleapis.com/auth/documents.readonly",
@@ -462,10 +463,10 @@ export class GoogleIntegration {
     }
     if (transcript.length < 40)
       fail(422, "This source does not contain enough text to process.");
-    if (transcript.length > 15000)
+    if (transcript.length > MAX_TRANSCRIPT_CHARS)
       fail(
         413,
-        "This source exceeds the 15,000-character processing limit. Copy a shorter section into New meeting, or import a shorter notes document.",
+        "This source exceeds the 100,000-character processing limit. Split it into separate meetings or import a shorter notes document. No text has been truncated.",
       );
     const previewId = random(),
       expires = Date.now() + 900000;
@@ -483,6 +484,13 @@ export class GoogleIntegration {
         source,
         expires,
       });
+      // The vault is one encrypted Firestore document. Keep the newest source
+      // and evict older previews before base64 expansion exceeds its size limit.
+      while (
+        s.previews.length > 1 &&
+        Buffer.byteLength(JSON.stringify(s.previews), "utf8") > 600_000
+      )
+        s.previews.shift();
     });
     return {
       previewId,

@@ -1,17 +1,135 @@
-ShiftScript v2.1 — 10 October 2026
-Node.js 24.19.0. Google/Gemini/Firebase Auth/SMTP are mocked in service tests.
-No private credentials from chat were used. No real email was sent.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-npm run check: PASS — 41 tests, 0 failures; Vite production build passed (306 modules).
+> shiftscript@2.1.1 check
+> npm test && npm run build
 
-Browser checks:
-browser-smoke.js: PASS — sample workflow, approval/rejection, edits, persistence, board, voice, mobile.
-accounts-browser.js: PASS — simulated signup, names, workspace setup, reset, account isolation, mobile.
-collaboration-browser.js: PASS — shared projects/workspaces, drafts, bulk review, tasks/checklists/notes, filters, exports, invitations, membership and mobile. Stale-write 409 is expected.
-integrations-browser.js: PASS — mocked Google Meet artifacts and Docs link, source review, task approval, Earny email preview/send, no pending tasks in email, phone layouts at 320/390/430 px, tablet 768 px, landscape 844 px, desktop 1440 px, dialog bounds, 44 px task status controls, 16 px phone fields, collapsible filters, drawer keyboard close/focus and no page overflow or JavaScript errors.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-Screenshots visually inspected: Google import, mobile task cards and recap dialog.
+> shiftscript@2.1.1 test
+> node --test tests/*.test.js
 
-Not verified live: Google consent and personal Gmail Meet API eligibility, Docs sharing, Zoho SMTP/inbox delivery, Firebase IAM, Gemini API quotas and Vercel deployment. Follow docs/UPDATE-v2.1.md.
+API error: 401 Error
+Firebase verification: Error
+API error: 401 Error
+✔ signup access is configured by the server; workspace routes require verified tokens (61.350021ms)
+API error: 409 Error
+API error: 404 Error
+✔ workspace creation and rename preserve meetings and isolate different accounts (30.653559ms)
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 400 ZodError
+✔ clients cannot choose an owner uid or another user's workspace id (17.122236ms)
+API error: 403 Error
+✔ private mode retains the email allowlist and public mode enables new accounts (4.940033ms)
+✔ workspace metadata persists after restarting the local store (28.19556ms)
+✔ Firestore workspace metadata merges without overwriting an existing quota or meetings (1.21666ms)
+API error: 403 Error
+API error: 404 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 400 Error
+API error: 400 Error
+✔ invitations bind verified email, enforce roles and revoke member access (140.83949ms)
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+API error: 403 Error
+✔ viewer reads/export data but cannot change any workspace workflow (46.780316ms)
+API error: 400 Error
+API error: 403 Error
+✔ extra workspaces and projects isolate records; meeting moves preserve task origins (26.33497ms)
+API error: 409 Error
+API error: 409 Error
+✔ drafts are private, persistent and reject stale save/delete versions (27.591179ms)
+API error: 404 Error
+API error: 400 Error
+✔ bulk review commits edited owners/dates atomically, remains idempotent and never auto-approves (35.802897ms)
+API error: 409 Error
+API error: 400 Error
+API error: 400 ZodError
+✔ manual tasks preserve checklists, notes and retries; stale edits fail; removed assignees retain history (31.371139ms)
+✔ legacy local data migrates in place without losing meetings, tasks or quota (3.055318ms)
+✔ Firestore membership migration and transactions read before writes and preserve unrelated documents (2.909362ms)
+API error: 403 Error
+✔ revocation during analysis prevents the result from being saved (30.974772ms)
+✔ task filters combine ownership, project, priority, source, date range and stable sorting (12.291827ms)
+✔ CSV quotes commas, accents, checklists and rejects spreadsheet formula execution (0.78406ms)
+✔ PDF uses embedded fonts and paginates long reports; report builders preserve evidence and statuses (380.20415ms)
+✔ Gemini sends strict JSON contract, configured model, no storage and bounded timeout (1.504534ms)
+✔ Gemini quota errors are readable and never leak upstream key strings (0.820695ms)
+✔ malformed or refused Gemini output does not become tasks (6.569666ms)
+✔ audio MIME, encoding, file signatures and size boundaries (60.436071ms)
+✔ transcription passes audio to Gemini and preserves editable text (2.190025ms)
+✔ audio API -> reviewed transcript -> stored meeting source; no raw audio persisted (58.398901ms)
+✔ OAuth binds state to the browser, uses PKCE, expires, and rejects replay without exposing secrets (86.838017ms)
+API error: 401 Error
+✔ unconfigured integration remains optional and unauthenticated private endpoints are rejected (14.26106ms)
+✔ Docs extraction handles tables and child tabs, and link validation prevents arbitrary URL fetches (0.905783ms)
+API error: 400 ZodError
+API error: 409 Error
+✔ Google preview/import keeps trusted source metadata, requires review and prevents client text or source tampering (54.659203ms)
+✔ Meet pagination preserves speaker names and unknown speakers without inventing identities (35.900069ms)
+✔ expired previews, overlong documents and incomplete artifact generation are rejected (20.560901ms)
+✔ long Unicode Google imports preserve all text and keep the encrypted preview vault bounded (71.547528ms)
+✔ token refresh preserves encrypted connection identity, and upstream failures never disclose key strings (11.831334ms)
+API error: 403 Error
+API error: 403 Error
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 409 Error
+✔ email previews include only approved tasks, escape HTML, enforce roles and recipient limits (21.677211ms)
+API error: 502 Error
+API error: 409 Error
+✔ uncertain SMTP outcomes are recorded and the same send cannot be repeated (20.512743ms)
+✔ Zoho sender and Bcc are configured server-side and only SMTP accepted recipients are reported (0.828147ms)
+✔ Firestore integration transactions persist encrypted user-only documents and preserve other users (1.167667ms)
+✔ unknown speaker labels cannot become named task owners (1.915924ms)
+API error: 400 ZodError
+API error: 400 ZodError
+✔ 100,000-character transcripts and drafts keep all text, including commitments at the end (101.187881ms)
+✔ comma-separated email recipients are validated and deduplicated (1.539497ms)
+✔ full workflow: notes, approval, editing, status, progress, refresh and duplicate prevention (104.490101ms)
+API error: 400 ZodError
+API error: 400 ZodError
+API error: 422 Error
+API error: 404 Error
+✔ invalid inputs, missing records and unsupported sample transcript (16.983077ms)
+✔ ambiguous dates remain unresolved; explicit dates and tomorrow are anchored (0.434794ms)
+✔ fabricated evidence fails; unknown owners and unsupported deadlines are cleared (0.907516ms)
+API error: 503 Error
+✔ hosted mode cannot use ephemeral local storage (4.363596ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 44
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1028.304074
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
-Dependency audit: 12 existing findings (8 moderate, 4 high). The new SMTP dependency was updated to Nodemailer 10.1.0; the final npm audit reports no Nodemailer advisory. See docs/TESTING.md for the existing dependency findings.
+> shiftscript@2.1.1 build
+> vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 308 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.67 kB │ gzip:   0.39 kB
+dist/assets/index-DfbyNfxb.css            37.85 kB │ gzip:   9.16 kB
+dist/assets/purify.es-BPuvlvQ_.js         29.05 kB │ gzip:  11.09 kB
+dist/assets/index.es-Be7jaOOL.js         158.97 kB │ gzip:  53.06 kB
+dist/assets/html2canvas.esm-DXEQVQnt.js  201.04 kB │ gzip:  47.43 kB
+dist/assets/jspdf.es.min-CtX56wJm.js     386.19 kB │ gzip: 126.39 kB
+dist/assets/index-CO4uoTwu.js            426.50 kB │ gzip: 128.49 kB
+✓ built in 3.18s

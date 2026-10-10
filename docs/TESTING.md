@@ -1,10 +1,10 @@
-# ShiftScript v2.1 testing
+# ShiftScript v2.1.1 testing
 
 Tested 10 October 2026 using Node.js 24.19.0. No private credentials supplied in chat were used.
 
 ## Automated checks
 
-`npm run check`: **41 tests passed, zero failed; production Vite build passed.** Coverage includes:
+`npm run check`: **44 tests passed, zero failed; production Vite build passed.** Coverage includes:
 
 - Transcript extraction fixtures, evidence grounding, dates, original source links and human approval; anonymous speaker labels cannot become named owners.
 - Duplicate meetings/reviews/manual create retries and invalid inputs.
@@ -20,6 +20,8 @@ Tested 10 October 2026 using Node.js 24.19.0. No private credentials supplied in
 Firestore tests use an injected transaction fixture. Auth/model tests use simulated tokens and SDK results. They do not contact live services.
 
 ## Google and email checks
+
+Version 2.1.1 adds 100,000-character text/draft processing with verified commitments at the end and one AI call per unique meeting; oversized input rejects before AI use. Large Unicode Google sources retain all text while old previews are evicted to bound encrypted vault size. Comma-separated addresses are trimmed, validated and deduplicated before sending. Browser checks cover dashboard/history recap buttons, invalid-address blocking, two recipients from comma-separated input, 44-pixel phone controls, a text upload above 15,000 characters and non-truncating paste over the new limit.
 
 `tests/integrations.test.js` adds OAuth state/PKCE/cookie binding, replay and expiry rejection; token encryption/refresh; mocked Firestore per-user separation; document URL validation and nested tabs/tables; paginated speaker-tagged entries; unknown labels; private previews, workspace scoping, disconnect invalidation, trusted import metadata and review/deduplication. It also checks email roles, approved-task-only rendering, HTML escaping, recipient limits, preview fingerprints, idempotent sends, uncertain SMTP outcomes and configured sender/Bcc.
 

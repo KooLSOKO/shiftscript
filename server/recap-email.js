@@ -2,9 +2,10 @@ import nodemailer from "nodemailer";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { fail } from "./collaboration.js";
+import { MAX_RECAP_RECIPIENTS } from "../shared/limits.js";
 export const emailInput = z
   .object({
-    recipients: z.array(z.email().max(254)).min(1).max(10),
+    recipients: z.array(z.email().max(254)).min(1).max(MAX_RECAP_RECIPIENTS),
     requestId: z.string().uuid(),
     fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   })

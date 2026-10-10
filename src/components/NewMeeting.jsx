@@ -3,6 +3,10 @@ import { api, today, types } from "../lib.js";
 import { Save, Upload, ArrowRight, RefreshCw } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import AudioInput from "./AudioInput.jsx";
+import {
+  MAX_TRANSCRIPT_CHARS,
+  MAX_TRANSCRIPT_FILE_BYTES,
+} from "../../shared/limits.js";
 const blank = () => ({
   title: "",
   date: today(),
@@ -84,6 +88,10 @@ export default function NewMeeting({
   };
   function save() {
     clearTimeout(timer.current);
+    if (latest.current.transcript.length > MAX_TRANSCRIPT_CHARS) {
+      message("Shorten the transcript to save this draft");
+      return Promise.resolve();
+    }
     const snapshot = JSON.stringify(latest.current);
     if (processed.current) return queue.current;
     queue.current = queue.current
@@ -150,6 +158,10 @@ export default function NewMeeting({
   async function submit(e) {
     e.preventDefault();
     if (audioBusy) return;
+    if (latest.current.transcript.length > MAX_TRANSCRIPT_CHARS)
+      return setError(
+        "Transcript must be no longer than 100,000 characters. Split it into separate meetings before processing.",
+      );
     setBusy(true);
     setError("");
     try {
@@ -188,12 +200,19 @@ export default function NewMeeting({
   }
   async function upload(file) {
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith(".txt") || file.size > 60000)
-      return setError("Choose a .txt transcript under 60 KB.");
+    if (
+      !file.name.toLowerCase().endsWith(".txt") ||
+      file.size > MAX_TRANSCRIPT_FILE_BYTES
+    )
+      return setError(
+        "Choose a .txt transcript up to 400 KB (100,000 characters).",
+      );
     try {
       const transcript = await file.text();
-      if (transcript.length > 15000)
-        throw new Error("Transcript must be under 15,000 characters.");
+      if (transcript.length > MAX_TRANSCRIPT_CHARS)
+        throw new Error(
+          "Transcript must be no longer than 100,000 characters. No text has been truncated.",
+        );
       setForm((p) => ({
         ...p,
         transcript,
@@ -311,16 +330,22 @@ export default function NewMeeting({
             aria-label="Meeting transcript"
             required
             minLength={40}
-            maxLength={15000}
             rows={10}
             value={form.transcript}
             onChange={(e) => change("transcript", e.target.value)}
             placeholder="Paste a transcript here. Speaker names help identify owners."
           />
           <p className="hint mt-2">
-            {form.transcript.length.toLocaleString()} / 15,000 characters ·
-            Check speaker names and dates before processing.
+            {form.transcript.length.toLocaleString()} /{" "}
+            {MAX_TRANSCRIPT_CHARS.toLocaleString()} characters · Check speaker
+            names and dates before processing.
           </p>
+          {form.transcript.length > MAX_TRANSCRIPT_CHARS && (
+            <p className="form-error" role="alert">
+              This transcript exceeds 100,000 characters. Shorten it or split it
+              into separate meetings before processing.
+            </p>
+          )}
         </fieldset>
         {error && (
           <p className="form-error" role="alert">
@@ -336,7 +361,12 @@ export default function NewMeeting({
           >
             Save & close
           </button>
-          <button className="button primary" disabled={busy || audioBusy}>
+          <button
+            className="button primary"
+            disabled={
+              busy || audioBusy || form.transcript.length > MAX_TRANSCRIPT_CHARS
+            }
+          >
             {busy ? (
               <>
                 <RefreshCw className="spin" size={16} />

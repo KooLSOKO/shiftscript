@@ -14,6 +14,7 @@ import {
 import { RecapMailer, recap } from "../server/recap-email.js";
 import { LocalStore } from "../server/store.js";
 import { createApp } from "../server/app.js";
+import { MAX_TRANSCRIPT_CHARS } from "../shared/limits.js";
 const env = {
   GOOGLE_CLIENT_ID: "mock-client",
   GOOGLE_CLIENT_SECRET: "mock-secret",
@@ -397,7 +398,11 @@ test("expired previews, overlong documents and incomplete artifact generation ar
           content: [
             {
               paragraph: {
-                elements: [{ textRun: { content: "x".repeat(15001) } }],
+                elements: [
+                  {
+                    textRun: { content: "x".repeat(MAX_TRANSCRIPT_CHARS + 1) },
+                  },
+                ],
               },
             },
           ],
@@ -409,7 +414,7 @@ test("expired previews, overlong documents and incomplete artifact generation ar
       kind: "document",
       url: "https://docs.google.com/document/d/portfolio-notes-document",
     }),
-    /15,000/,
+    /100,000/,
   );
   f.google.fetcher = async () =>
     new Response(JSON.stringify({ state: "ENDED" }));
@@ -420,6 +425,39 @@ test("expired previews, overlong documents and incomplete artifact generation ar
     }),
     /still preparing/,
   );
+});
+test("long Unicode Google imports preserve all text and keep the encrypted preview vault bounded", async (t) => {
+  const f = await fixture(t);
+  await connect(f.app);
+  const transcript = "界".repeat(MAX_TRANSCRIPT_CHARS);
+  f.google.fetcher = async () =>
+    new Response(
+      JSON.stringify({
+        title: "Long review",
+        body: {
+          content: [
+            { paragraph: { elements: [{ textRun: { content: transcript } }] } },
+          ],
+        },
+      }),
+    );
+  let latest;
+  for (let i = 0; i < 4; i++)
+    latest = await f.google.preview("kiya", "kiya", {
+      kind: "document",
+      url: "https://docs.google.com/document/d/portfolio-notes-document",
+    });
+  assert.equal(latest.transcript, transcript);
+  assert.equal(
+    (await f.google.imported("kiya", "kiya", latest.previewId)).transcript,
+    transcript,
+  );
+  const saved = await f.vault.get("kiya");
+  assert(
+    saved.previews.length < 4,
+    "Older previews are evicted before the Firestore document limit",
+  );
+  assert(Buffer.byteLength(f.vault.seal(saved), "utf8") < 900_000);
 });
 test("token refresh preserves encrypted connection identity, and upstream failures never disclose key strings", async (t) => {
   const f = await fixture(t);

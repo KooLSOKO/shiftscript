@@ -1,4 +1,4 @@
-# ShiftScript v2.1
+# ShiftScript v2.1.1
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -6,7 +6,7 @@ A corporate blue meeting workspace: turn a transcript or voice recording into st
 
 ## Existing project: start here
 
-Read **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)** for the safe Mac update, GitHub push, Vercel deployment and Google Meet, Zoho email and shared workspace setup. This is a complete source project, not a partial patch. Your Firebase Web configuration is included; private credentials are excluded.
+Read **[docs/UPDATE-v2.1.1.md](docs/UPDATE-v2.1.1.md)** for this dashboard email/longer transcript update, Mac commands and usage. For Google Meet, Zoho email and shared workspace setup, see **[docs/UPDATE-v2.1.md](docs/UPDATE-v2.1.md)**. This is a complete source project, not a partial patch. Your Firebase Web configuration is included; private credentials are excluded.
 
 ## New project in VS Code
 
@@ -56,7 +56,7 @@ The key stays on the Node server. Do not use `VITE_GEMINI_API_KEY`. Transcriptio
 
 ## Voice and transcripts
 
-Text: paste or upload `.txt`, maximum 15,000 characters. Choose meeting date/type and an optional project.
+Text: paste or upload `.txt`, maximum 100,000 characters (file limit 400 KB). Google notes/transcript imports and private drafts use the same text limit. Choose meeting date/type and an optional project. Voice transcription retains its separate 2.5 MB recording and 15,000-character output limits.
 
 Audio: upload MP3, WAV, M4A, AAC, OGG, FLAC or WebM, or **Record voice** on localhost/HTTPS. Recording stops after five minutes; files must be **2.5 MB or smaller**. Trim/compress longer recordings. Gemini transcribes first; you correct speaker names and unclear words, then process the text for tasks. Raw audio is not persisted. Unidentified speaker labels do not establish a real person's identity.
 
