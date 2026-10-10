@@ -1320,7 +1320,14 @@ export default function App() {
                               </thead>
                               <tbody>
                                 {filtered.map((t) => (
-                                  <tr key={t.id}>
+                                  <tr
+                                    key={t.id}
+                                    className={
+                                      t.status === "Completed"
+                                        ? "task-row-completed"
+                                        : undefined
+                                    }
+                                  >
                                     {!readOnly && (
                                       <td
                                         data-label="Select"
@@ -1341,33 +1348,16 @@ export default function App() {
                                       >
                                         {t.title}
                                       </button>
-                                      {t.checklist?.length > 0 && (
-                                        <span className="hint">
-                                          {
-                                            t.checklist.filter((c) => c.done)
-                                              .length
-                                          }
-                                          /{t.checklist.length} steps
-                                        </span>
-                                      )}
-                                      <button
-                                        className="text-button task-calendar-link"
-                                        aria-label={
-                                          "Add " +
-                                          t.title +
-                                          " to Google Calendar"
-                                        }
-                                        onClick={() => setCalendarTaskId(t.id)}
-                                      >
-                                        <Icons.CalendarDays size={15} />
-                                        {personal?.calendarMarks?.some(
-                                          (mark) =>
-                                            mark.workspaceId === workspaceId &&
-                                            mark.taskId === t.id,
-                                        )
-                                          ? "Marked added to Calendar"
-                                          : "Add to Calendar"}
-                                      </button>
+                                      {t.status !== "Completed" &&
+                                        t.checklist?.length > 0 && (
+                                          <span className="hint">
+                                            {
+                                              t.checklist.filter((c) => c.done)
+                                                .length
+                                            }
+                                            /{t.checklist.length} steps
+                                          </span>
+                                        )}
                                     </td>
                                     <td data-label="Owner">{t.owner}</td>
                                     <td
@@ -1375,17 +1365,19 @@ export default function App() {
                                       className={overdue(t) ? "late" : ""}
                                     >
                                       {formatDate(t.dueDate)}
-                                      {!t.schedule && (
-                                        <small className="saved-schedule">
-                                          Not scheduled
-                                        </small>
-                                      )}
-                                      {t.schedule && (
-                                        <small className="saved-schedule">
-                                          Scheduled {t.schedule.date} ·{" "}
-                                          {t.schedule.time}
-                                        </small>
-                                      )}
+                                      {t.status !== "Completed" &&
+                                        !t.schedule && (
+                                          <small className="saved-schedule">
+                                            Not scheduled
+                                          </small>
+                                        )}
+                                      {t.status !== "Completed" &&
+                                        t.schedule && (
+                                          <small className="saved-schedule">
+                                            Scheduled {t.schedule.date} ·{" "}
+                                            {t.schedule.time}
+                                          </small>
+                                        )}
                                     </td>
                                     <td data-label="Priority">
                                       <Priority value={t.priority} />
@@ -1427,20 +1419,23 @@ export default function App() {
                                           <Icons.Edit size={15} />
                                           Details
                                         </button>
-                                        <button
-                                          className="button small"
-                                          disabled={
-                                            readOnly ||
-                                            t.status === "Completed" ||
-                                            waitingOn(t, data.tasks).length > 0
-                                          }
-                                          onClick={() =>
-                                            changeStatus(t, "Completed")
-                                          }
-                                        >
-                                          <Icons.Check size={15} />
-                                          Done
-                                        </button>
+                                        {t.status !== "Completed" && (
+                                          <button
+                                            className="button small"
+                                            disabled={
+                                              readOnly ||
+                                              t.status === "Completed" ||
+                                              waitingOn(t, data.tasks).length >
+                                                0
+                                            }
+                                            onClick={() =>
+                                              changeStatus(t, "Completed")
+                                            }
+                                          >
+                                            <Icons.Check size={15} />
+                                            Done
+                                          </button>
+                                        )}
                                       </div>
                                     </td>
                                     <td data-label="Project / source">
@@ -1494,7 +1489,15 @@ export default function App() {
                               {filtered
                                 .filter((t) => t.status === s)
                                 .map((t) => (
-                                  <article className="task-card" key={t.id}>
+                                  <article
+                                    className={
+                                      "task-card" +
+                                      (t.status === "Completed"
+                                        ? " task-card-completed"
+                                        : "")
+                                    }
+                                    key={t.id}
+                                  >
                                     {!readOnly && (
                                       <label className="check-option">
                                         <input
@@ -1503,57 +1506,56 @@ export default function App() {
                                           checked={selectedIds.includes(t.id)}
                                           onChange={() => toggleSelected(t.id)}
                                         />
-                                        Select
+                                        <span className="task-select-label">
+                                          Select
+                                        </span>
                                       </label>
                                     )}
-                                    {waitingOn(t, data.tasks).length > 0 && (
-                                      <span className="badge dependency-badge">
-                                        Waiting on{" "}
-                                        {waitingOn(t, data.tasks).length}{" "}
-                                        task(s)
-                                      </span>
+                                    {t.status !== "Completed" &&
+                                      waitingOn(t, data.tasks).length > 0 && (
+                                        <span className="badge dependency-badge">
+                                          Waiting on{" "}
+                                          {waitingOn(t, data.tasks).length}{" "}
+                                          task(s)
+                                        </span>
+                                      )}
+                                    {t.status !== "Completed" && (
+                                      <Priority value={t.priority} />
                                     )}
-                                    <Priority value={t.priority} />
                                     <button
                                       className="card-title"
                                       onClick={() => setTaskId(t.id)}
                                     >
                                       {t.title}
                                     </button>
-                                    <p className="hint">
-                                      {data.projects.find(
-                                        (p) => p.id === t.projectId,
-                                      )?.name || "No project"}
-                                    </p>
-                                    <div className="task-card-foot">
-                                      <span>{t.owner}</span>
-                                      <span
-                                        className={overdue(t) ? "late" : ""}
-                                      >
-                                        {formatDate(t.dueDate)}
-                                        {!t.schedule && (
-                                          <small className="saved-schedule">
-                                            Not scheduled
-                                          </small>
-                                        )}
-                                        {t.schedule && (
-                                          <small className="saved-schedule">
-                                            Scheduled {t.schedule.date} ·{" "}
-                                            {t.schedule.time}
-                                          </small>
-                                        )}
-                                      </span>
-                                    </div>
-                                    <button
-                                      className="text-button task-calendar-link"
-                                      aria-label={
-                                        "Add " + t.title + " to Google Calendar"
-                                      }
-                                      onClick={() => setCalendarTaskId(t.id)}
-                                    >
-                                      <Icons.CalendarDays size={15} />
-                                      Add to Calendar
-                                    </button>
+                                    {t.status !== "Completed" && (
+                                      <>
+                                        <p className="hint">
+                                          {data.projects.find(
+                                            (p) => p.id === t.projectId,
+                                          )?.name || "No project"}
+                                        </p>
+                                        <div className="task-card-foot">
+                                          <span>{t.owner}</span>
+                                          <span
+                                            className={overdue(t) ? "late" : ""}
+                                          >
+                                            {formatDate(t.dueDate)}
+                                            {!t.schedule && (
+                                              <small className="saved-schedule">
+                                                Not scheduled
+                                              </small>
+                                            )}
+                                            {t.schedule && (
+                                              <small className="saved-schedule">
+                                                Scheduled {t.schedule.date} ·{" "}
+                                                {t.schedule.time}
+                                              </small>
+                                            )}
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
                                     <select
                                       aria-label={"Status for " + t.title}
                                       disabled={readOnly}

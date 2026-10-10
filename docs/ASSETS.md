@@ -84,3 +84,7 @@ The central mobile action uses the existing original Plus SVG, a code-native SVG
 ## Authentication paint stroke (v3.0.8)
 
 The login/signup handoff is an original SVG path and CSS dash animation inspired by the user-supplied video. It uses the shared cobalt blue and existing ShiftScript favicon/white S branding. No video, third-party artwork or new animation dependency is shipped. SVG viewport cropping preserves stroke proportions on portrait/landscape screens; the solid stage covers the full viewport. The animation is bypassed for reduced motion.
+
+## v3.0.10 interactive controls
+
+MeetingSourcePicker adapts the Uiverse GreyD097 dial as scoped React/CSS with Earny cobalt, four native accessible choices and a bounded pointer drag area. DisconnectButton adapts AKAspidey01's sliding icon panel, using the existing custom LogOut icon. Both use code-native visuals, with no external images, scripts or new dependencies. Attribution is retained in source comments.

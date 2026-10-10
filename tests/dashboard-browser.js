@@ -319,6 +319,144 @@ try {
       });
     }
   }
+  // Completed cards collapse immediately, keep the original data and reopen.
+  async function navigate(label) {
+    const button = page.getByRole("button", { name: label, exact: true });
+    if (!(await button.isVisible()))
+      await page
+        .getByRole("button", { name: "Open navigation", exact: true })
+        .click();
+    await button.click();
+  }
+  await navigate("Board");
+  await page
+    .getByRole("button", { name: "Clear filters", exact: true })
+    .click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1050 });
+    const completed = page
+      .locator("article.task-card-completed")
+      .filter({ has: taskButton("Completed archive") });
+    const active = page
+      .locator("article.task-card")
+      .filter({ has: taskButton("Active next step") });
+    await completed.waitFor();
+    assert.match(await completed.getAttribute("class"), /task-card-completed/);
+    assert.equal(
+      await completed
+        .locator(".task-card-foot, .priority, .hint, .task-calendar-link")
+        .count(),
+      0,
+    );
+    assert.equal(await page.locator(".task-calendar-link").count(), 0);
+    assert(
+      (await completed.boundingBox()).height <
+        (await active.boundingBox()).height - 60,
+    );
+    assert(
+      (
+        await completed
+          .getByLabel("Status for Completed archive", { exact: true })
+          .boundingBox()
+      ).height >= 44,
+    );
+    await completed
+      .getByLabel("Select Completed archive", { exact: true })
+      .check();
+    await completed
+      .getByLabel("Select Completed archive", { exact: true })
+      .uncheck();
+    await taskButton("Completed archive").click();
+    const detail = page.getByRole("dialog", {
+      name: "Task details",
+      exact: true,
+    });
+    assert.equal(
+      await detail.getByLabel("Assigned to", { exact: true }).inputValue(),
+      "Kiya Soko",
+    );
+    assert.equal(
+      await detail.getByRole("textbox", { name: /^Description/ }).inputValue(),
+      "A fictional commitment",
+    );
+    assert.equal(
+      await detail.getByLabel("Status", { exact: true }).inputValue(),
+      "Completed",
+    );
+    await detail
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
+    if (width === 390 || width === 1440) {
+      await completed.scrollIntoViewIfNeeded();
+      await page.evaluate(() => document.activeElement?.blur());
+      await completed.screenshot({
+        path: `docs/screenshots/completed-card-${width === 390 ? "mobile" : "desktop"}.png`,
+      });
+    }
+    await completed
+      .getByLabel("Status for Completed archive", { exact: true })
+      .selectOption("To Do");
+    await page
+      .locator(".task-card:not(.task-card-completed)")
+      .filter({ has: taskButton("Completed archive") })
+      .waitFor();
+    const reopened = page
+      .locator("article.task-card")
+      .filter({ has: taskButton("Completed archive") });
+    assert(await reopened.getByText("Kiya Soko", { exact: true }).isVisible());
+    await reopened
+      .getByLabel("Status for Completed archive", { exact: true })
+      .selectOption("Completed");
+    await completed.waitFor();
+  }
+  await page.setViewportSize({ width: 390, height: 1050 });
+  await navigate("Task tracker");
+  const completedRow = page
+    .locator("tr.task-row-completed")
+    .filter({ has: taskButton("Completed archive") });
+  await completedRow.waitFor();
+  for (const label of ["Owner", "Due date", "Priority", "Project / source"])
+    assert(
+      !(await completedRow.locator(`td[data-label="${label}"]`).isVisible()),
+    );
+  assert.equal(
+    await completedRow
+      .getByRole("button", { name: "Done", exact: true })
+      .count(),
+    0,
+  );
+  await completedRow.scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.activeElement?.blur());
+  await completedRow.screenshot({ path: "docs/screenshots/completed-list-mobile.png" });
+  await completedRow
+    .getByRole("button", { name: "Details", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Task details", exact: true })
+    .waitFor();
+  await page.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await completedRow
+    .getByLabel("Status for Completed archive", { exact: true })
+    .selectOption("To Do");
+  const reopenedRow = page
+    .locator("tbody tr")
+    .filter({ has: taskButton("Completed archive") });
+  await reopenedRow
+    .locator('td[data-label="Owner"]')
+    .waitFor({ state: "visible" });
+  await reopenedRow
+    .getByLabel("Status for Completed archive", { exact: true })
+    .selectOption("Completed");
+  await completedRow.waitFor();
+  await page.reload();
+  await overview();
+  await card("Completed", 1).click();
+  await page
+    .locator("tr.task-row-completed")
+    .filter({ has: taskButton("Completed archive") })
+    .waitFor();
+  await overview();
+  await page.setViewportSize({ width: 2048, height: 1050 });
   // Workspace switches clear approval filters; zero totals are still usable.
   await page
     .getByRole("button", { name: "Switch workspace", exact: true })
@@ -350,7 +488,7 @@ try {
   assert.equal(await page.locator(".meeting-row").count(), 3);
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: all seven dashboard shortcuts, keyboard Enter/Space, correct task subsets, all pending meetings, stale filter reset, workspace isolation/reset, zero totals, Manrope and 320/390/768/2048px layouts.",
+    "PASS: completed cards/rows collapse and reopen at 320/390/768/1440px, details and selection preserved, no inline Calendar, persistence after reload; all seven dashboard shortcuts, keyboard Enter/Space, correct task subsets, all pending meetings, stale filter reset, workspace isolation/reset, zero totals, Manrope and 320/390/768/2048px layouts.",
   );
 } catch (error) {
   await page.screenshot({

@@ -1,14 +1,8 @@
+import DisconnectButton from "./DisconnectButton.jsx";
 import ProcessingLoader from "./ProcessingLoader.jsx";
 import { useEffect, useState } from "react";
 import { api, today, types } from "../lib.js";
-import {
-  Video,
-  Link,
-  RefreshCw,
-  FileText,
-  CheckCircle2,
-  LogOut,
-} from "./Icons.jsx";
+import { Video, Link, RefreshCw, FileText, CheckCircle2 } from "./Icons.jsx";
 export default function GoogleMeet({
   projects,
   workspace,
@@ -200,8 +194,7 @@ export default function GoogleMeet({
               <RefreshCw size={17} /> Load recent meetings
             </button>
             {!embedded && (
-              <button
-                className="button"
+              <DisconnectButton
                 disabled={busy}
                 onClick={() =>
                   run(async () => {
@@ -213,9 +206,7 @@ export default function GoogleMeet({
                     setListed(false);
                   })
                 }
-              >
-                <LogOut size={17} /> Disconnect
-              </button>
+              />
             )}
           </div>
         ) : (

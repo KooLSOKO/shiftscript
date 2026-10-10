@@ -218,10 +218,11 @@ try {
   await dialog().getByRole("heading", { name: "Task details" }).waitFor();
   await close();
   await page
-    .getByRole("button", {
-      name: "Add Draft portfolio to Google Calendar",
-      exact: true,
-    })
+    .getByRole("button", { name: "Draft portfolio", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Task details", exact: true })
+    .getByRole("button", { name: "Add to Google Calendar", exact: true })
     .click();
   await dialog()
     .getByLabel("Calendar date", { exact: true })
@@ -238,10 +239,11 @@ try {
     "09:00",
   );
   await page
-    .getByRole("button", {
-      name: "Add Draft portfolio to Google Calendar",
-      exact: true,
-    })
+    .getByRole("button", { name: "Draft portfolio", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Task details", exact: true })
+    .getByRole("button", { name: "Add to Google Calendar", exact: true })
     .click();
   assert.equal(
     await dialog().getByLabel("Start time", { exact: true }).inputValue(),

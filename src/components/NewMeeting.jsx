@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { api, today, types } from "../lib.js";
-import { Save, Upload, Video, FileText, NotebookPen } from "./Icons.jsx";
+import { Save, Upload, FileText } from "./Icons.jsx";
 import GoogleMeet from "./GoogleMeet.jsx";
 import Modal from "./Modal.jsx";
 import AudioInput from "./AudioInput.jsx";
+import MeetingSourcePicker from "./MeetingSourcePicker.jsx";
 import ProcessingLoader from "./ProcessingLoader.jsx";
 import {
   MAX_TRANSCRIPT_CHARS,
@@ -355,32 +356,14 @@ export default function NewMeeting({
           </p>
         </details>
       )}
-      <div
-        className="meeting-source-tabs"
-        role="group"
-        aria-label="Meeting source"
-      >
-        {[
-          ["text", "Text or voice", FileText],
-          ["google", "Recent Google Meet", Video],
-          ["previous", "Previous meeting", NotebookPen],
-        ].map(([mode, label, Icon]) => (
-          <button
-            key={mode}
-            type="button"
-            className={"button small " + (sourceMode === mode ? "primary" : "")}
-            aria-pressed={sourceMode === mode}
-            disabled={busy || audioBusy || importBusy}
-            onClick={() => setSourceMode(mode)}
-          >
-            <Icon size={17} />
-            {label}
-          </button>
-        ))}
-      </div>
-      {sourceMode !== "text" && (
+      <MeetingSourcePicker
+        value={sourceMode}
+        onChange={setSourceMode}
+        disabled={busy || audioBusy || importBusy}
+      />
+      {sourceMode !== "text" && sourceMode !== "voice" && (
         <p className="hint mb-4">
-          Your text/voice draft is kept while you browse other sources.
+          Your transcript draft is kept while you browse other sources.
         </p>
       )}
       {sourceMode === "google" && (
@@ -472,7 +455,34 @@ export default function NewMeeting({
           )}
         </section>
       )}
-      {sourceMode === "text" && (
+      <p
+        className="hint mt-4 mb-4"
+        hidden={sourceMode !== "text" && sourceMode !== "voice"}
+      >
+        Audio and live transcript processing send your content to Gemini.
+        Confirm participant permission and{" "}
+        <a
+          className="text-button"
+          href="/privacy#ai"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          check AI data handling
+        </a>{" "}
+        before using private information. Use fictional or anonymised test
+        content with unpaid Gemini.
+      </p>
+      <div hidden={sourceMode !== "voice"}>
+        <AudioInput
+          config={config}
+          disabled={busy}
+          onBusy={setAudioBusy}
+          onTranscript={(transcript, source) =>
+            setForm((p) => ({ ...p, transcript, source }))
+          }
+        />
+      </div>
+      {(sourceMode === "text" || sourceMode === "voice") && (
         <form onSubmit={submit}>
           <fieldset disabled={busy}>
             <div className="field-grid">
@@ -525,28 +535,6 @@ export default function NewMeeting({
                 </select>
               </label>
             </div>
-            <p className="hint mt-4 mb-4">
-              Audio and live transcript processing send your content to Gemini.
-              Confirm participant permission and{" "}
-              <a
-                className="text-button"
-                href="/privacy#ai"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                check AI data handling
-              </a>{" "}
-              before using private information. Use fictional or anonymised test
-              content with unpaid Gemini.
-            </p>
-            <AudioInput
-              config={config}
-              disabled={busy}
-              onBusy={setAudioBusy}
-              onTranscript={(transcript, source) =>
-                setForm((p) => ({ ...p, transcript, source }))
-              }
-            />
             <div className="flex flex-wrap gap-3 justify-between mt-5 mb-2">
               <span className="field-label">Transcript</span>
               <div className="flex gap-3">

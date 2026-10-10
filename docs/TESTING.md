@@ -123,3 +123,11 @@ The experience suite holds the meeting-processing request open and verifies the 
 ## Authentication paint handoff (v3.0.8)
 
 Accounts-browser now checks normal-motion identity flows in isolated browser contexts at 320×844, 390×844, 768×1024, 1440×1000 and 844×390. Test-only API gates expose the cover/hold phases, verify the viewport bounds, colour and inert background, and exercise slow-response fallback. It checks natural signup completion, names retained for onboarding, email/Google success, restored sessions without replay, keyboard Escape, focus/scroll cleanup, API failure followed by retry and reduced motion changed mid-animation. The Chromium fallback removes the single-process flag for these isolated contexts. Existing reduced-motion/error/account-isolation tests still run. No real Google/Firebase account or email is created by this suite.
+
+## v3.0.9 completed-task display
+
+The dashboard browser suite checks compact completed Board cards at 320/390/768/1440px, retained details, selection, reopening, mobile list fields and reload persistence. Inline Calendar buttons are absent; existing Calendar tests now open Task details before scheduling.
+
+## v3.0.10 source controls
+
+The browser smoke suite checks four directional choices, keyboard focus, all mouse drag directions at 320/390/768/1440px, native touch drag, retained draft/audio and disabled selection during permission requests/transcription. The integration suite checks Google and previous-meeting sources, the blue Disconnect button dimensions, keyboard focus expansion, reduced motion and one mocked disconnect request. The built experience suite covers processing and navigation.

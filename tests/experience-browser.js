@@ -324,23 +324,22 @@ try {
     "none",
   );
 
-  const calendar = page
-    .getByRole("button", {
-      name: "Add Review the portfolio to Google Calendar",
-      exact: true,
-    })
+  assert.equal(await page.locator(".task-calendar-link").count(), 0);
+  const taskTitle = page
+    .getByRole("button", { name: "Review the portfolio", exact: true })
     .first();
-  await calendar.waitFor();
+  await taskTitle.click();
+  const calendar = page
+    .getByRole("dialog", { name: "Task details", exact: true })
+    .getByRole("button", { name: "Add to Google Calendar", exact: true });
   const calendarBox = await calendar.boundingBox();
   assert(calendarBox.height >= 44 && calendarBox.width >= 44);
-  assert.equal(
-    await calendar.evaluate((el) => getComputedStyle(el).fontSize),
-    "14px",
-  );
   await calendar.click();
-  await page.getByRole("dialog").waitFor();
+  await page
+    .getByRole("dialog", { name: "Add task to Google Calendar", exact: true })
+    .waitFor();
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
-  await calendar.scrollIntoViewIfNeeded();
+  await taskTitle.scrollIntoViewIfNeeded();
   await page.evaluate(() => document.activeElement?.blur());
   await page.screenshot({
     path: "docs/screenshots/calendar-controls-mobile.png",

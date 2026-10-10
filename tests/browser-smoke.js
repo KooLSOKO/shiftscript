@@ -56,6 +56,115 @@ try {
     .getByRole("heading", { name: "Less follow-up. More follow-through." })
     .waitFor();
   await page.getByRole("button", { name: "New meeting", exact: true }).click();
+  const sourcePicker = page.getByRole("radiogroup", {
+    name: "Meeting source",
+    exact: true,
+  });
+  const sourceChoice = (name) =>
+    sourcePicker.getByRole("radio", { name, exact: true });
+  assert.equal(await sourcePicker.getByRole("radio").count(), 4);
+  await page
+    .getByLabel("Meeting title", { exact: true })
+    .fill("Draft stays with me");
+  await page
+    .getByLabel("Meeting transcript", { exact: true })
+    .fill("Kiya: We will keep this draft while choosing a source.");
+  await sourceChoice("Text").focus();
+  for (const [key, mode] of [
+    ["ArrowRight", "Voice"],
+    ["ArrowDown", "Recent Google Meet"],
+    ["ArrowLeft", "Previous meeting"],
+    ["ArrowUp", "Text"],
+  ]) {
+    await page.keyboard.press(key);
+    assert.equal(await sourceChoice(mode).getAttribute("aria-checked"), "true");
+    assert(
+      await sourceChoice(mode).evaluate((el) => el === document.activeElement),
+    );
+  }
+  assert.equal(
+    await page.getByLabel("Meeting title", { exact: true }).inputValue(),
+    "Draft stays with me",
+  );
+  assert.match(
+    await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
+    /keep this draft/,
+  );
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1050 });
+    for (const radio of await sourcePicker.getByRole("radio").all()) {
+      const box = await radio.boundingBox();
+      assert(
+        box.width >= 44 &&
+          box.height >= 44 &&
+          box.x >= 0 &&
+          box.x + box.width <= width,
+        `Source target outside ${width}px`,
+      );
+    }
+    assert(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    for (const [dx, dy, mode] of [
+      [38, 0, "Voice"],
+      [0, 38, "Recent Google Meet"],
+      [-38, 0, "Previous meeting"],
+      [0, -38, "Text"],
+    ]) {
+      await page.locator(".source-stick").scrollIntoViewIfNeeded();
+      const box = await page.locator(".source-stick").boundingBox();
+      const x = box.x + box.width / 2,
+        y = box.y + box.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + dx, y + dy, { steps: 3 });
+      await page.mouse.up();
+      assert.equal(
+        await sourceChoice(mode).getAttribute("aria-checked"),
+        "true",
+      );
+    }
+    if (width === 390 || width === 1440) {
+      await page
+        .locator(".meeting-source-picker")
+        .screenshot({
+          path: `docs/screenshots/source-picker-${width === 390 ? "mobile" : "desktop"}.png`,
+        });
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 1050 });
+  await page.locator(".source-stick").scrollIntoViewIfNeeded();
+  const touchBox = await page.locator(".source-stick").boundingBox();
+  const tx = touchBox.x + touchBox.width / 2,
+    ty = touchBox.y + touchBox.height / 2;
+  const touchSession = await page.context().newCDPSession(page);
+  await touchSession.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: tx, y: ty, id: 1 }],
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: tx + 38, y: ty, id: 1 }],
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  assert.equal(
+    await sourceChoice("Voice").getAttribute("aria-checked"),
+    "true",
+  );
+  await touchSession.send("Emulation.setTouchEmulationEnabled", {
+    enabled: false,
+  });
+  await touchSession.detach();
+  await sourceChoice("Text").click();
+  await page.setViewportSize({ width: 1440, height: 1050 });
   await page.getByRole("button", { name: "Load sample", exact: true }).click();
   await page
     .getByRole("button", { name: "Process transcript", exact: true })
@@ -246,11 +355,42 @@ try {
   wav.write("RIFF");
   wav.write("WAVE", 8);
   wav.write("fmt ", 12);
+  await page.getByRole("radio", { name: "Voice", exact: true }).click();
+  await page.evaluate(() => {
+    navigator.mediaDevices.getUserMedia = () =>
+      new Promise((_resolve, reject) => {
+        window.rejectMicrophone = reject;
+      });
+  });
+  await page.getByRole("button", { name: "Record voice", exact: true }).click();
+  for (const radio of await sourcePicker.getByRole("radio").all())
+    assert(await radio.isDisabled());
+  await page.evaluate(() =>
+    window.rejectMicrophone(
+      new DOMException("Permission declined", "NotAllowedError"),
+    ),
+  );
+  await page
+    .getByText(
+      "Microphone access was declined. You can upload an audio file instead.",
+    )
+    .waitFor();
+  assert(!(await sourceChoice("Text").isDisabled()));
   await page.getByLabel("Upload audio file").setInputFiles({
     name: "voice-sample.wav",
     mimeType: "audio/wav",
     buffer: wav,
   });
+  await sourceChoice("Text").click();
+  assert(
+    !(await page
+      .getByRole("region", { name: "Voice input", exact: true })
+      .isVisible()),
+  );
+  await sourceChoice("Voice").click();
+  assert(
+    await page.getByText("voice-sample.wav", { exact: false }).isVisible(),
+  );
   await page
     .getByRole("button", { name: "Transcribe to text", exact: true })
     .click();
@@ -259,6 +399,13 @@ try {
     .getByText("Transcribing voice…", { exact: true })
     .waitFor();
   assert.equal(await page.locator(".ss-wave-loader li").count(), 9);
+  for (const radio of await sourcePicker.getByRole("radio").all())
+    assert(await radio.isDisabled());
+  await sourceChoice("Voice").dispatchEvent("keydown", { key: "ArrowUp" });
+  assert.equal(
+    await sourceChoice("Voice").getAttribute("aria-checked"),
+    "true",
+  );
   releaseVoice();
   await page.waitForFunction(
     (expected) =>

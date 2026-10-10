@@ -22,7 +22,8 @@ const source = {
   documentId: "portfolio-document",
   artifact: "conferenceRecords/portfolio/smartNotes/notes",
 };
-let sent = 0;
+let sent = 0,
+  disconnected = 0;
 const sentRecipients = [];
 await store.mutate("local-demo", (s) => {
   s.workspace = newWorkspace(
@@ -68,7 +69,9 @@ const google = {
     expires: Date.now() + 900000,
   }),
   imported: async () => ({ transcript, source }),
-  disconnect: async () => {},
+  disconnect: async () => {
+    disconnected++;
+  },
 };
 const server = createApp({
   store,
@@ -165,7 +168,7 @@ try {
   await page.goto("http://127.0.0.1:5182/app");
   await page.getByRole("button", { name: "New meeting", exact: true }).click();
   await page
-    .getByRole("button", { name: "Recent Google Meet", exact: true })
+    .getByRole("radio", { name: "Recent Google Meet", exact: true })
     .click();
   await page
     .getByRole("heading", { name: "Recent meetings", exact: true })
@@ -321,7 +324,7 @@ try {
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.getByRole("button", { name: "New meeting", exact: true }).click();
   await page
-    .getByRole("button", { name: "Previous meeting", exact: true })
+    .getByRole("radio", { name: "Previous meeting", exact: true })
     .click();
   await page.getByLabel("Search saved meetings").fill("Kopano");
   await page.locator(".previous-meeting-option").first().click();
@@ -339,7 +342,7 @@ try {
     ).endsWith("follow-up"),
   );
   await page
-    .getByRole("button", { name: "Recent Google Meet", exact: true })
+    .getByRole("radio", { name: "Recent Google Meet", exact: true })
     .click();
   await page
     .getByRole("heading", { name: "Recent meetings", exact: true })
@@ -349,9 +352,7 @@ try {
       "Already imported",
     ),
   );
-  await page
-    .getByRole("button", { name: "Text or voice", exact: true })
-    .click();
+  await page.getByRole("radio", { name: "Text", exact: true }).click();
   assert.equal(
     await page.getByLabel("Meeting transcript", { exact: true }).inputValue(),
     transcript,
@@ -445,6 +446,58 @@ try {
   await widthCheck("Landscape import");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await widthCheck("Desktop import");
+  const disconnect = page.getByRole("button", {
+    name: "Disconnect",
+    exact: true,
+  });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await disconnect.scrollIntoViewIfNeeded();
+    const bounds = await disconnect.boundingBox();
+    assert(
+      bounds.width >= 44 &&
+        bounds.height === 56 &&
+        bounds.x >= 0 &&
+        bounds.x + bounds.width <= width,
+    );
+    await widthCheck("Disconnect " + width);
+    if (width === 390 || width === 1440)
+      await disconnect.screenshot({
+        path: `docs/screenshots/disconnect-${width === 390 ? "mobile" : "desktop"}.png`,
+      });
+  }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await disconnect.focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  const panel = disconnect.locator(".disconnect-button-icon");
+  await panel.evaluate(async (el) => {
+    await Promise.all(
+      el.getAnimations().map((a) => a.finished.catch(() => {})),
+    );
+  });
+  assert((await panel.boundingBox()).width > 170);
+  assert.equal(
+    await panel.evaluate((el) => getComputedStyle(el).backgroundColor),
+    "rgb(36, 88, 232)",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  assert.equal((await panel.boundingBox()).width, 48);
+  assert.equal(
+    await disconnect
+      .locator(".disconnect-button-label")
+      .evaluate((el) => getComputedStyle(el).opacity),
+    "1",
+  );
+  await page.keyboard.press("Enter");
+  await page
+    .getByRole("button", { name: "Connect Google", exact: true })
+    .waitFor();
+  assert.equal(disconnected, 1);
+  assert.equal(
+    await page.getByRole("heading", { name: "Review your import" }).count(),
+    0,
+  );
   assert.deepEqual(errors, []);
   console.log(
     "Google import, task approval, email preview/send, phone layouts (320/390/430), tablet (768), landscape (844), modal controls and drawer keyboard checks passed.",

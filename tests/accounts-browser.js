@@ -322,10 +322,11 @@ try {
       0,
     );
   await page
-    .getByRole("button", {
-      name: "Add Profile test first to Google Calendar",
-      exact: true,
-    })
+    .getByRole("button", { name: "Profile test first", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Task details", exact: true })
+    .getByRole("button", { name: "Add to Google Calendar", exact: true })
     .click();
   const calendar = page.getByRole("dialog", {
     name: "Add task to Google Calendar",
@@ -409,10 +410,11 @@ try {
     .getByRole("button", { name: "Close dialog", exact: true })
     .click();
   await page
-    .getByRole("button", {
-      name: "Add Profile test linked to Google Calendar",
-      exact: true,
-    })
+    .getByRole("button", { name: "Profile test linked", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Task details", exact: true })
+    .getByRole("button", { name: "Add to Google Calendar", exact: true })
     .click();
   assert.equal(
     await calendar.getByLabel("Calendar date", { exact: true }).inputValue(),

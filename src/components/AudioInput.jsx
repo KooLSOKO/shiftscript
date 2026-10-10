@@ -15,6 +15,7 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
   const [file, setFile] = useState(null),
     [url, setUrl] = useState(""),
     [recording, setRecording] = useState(false),
+    [requesting, setRequesting] = useState(false),
     [busy, setBusy] = useState(false),
     [seconds, setSeconds] = useState(0),
     [error, setError] = useState("");
@@ -61,6 +62,8 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
       return setError(
         "Microphone recording is unavailable here. Upload an audio file instead. Use localhost or HTTPS.",
       );
+    setRequesting(true);
+    onBusy(true);
     try {
       stream.current = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -133,6 +136,8 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
           ? "Microphone access was declined. You can upload an audio file instead."
           : e.message,
       );
+    } finally {
+      if (mounted.current) setRequesting(false);
     }
   }
   async function transcribe() {
@@ -175,7 +180,7 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
         <label
           className={
             "button small upload " +
-            (disabled || busy || recording ? "disabled" : "")
+            (disabled || busy || recording || requesting ? "disabled" : "")
           }
         >
           <Upload size={15} />
@@ -184,7 +189,7 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
             aria-label="Upload audio file"
             type="file"
             accept=".mp3,.wav,.m4a,.aac,.ogg,.flac,.webm"
-            disabled={disabled || busy || recording}
+            disabled={disabled || busy || recording || requesting}
             onChange={(e) => {
               choose(e.target.files?.[0]);
               e.target.value = "";
@@ -205,7 +210,7 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
           <button
             type="button"
             className="button small"
-            disabled={disabled || busy}
+            disabled={disabled || busy || requesting}
             onClick={record}
           >
             <Mic size={15} />
