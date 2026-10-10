@@ -73,6 +73,7 @@ export default function AccountAccess({
   error,
   setError,
   setRegistering,
+  onAuthenticated,
 }) {
   const [mode, setMode] = useState(() =>
       new URLSearchParams(window.location.search).get("mode") === "signup" &&
@@ -107,6 +108,7 @@ export default function AccountAccess({
       // Basic Firebase identity only. Meet permissions belong to the separate connection flow.
       const result = await signInWithPopup(auth, provider);
       await result.user.getIdToken(true);
+      onAuthenticated?.();
     } catch (e) {
       if (
         ["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(
@@ -139,7 +141,7 @@ export default function AccountAccess({
     if (signup && password !== confirm)
       return setError("Your passwords don't match.");
     setBusy(true);
-    if (signup) setRegistering(true);
+    if (!reset) setRegistering(true);
     try {
       if (reset) {
         await sendPasswordResetEmail(auth, email.trim());
@@ -154,8 +156,10 @@ export default function AccountAccess({
         );
         await updateProfile(credential.user, { displayName: name.trim() });
         await credential.user.getIdToken(true);
+        onAuthenticated?.();
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
+        onAuthenticated?.();
       }
     } catch (e) {
       setError(
@@ -164,7 +168,7 @@ export default function AccountAccess({
       );
     } finally {
       setBusy(false);
-      if (signup) setRegistering(false);
+      if (!reset) setRegistering(false);
     }
   }
   return (

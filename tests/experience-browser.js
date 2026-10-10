@@ -248,6 +248,12 @@ try {
       .evaluate((el) => getComputedStyle(el).animationName),
     "ss-wave-1",
   );
+  // Changing the motion preference restarts the finite dialog entrance. Measure its settled layout.
+  await page.getByRole("dialog").evaluate(async (el) => {
+    await Promise.all(
+      el.getAnimations().map((animation) => animation.finished.catch(() => {})),
+    );
+  });
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 844 });
     await loader.scrollIntoViewIfNeeded();

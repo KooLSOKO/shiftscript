@@ -119,3 +119,7 @@ The ninth suite, `experience-browser.js`, tests built pages with isolated fictio
 ## Processing waves and transitions (v3.0.7)
 
 The experience suite holds the meeting-processing request open and verifies the nine-bar cobalt status, disabled submission, fit at 320/390/1440px, normal/reduced motion, failure cleanup and successful retry with the draft retained. Browser-smoke holds a mocked transcription response to check the voice loader; integrations-browser holds Google import to check its loader. Circular text angles cover the full 360 degrees without an oversized closing gap. Tab changes create a new entrance wrapper, while reduced motion disables its animation. These request gates exist in tests only; production has no simulated waiting.
+
+## Authentication paint handoff (v3.0.8)
+
+Accounts-browser now checks normal-motion identity flows in isolated browser contexts at 320×844, 390×844, 768×1024, 1440×1000 and 844×390. Test-only API gates expose the cover/hold phases, verify the viewport bounds, colour and inert background, and exercise slow-response fallback. It checks natural signup completion, names retained for onboarding, email/Google success, restored sessions without replay, keyboard Escape, focus/scroll cleanup, API failure followed by retry and reduced motion changed mid-animation. The Chromium fallback removes the single-process flag for these isolated contexts. Existing reduced-motion/error/account-isolation tests still run. No real Google/Firebase account or email is created by this suite.

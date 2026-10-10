@@ -24,7 +24,7 @@ const server = createApp({
   signupEnabled: true,
   store,
   verifyToken: async (uid) => {
-    if (!["soko", "kopano", "google-new"].includes(uid))
+    if (!["soko", "kopano", "google-new", "transition-new"].includes(uid))
       throw new Error("Bad token");
     return { uid, email: uid + "@example.test" };
   },
@@ -47,7 +47,7 @@ if (process.env.SHIFTSCRIPT_TEST_CHROMIUM) {
   options = {
     headless: true,
     executablePath: await bundled.executablePath(),
-    args: bundled.args,
+    args: bundled.args.filter((arg) => arg !== "--single-process"),
   };
 }
 const browser = await chromium.launch(options);
@@ -87,7 +87,7 @@ export const onAuthStateChanged = (_a, fn) => { callbacks.add(fn); queueMicrotas
 export async function createUserWithEmailAndPassword(_a, email, password) {
   const accounts = JSON.parse(localStorage.getItem('test-accounts') || '{}');
   if(accounts[email]) throw Object.assign(new Error(), {code:'auth/email-already-in-use'});
-  const u = {uid:email.startsWith('kopano')?'kopano':'soko',email,displayName:''};
+  const u = {uid:email.startsWith('transition')?'transition-new':email.startsWith('kopano')?'kopano':'soko',email,displayName:''};
   accounts[email]=u; localStorage.setItem('test-accounts',JSON.stringify(accounts));
   auth.currentUser=hydrate(u); notify(); return {user:auth.currentUser};
 }
@@ -555,9 +555,336 @@ try {
     .waitFor();
   assert.deepEqual(users.get("google-new").meetings, []);
   assert.equal(users.get("google-new").workspace.ownerName, "Lerato Dlamini");
+
+  // Normal-motion authentication handoffs against the actual React/API flow.
+  async function transitionPage(
+    viewport,
+    reducedMotion = "no-preference",
+    signup = false,
+  ) {
+    const context = await browser.newContext({ viewport, reducedMotion });
+    await context.addInitScript(() => {
+      localStorage.setItem(
+        "shiftscript:cookie-preferences:v1",
+        JSON.stringify({ version: 1, essential: true, optional: false }),
+      );
+      localStorage.setItem(
+        "test-accounts",
+        JSON.stringify({
+          "soko@example.test": {
+            uid: "soko",
+            email: "soko@example.test",
+            displayName: "Victor Soko",
+          },
+        }),
+      );
+      window.authTransitionStarts = 0;
+      new MutationObserver((records) => {
+        for (const record of records)
+          for (const node of record.addedNodes) {
+            if (
+              node.nodeType === 1 &&
+              (node.matches(".auth-transition") ||
+                node.querySelector(".auth-transition"))
+            )
+              window.authTransitionStarts++;
+          }
+      }).observe(document, { childList: true, subtree: true });
+    });
+    const next = await context.newPage();
+    next.setDefaultTimeout(10000);
+    next.on("pageerror", (e) => errors.push(e.message));
+    await next.route(
+      /\/node_modules\/\.vite\/deps\/firebase_auth\.js(?:\?|$)/,
+      (route) =>
+        route.fulfill({ contentType: "application/javascript", body: shim }),
+    );
+    await next.route("https://**", (route) => route.abort());
+    await next.goto(
+      "http://127.0.0.1:5180/app" + (signup ? "?mode=signup" : ""),
+    );
+    try {
+      await next.getByLabel("Email", { exact: true }).waitFor();
+    } catch (error) {
+      await next.screenshot({
+        path: "docs/screenshots/auth-handoff-failure.png",
+      });
+      console.error(
+        "Auth transition setup",
+        await next.locator("body").innerText(),
+      );
+      throw error;
+    }
+    return { context, page: next };
+  }
+  async function enterLogin(next) {
+    await next.getByLabel("Email", { exact: true }).fill("soko@example.test");
+    await next.getByLabel("Password", { exact: true }).fill("test-pass-123");
+    await next
+      .getByRole("button", { name: "Open workspace", exact: true })
+      .click();
+  }
+  const opening = (next) =>
+    next.getByRole("dialog", { name: "Opening ShiftScript", exact: true });
+  for (const viewport of [
+    { width: 320, height: 844 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 1000 },
+    { width: 844, height: 390 },
+  ]) {
+    const { context, page: next } = await transitionPage(viewport);
+    let releaseWorkspace;
+    const gate = new Promise((resolve) => {
+      releaseWorkspace = resolve;
+    });
+    await next.route(/\/api\/workspace(?:\?|$)/, async (route) => {
+      await gate;
+      await route.continue();
+    });
+    await enterLogin(next);
+    await opening(next).waitFor();
+    if (viewport.width === 390 || viewport.width === 1440) {
+      // Inspect a deterministic mid-stroke frame; phase timers keep running normally.
+      await next.locator(".auth-transition").evaluate((el) => {
+        for (const animation of el.getAnimations({ subtree: true })) {
+          animation.currentTime = 230;
+          animation.pause();
+        }
+      });
+      await next.screenshot({
+        path: `docs/screenshots/auth-paint-${viewport.width === 390 ? "mobile" : "desktop"}.png`,
+      });
+    }
+    await next.waitForFunction(
+      () =>
+        document.querySelector(".auth-transition")?.dataset.phase === "hold",
+    );
+    const box = await opening(next).boundingBox();
+    assert.equal(box.x, 0);
+    assert.equal(box.y, 0);
+    assert.equal(box.width, viewport.width);
+    assert.equal(box.height, viewport.height);
+    assert.equal(
+      await next
+        .locator(".auth-transition-plate")
+        .evaluate((el) => getComputedStyle(el).opacity),
+      "1",
+    );
+    assert.equal(
+      await next
+        .locator(".auth-transition-stroke path")
+        .evaluate((el) => getComputedStyle(el).stroke),
+      "rgb(36, 88, 232)",
+    );
+    assert(await next.locator(".auth-content").evaluate((el) => el.inert));
+    assert.equal(
+      await next.evaluate(() => document.body.style.overflow),
+      "hidden",
+    );
+    assert(
+      await next
+        .getByRole("button", { name: "Skip animation" })
+        .evaluate((el) => el === document.activeElement),
+    );
+    await next.keyboard.press("Tab");
+    assert(
+      await next
+        .getByRole("button", { name: "Skip animation" })
+        .evaluate((el) => el === document.activeElement),
+    );
+    const skipBox = await next
+      .getByRole("button", { name: "Skip animation" })
+      .boundingBox();
+    assert(skipBox.height >= 44 && skipBox.x + skipBox.width <= viewport.width);
+    assert(
+      await next.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    if (viewport.width === 390 || viewport.width === 1440)
+      await next.screenshot({
+        path: `docs/screenshots/auth-handoff-${viewport.width === 390 ? "mobile" : "desktop"}.png`,
+      });
+    releaseWorkspace();
+    await opening(next).waitFor({ state: "detached" });
+    await next
+      .getByRole("heading", { name: "Less follow-up. More follow-through." })
+      .waitFor();
+    assert.equal(await next.evaluate(() => window.authTransitionStarts), 1);
+    assert(!(await next.locator(".auth-content").evaluate((el) => el.inert)));
+    assert.equal(await next.evaluate(() => document.body.style.overflow), "");
+    assert(
+      await next.evaluate(
+        () =>
+          document.activeElement?.tagName === "H1" ||
+          document.activeElement?.tagName === "H2",
+      ),
+    );
+    await next.reload();
+    await next
+      .getByRole("heading", { name: "Less follow-up. More follow-through." })
+      .waitFor();
+    assert.equal(
+      await next.evaluate(() => window.authTransitionStarts),
+      0,
+      "Restored session replayed the auth transition",
+    );
+    if (viewport.width === 390 || viewport.width === 1440) {
+      if (viewport.width === 390)
+        await next
+          .getByRole("button", { name: "Open navigation", exact: true })
+          .click();
+      await next.getByRole("button", { name: "Sign out", exact: true }).click();
+      await next
+        .getByRole("button", { name: "Continue with Google", exact: true })
+        .click();
+      await opening(next).waitFor();
+      await opening(next).waitFor({ state: "detached" });
+      await next
+        .getByRole("heading", { name: "Less follow-up. More follow-through." })
+        .waitFor();
+      assert.equal(
+        await next.evaluate(() => window.authTransitionStarts),
+        1,
+        "Google sign-in did not trigger exactly one handoff",
+      );
+    }
+    await context.close();
+  }
+  const fresh = await transitionPage(
+    { width: 390, height: 844 },
+    "no-preference",
+    true,
+  );
+  await fresh.page
+    .getByLabel("Full name", { exact: true })
+    .fill("Thandi Molefe");
+  await fresh.page
+    .getByLabel("Email", { exact: true })
+    .fill("transition@example.test");
+  await fresh.page
+    .getByLabel("Password", { exact: true })
+    .fill("test-pass-123");
+  await fresh.page
+    .getByLabel("Confirm password", { exact: true })
+    .fill("test-pass-123");
+  await fresh.page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await opening(fresh.page).waitFor();
+  await opening(fresh.page).waitFor({ state: "detached" });
+  await fresh.page
+    .getByRole("heading", { name: "Give your work a place to land." })
+    .waitFor();
+  assert.equal(
+    await fresh.page.getByLabel("Your full name", { exact: true }).inputValue(),
+    "Thandi Molefe",
+  );
+  assert.equal(await fresh.page.evaluate(() => window.authTransitionStarts), 1);
+  await fresh.page
+    .getByLabel("Workspace name", { exact: true })
+    .fill("Transition studio");
+  await fresh.page
+    .getByRole("button", { name: "Create workspace", exact: true })
+    .click();
+  await fresh.page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  assert.equal(
+    await fresh.page.evaluate(() => window.authTransitionStarts),
+    1,
+    "Workspace creation replayed signup animation",
+  );
+  await fresh.context.close();
+  const skipped = await transitionPage({ width: 320, height: 844 });
+  let releaseSkipped;
+  const skippedGate = new Promise((resolve) => {
+    releaseSkipped = resolve;
+  });
+  await skipped.page.route(/\/api\/workspace(?:\?|$)/, async (route) => {
+    await skippedGate;
+    await route.continue();
+  });
+  await enterLogin(skipped.page);
+  await opening(skipped.page).waitFor();
+  await skipped.page.keyboard.press("Escape");
+  await opening(skipped.page).waitFor({ state: "detached" });
+  assert.equal(
+    await skipped.page.evaluate(() => document.body.style.overflow),
+    "",
+  );
+  releaseSkipped();
+  await skipped.page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  await skipped.context.close();
+  // Slow requests must reveal a real loading screen rather than trap the user.
+  const slow = await transitionPage({ width: 390, height: 844 });
+  let releaseSlow;
+  const slowGate = new Promise((resolve) => {
+    releaseSlow = resolve;
+  });
+  await slow.page.route(/\/api\/workspace(?:\?|$)/, async (route) => {
+    await slowGate;
+    await route.continue();
+  });
+  await enterLogin(slow.page);
+  await opening(slow.page).waitFor();
+  await opening(slow.page).waitFor({ state: "detached", timeout: 4000 });
+  await slow.page
+    .getByRole("heading", { name: "Opening your workspace…", exact: true })
+    .waitFor();
+  releaseSlow();
+  await slow.page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  assert.equal(await slow.page.evaluate(() => window.authTransitionStarts), 1);
+  await slow.context.close();
+  const failed = await transitionPage({ width: 1440, height: 1000 });
+  await failed.page.route(/\/api\/workspace(?:\?|$)/, (route) =>
+    route.fulfill({
+      status: 503,
+      json: { error: "Simulated workspace unavailable." },
+    }),
+  );
+  await enterLogin(failed.page);
+  await opening(failed.page).waitFor({ state: "detached" });
+  await failed.page
+    .getByRole("heading", {
+      name: "We couldn't open your workspace.",
+      exact: true,
+    })
+    .waitFor();
+  await failed.page.unroute(/\/api\/workspace(?:\?|$)/);
+  await failed.page
+    .getByRole("button", { name: "Try again", exact: true })
+    .click();
+  await failed.page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  assert.equal(
+    await failed.page.evaluate(() => window.authTransitionStarts),
+    1,
+  );
+  await failed.context.close();
+  const changed = await transitionPage({ width: 390, height: 844 });
+  await enterLogin(changed.page);
+  await opening(changed.page).waitFor();
+  await changed.page.emulateMedia({ reducedMotion: "reduce" });
+  await opening(changed.page).waitFor({ state: "detached" });
+  await changed.page
+    .getByRole("heading", { name: "Less follow-up. More follow-through." })
+    .waitFor();
+  assert.equal(
+    await changed.page.evaluate(() => document.body.style.overflow),
+    "",
+  );
+  await changed.context.close();
+
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated email and Google sign-in, returning workspace preservation, Google onboarding/name, cancellation and configuration errors, account isolation, reset, mobile overflow and policy links.",
+    "PASS: simulated email and Google sign-in, returning workspace preservation, Google onboarding/name, cancellation and configuration errors, account isolation, reset, mobile overflow and policy links; blue auth handoff at 320/390/768/1440/landscape, Google/email success, signup onboarding, once per explicit auth, restored sessions, focus/inert/scroll cleanup, Escape, slow/error recovery and changing reduced motion.",
   );
 } catch (e) {
   await page.screenshot({

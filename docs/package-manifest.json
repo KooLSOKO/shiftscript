@@ -1,6 +1,6 @@
 {
-  "version": "3.0.7",
-  "root": "ShiftScript-v3.0.7",
+  "version": "3.0.8",
+  "root": "ShiftScript-v3.0.8",
   "verification": {
     "unitApiTests": 69,
     "browserSuitesRunForThisRevision": [
@@ -52,7 +52,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "03d98df6d8053a434b16b4edc4a6f40934c6ed66ca3908e1133887f8bf892e60"
+      "sha256": "3eb98bd11494b1f77627154eec0bf271b992611e1fe67d8ceb48c1a3c0275589"
     },
     {
       "path": "api/index.js",
@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/ASSETS.md",
-      "sha256": "a4c6135d4f1d25da3bc16221df0b473f3c6d2708ba0456c6d7235ecd17e17a7f"
+      "sha256": "57ea6a2d1ab3984c4742caf1276e3d783b3f1bde2e21a9bfa0690127b65bbda8"
     },
     {
       "path": "docs/DEMO.md",
@@ -92,7 +92,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "8bb3f2ed8076e7f153419c66b15cfb3e26b13907608984f3653b0a100c2c0536"
+      "sha256": "2d5af81a4f9e8d3aa2e01ac3946da68fdb361c69e6343c79aac273aac459e05e"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -151,12 +151,16 @@
       "sha256": "c6bb9f0e3d5caf64f4a2162f95001f4a0a893e7271f0f7bbac912119d5a9b989"
     },
     {
+      "path": "docs/UPDATE-v3.0.8.md",
+      "sha256": "2b699bb2a830bf6d44a9b13611856d2b4905e7a3a0b115eb968f20541a510aa3"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "ede7f676105ed8aa1ab53c10d5e1b35e0239d6e4f4404a4ca41a84173ed17bfb"
+      "sha256": "6436c7f811856a7f1a5ad1a6c126d6557055a7d7ac0b8d7a9afda26dac955c57"
     },
     {
       "path": "docs/screenshots/about-public-desktop.png",
@@ -168,11 +172,27 @@
     },
     {
       "path": "docs/screenshots/activity-desktop.png",
-      "sha256": "d57beb8b12ef6b09fe516f058441323b6a69dd10d8697ca8e5042fc7d983c4fb"
+      "sha256": "7dd65503a54bc420a8166e962a45a15b324216d28c03ece2d3b7891d9a2c171f"
     },
     {
       "path": "docs/screenshots/agenda-desktop.png",
       "sha256": "e6223ce044f7efab7fba33e8306f3e11bb1bc2cab809da3a44060113805d601f"
+    },
+    {
+      "path": "docs/screenshots/auth-handoff-desktop.png",
+      "sha256": "828df3b194eddbc84787e07793c3e7f2ea453d4877e54dfef154baed70f96149"
+    },
+    {
+      "path": "docs/screenshots/auth-handoff-mobile.png",
+      "sha256": "dbee868fddf505cb8f01f553533fc2261d4bb427bb5a290b6bf8eb461bac48e1"
+    },
+    {
+      "path": "docs/screenshots/auth-paint-desktop.png",
+      "sha256": "d49abbdab2080af40fc7d7256a755fb51461dd0ec0c794649252e0c6e4588d04"
+    },
+    {
+      "path": "docs/screenshots/auth-paint-mobile.png",
+      "sha256": "2e891bdc2816a7ec94434ce44296ea5819afb02fbeda321e25284d5ad231632c"
     },
     {
       "path": "docs/screenshots/board-desktop.png",
@@ -188,7 +208,7 @@
     },
     {
       "path": "docs/screenshots/calendar-mobile.png",
-      "sha256": "1a8dc142331113b55ed1c0586c04a4b1818b960f1a5dc62f17f3bf3ccc578307"
+      "sha256": "92585772c7d5453ee1cca9230faed8cdf4b7d9c5eeda9e35e1360505cd83af65"
     },
     {
       "path": "docs/screenshots/cookie-first-visit-desktop.png",
@@ -252,11 +272,11 @@
     },
     {
       "path": "docs/screenshots/google-import-mobile.png",
-      "sha256": "fc14bdc1a102f68d43844569c1ccdead71ddcb1f61243f5bf23b730f64302bbc"
+      "sha256": "aefe5b651d08cdb3334fc83457a7f9333ef678bebe16de08eb5eee615f454979"
     },
     {
       "path": "docs/screenshots/google-signin-desktop.png",
-      "sha256": "a459c3cbb38af735cb293c1f30c6eda17cb60fedbe610cfc928668fcb865343f"
+      "sha256": "b7e0bdec1566f7218c7892c935fde75784dd514e22bcf57f587474bcb33b172e"
     },
     {
       "path": "docs/screenshots/google-signin-mobile.png",
@@ -288,7 +308,7 @@
     },
     {
       "path": "docs/screenshots/manual-task-desktop.png",
-      "sha256": "f4f1544e0ca8ea382b0e5186447e029b33ce5c5e25e87400261b53ed0bb62050"
+      "sha256": "51dd61b0efb036eb94747d8feaa7ec2c27aabcd57f7c2a7aaad68adf7c1593bf"
     },
     {
       "path": "docs/screenshots/meeting-mobile.png",
@@ -312,7 +332,7 @@
     },
     {
       "path": "docs/screenshots/new-meeting-google-mobile.png",
-      "sha256": "75bd5e37ad37778823c2bba956ae71ef69a98181b00d93fd8a575d04e0cd0787"
+      "sha256": "f545b7a4fbdb710d19552af418807f51c8c6edf7d612c0e987f09ef3b32daa21"
     },
     {
       "path": "docs/screenshots/privacy-public-desktop.png",
@@ -360,7 +380,7 @@
     },
     {
       "path": "docs/screenshots/review-mobile-v21.png",
-      "sha256": "3b477c7b8b910dd0091daec917551ce118ecb81ed471c1a58830aaa08e9f17ac"
+      "sha256": "a762e4c6e5a72ddb7392c0452d88cfe655b49244f300d71db4df628f3a1229c0"
     },
     {
       "path": "docs/screenshots/signup-desktop.png",
@@ -368,7 +388,7 @@
     },
     {
       "path": "docs/screenshots/task-editor-mobile-v21.png",
-      "sha256": "0887bd1ee78bd9dfa25f7792422673bd1c56ba673ce20b323d80aa0a3b922bb8"
+      "sha256": "c070ddc6420c4a89b7b7681bb8750a14676a70cc5003f591a26536b80698c5e4"
     },
     {
       "path": "docs/screenshots/tasks-mobile-v21.png",
@@ -388,15 +408,15 @@
     },
     {
       "path": "docs/screenshots/transcript-loader-desktop.png",
-      "sha256": "8d5f629a32bbcafcfc7ef6265bfdfc4a207832f2933f35cdc240be3056f5b3c8"
+      "sha256": "e303d268071702d3036ae6d98d89d36524192b47f90118a09a68a4809d4de45a"
     },
     {
       "path": "docs/screenshots/transcript-loader-mobile.png",
-      "sha256": "9b7f887601f0ae9e7039d862f6de1064e32c3ae501e825af6e650bb80a965f14"
+      "sha256": "110feb3af713e67af4f45f10362843831017a7fe1b35321421bb5c49f98c8d40"
     },
     {
       "path": "docs/screenshots/voice-input-desktop.png",
-      "sha256": "b23a1a0e58c928fcad90216cb3db73d6f15ddb80695162e6d58464c2ff351ac0"
+      "sha256": "48b46a0e765e871c566ccae7c6a67c5238467d638013d370df29464799c866d2"
     },
     {
       "path": "docs/screenshots/workspace-setup-desktop.png",
@@ -428,11 +448,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "5c052a882b8088f179abba4b402680bea9436722145a11b99f80c9010c741e34"
+      "sha256": "6f8206f6cd2a7b85cbd704bf9ae2416045486890261dc984112b99a83d7ef54e"
     },
     {
       "path": "package.json",
-      "sha256": "239a79e3c7dc39c9a5f1e1ba583475ab8b28f7f8807a022fd9b919c2190d2e12"
+      "sha256": "59e67c1985ae748b11c59b6dfbdc5017a2dbf046639bf42f89027a4c9413012e"
     },
     {
       "path": "public/about/index.html",
@@ -868,7 +888,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "3f33c65c358a7718ee2fd3c0110f4c3a881fdd680d5fff5ee2d62ff7df0d5d57"
+      "sha256": "f37eb5399ffd5d1916a512e797793ed5e1a176480cd21920ae1f99b996f6ace2"
     },
     {
       "path": "src/app-entry.jsx",
@@ -876,11 +896,15 @@
     },
     {
       "path": "src/components/Account.jsx",
-      "sha256": "6b883448448c3fc619b0c99a6b7e0c30f4c95d4efbf706494b049ec6d2023a4e"
+      "sha256": "3893307bbe695a87bc07958949775bf601f7670ab95a92516af6bb26f9ab8604"
     },
     {
       "path": "src/components/AudioInput.jsx",
       "sha256": "b328132ea0d4526520a831ee64dc756bed39fe77824f5598df9036419af90ca3"
+    },
+    {
+      "path": "src/components/AuthTransition.jsx",
+      "sha256": "4e0379e4def847f68a6b562b0101e1bd0d063fcc332e1696602ddd730e3c41ef"
     },
     {
       "path": "src/components/CalendarBatch.jsx",
@@ -1000,11 +1024,11 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "406bb3ac87cc0a39910988f26317ec41c76bab4e99ecf62122e77bd437f4099a"
+      "sha256": "bdd56f1664fb316525937dcce7a9bc4a281eaa4b1c224290c7b23d6373bf238b"
     },
     {
       "path": "tests/accounts-browser.js",
-      "sha256": "53b3d1c01d2c71ef8592957cf59c162a8d82a95f7c61ba7acd165b364da3b640"
+      "sha256": "36e5d20b41c412e2ef10dc36444e0c4789539ceea2b96af70b79463e21892208"
     },
     {
       "path": "tests/accounts.test.js",
@@ -1032,7 +1056,7 @@
     },
     {
       "path": "tests/experience-browser.js",
-      "sha256": "7368cfb224a28117fc937b1d8ea1b44f9c2081cf242f0a79c778f8ebd5a93752"
+      "sha256": "8295bcbe3818795e91cdfdcb1b78ce85fa3484f206b81f8eb87381b7d7266580"
     },
     {
       "path": "tests/exports-filters.test.js",

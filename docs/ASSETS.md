@@ -80,3 +80,7 @@ The central mobile action uses the existing original Plus SVG, a code-native SVG
 ## Processing waves and circular lettering (v3.0.7)
 
 `src/components/ProcessingLoader.jsx` supplies a reusable nine-bar status display. Its CSS waveform is adapted from the JkHuger Uiverse.io example supplied by the user, with the shared cobalt colour. It is decorative and noninteractive, with separate accessible status text. The central meeting button now uses individually positioned text characters rather than an SVG text path to distribute lettering evenly across browsers. No new raster assets or external runtime dependencies are required. Page transitions and FAQ reveals use short CSS animations with static reduced-motion variants.
+
+## Authentication paint stroke (v3.0.8)
+
+The login/signup handoff is an original SVG path and CSS dash animation inspired by the user-supplied video. It uses the shared cobalt blue and existing ShiftScript favicon/white S branding. No video, third-party artwork or new animation dependency is shipped. SVG viewport cropping preserves stroke proportions on portrait/landscape screens; the solid stage covers the full viewport. The animation is bypassed for reduced motion.
