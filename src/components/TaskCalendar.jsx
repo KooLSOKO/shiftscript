@@ -4,7 +4,7 @@ import {
   calendarDurations,
   deviceTimeZone,
 } from "../features/calendar.js";
-import { CalendarDays, ArrowUpRight } from "./Icons.jsx";
+import { CalendarDays } from "./Icons.jsx";
 import { api } from "../lib.js";
 import Modal from "./Modal.jsx";
 
@@ -140,7 +140,7 @@ export default function TaskCalendar({
             type="submit"
             disabled={!date || !time}
           >
-            Open Google Calendar <ArrowUpRight size={17} />
+            Open Google Calendar
           </button>
         </div>
       </form>
@@ -233,7 +233,7 @@ export default function TaskCalendar({
             target="_blank"
             rel="noopener noreferrer"
           >
-            Open event draft again <ArrowUpRight size={15} />
+            Open event draft again
           </a>
           <p className="hint">
             Use this link if your browser blocked the new tab. Reopening and

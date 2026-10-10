@@ -1,0 +1,107 @@
+{
+  "version": "3.0.4",
+  "date": "2026-10-10",
+  "generator": "Built-in image-generation tool",
+  "delivery": "Transparent PNG; ImageMagick only used for delivery resizing and PNG encoding. Original new icon PNGs retained.",
+  "assets": [
+    {
+      "name": "meeting-blue",
+      "operation": "background-extraction",
+      "path": "public/art/meeting-blue.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/meeting-blue.webp"
+      ]
+    },
+    {
+      "name": "meetings",
+      "operation": "background-extraction",
+      "path": "public/art/meetings.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/meetings.webp"
+      ]
+    },
+    {
+      "name": "google-meet",
+      "operation": "background-extraction",
+      "path": "public/art/google-meet.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/google-meet.webp"
+      ]
+    },
+    {
+      "name": "tasks",
+      "operation": "background-extraction",
+      "path": "public/art/tasks.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/tasks.webp"
+      ]
+    },
+    {
+      "name": "projects",
+      "operation": "background-extraction",
+      "path": "public/art/projects.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/projects.webp"
+      ]
+    },
+    {
+      "name": "team",
+      "operation": "background-extraction",
+      "path": "public/art/team.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/team.webp"
+      ]
+    },
+    {
+      "name": "profile",
+      "operation": "background-extraction",
+      "path": "public/art/profile.png",
+      "prompt": "Use case: background-extraction. Edit target: attached ShiftScript character illustration. Remove ONLY the pale blue background and all rectangular background panels. Return a real transparent PNG cutout with alpha, no checkerboard painted into the image, no colored backdrop, no border. Preserve all existing people, faces, clothing, blue desk, chairs, laptop, floating icons, plant and foreground objects in precisely the existing positions, colors, clay material and composition. Keep every foreground element intact and subtle object contact shadows. Preserve the original wide landscape framing. No text or watermark.",
+      "references": [
+        "public/art/profile.webp"
+      ]
+    },
+    {
+      "name": "audio-voice",
+      "operation": "new clay illustration",
+      "path": "public/art/clay/audio-voice.png",
+      "prompt": "Use case: stylized-concept. Create a single original ShiftScript clay icon for Audio & voice. Reference image is STYLE ONLY. Matte tactile clay in cobalt blue #2458E8 and ivory, small navy accents. Subject: rounded upright podcast microphone on a short curved blue stand with two restrained ivory sound wave marks, one small coral recording dot. Friendly sculpted handmade 3D clay, soft studio lighting, quarter view, simple chunky readable silhouette, no chrome. Square composition centered with 12% padding. Genuine transparent PNG background, no colored panel, no ground plane, no text, no letters, no arrows, no sparkle, no watermark.",
+      "references": [
+        "public/art/clay/meeting-notes.png"
+      ]
+    },
+    {
+      "name": "meet-notes",
+      "operation": "new clay illustration",
+      "path": "public/art/clay/meet-notes.png",
+      "prompt": "Use case: stylized-concept. Create a single original ShiftScript clay icon for Google Meet notes. Reference image is STYLE ONLY. Matte tactile clay, cobalt blue #2458E8 and ivory, restrained navy. Subject: rounded blue video camera paired with a small ivory notes document with two embossed blue lines and a small mint approval mark. Simple sculpted handmade 3D clay, soft studio lighting, quarter view, compact readable silhouette. Square centered composition with 12% padding. Genuine transparent PNG, no background panel, no ground plane, no Google logo, no text, no letters, no arrows, no sparkle, no watermark.",
+      "references": [
+        "public/art/clay/meeting-notes.png"
+      ]
+    },
+    {
+      "name": "review-decisions",
+      "operation": "new clay illustration",
+      "path": "public/art/clay/review-decisions.png",
+      "prompt": "Use case: stylized-concept. Original ShiftScript section illustration, reference is STYLE ONLY. A South African Black woman with short natural hair and cobalt blue shirt carefully reviewing an ivory clipboard with three chunky blue tick marks; beside her a small cobalt laptop and a coral priority flag. Show upper body and complete small blue table, friendly professional expression. Tactile matte clay, soft studio lighting, simple blue #2458E8 / navy / ivory palette and coral accent. Wide landscape cutout for website section at modest scale, all objects fully inside frame with generous padding. Genuine transparent PNG alpha, no scene background, no rectangle, no room, no ground plane, no text, letters, arrows, sparkle, watermark.",
+      "references": [
+        "public/art/meeting-blue.webp"
+      ]
+    },
+    {
+      "name": "team-handoff",
+      "operation": "new clay illustration",
+      "path": "public/art/clay/team-handoff.png",
+      "prompt": "Use case: stylized-concept. Original ShiftScript section illustration, reference is STYLE ONLY. Two South African Black colleagues, one woman with braided bun in cobalt blazer and one man with short hair in navy shirt, passing a small ivory checklist between them, with a compact blue calendar tile and a mint completed-task disc nearby. Friendly calm professional collaboration. Waist up at a small blue round table. Tactile matte clay material, soft studio lighting, blue #2458E8 / navy / ivory palette. Wide landscape cutout for website call-to-action section, all people and objects inside frame, generous padding. Genuine transparent PNG alpha, no room, no background panel, no ground plane, no text, letters, arrows, sparkle, watermark.",
+      "references": [
+        "public/art/meeting-blue.webp"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api, today, types } from "../lib.js";
 import Modal from "./Modal.jsx";
-import { Save, ArrowRight, Copy } from "./Icons.jsx";
+import { Save, Copy } from "./Icons.jsx";
 import { followUpReport } from "../../shared/productivity.js";
 export default function MeetingPreparation({
   data,
@@ -213,7 +213,6 @@ export default function MeetingPreparation({
           onClick={() => save(true)}
         >
           Use for new meeting
-          <ArrowRight size={16} />
         </button>
       </div>
       {error && (
@@ -249,7 +248,6 @@ export function MeetingFollowUp({
         onClick={() => onMeeting(previous.id)}
       >
         {previous.title}
-        <ArrowRight size={15} />
       </button>
       <p className="hint mt-2">
         Current progress on earlier commitments. Decision mentions are

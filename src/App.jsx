@@ -573,13 +573,12 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-note">
-          <img src="/art/meeting-blue.webp" alt="" />
+          <img src="/art/meeting-blue.png" alt="" />
           <h3>Good meetings go somewhere.</h3>
           <p>Keep decisions, owners and next steps in the same place.</p>
           {!readOnly && (
             <button className="text-button" onClick={() => setNewMeeting(true)}>
               Start with a transcript
-              <Icons.ArrowRight size={15} />
             </button>
           )}
         </div>
@@ -829,7 +828,6 @@ export default function App() {
                             {data.draft
                               ? "Continue your draft"
                               : "Add your first next step"}
-                            <Icons.ArrowUpRight size={17} />
                           </button>
                         )}
                         <button
@@ -840,12 +838,11 @@ export default function App() {
                           }}
                         >
                           My work
-                          <Icons.ArrowRight size={16} />
                         </button>
                       </div>
                     </div>
                     <img
-                      src="/art/meeting-blue.webp"
+                      src="/art/meeting-blue.png"
                       alt="Illustration of colleagues planning their next steps"
                     />
                   </section>
@@ -899,7 +896,6 @@ export default function App() {
                           onClick={() => setTab("meetings")}
                         >
                           View all
-                          <Icons.ArrowUpRight size={16} />
                         </button>
                       </div>
                       {data.meetings.length ? (
@@ -942,7 +938,7 @@ export default function App() {
                             <p>Confirm owners and deadlines.</p>
                           </div>
                           <button
-                            className="icon-button"
+                            className="button small"
                             aria-label="Review proposed tasks"
                             onClick={() =>
                               openMeeting(
@@ -954,7 +950,7 @@ export default function App() {
                               )
                             }
                           >
-                            <Icons.ArrowUpRight />
+                            Review
                           </button>
                         </div>
                       )}
@@ -973,7 +969,7 @@ export default function App() {
                                 <p>Find what needs a hand.</p>
                               </div>
                               <button
-                                className="icon-button"
+                                className="button small"
                                 aria-label={title}
                                 onClick={() => {
                                   setFilters({
@@ -985,7 +981,7 @@ export default function App() {
                                   setTab("tasks");
                                 }}
                               >
-                                <Icons.ArrowUpRight />
+                                View tasks
                               </button>
                             </div>
                           ),
@@ -1335,7 +1331,6 @@ export default function App() {
                                       onClick={() => openMeeting(t.meetingId)}
                                     >
                                       {t.meetingTitle}
-                                      <Icons.ArrowUpRight size={13} />
                                     </button>
                                   ) : (
                                     <span className="hint">Added manually</span>
@@ -1703,7 +1698,6 @@ function Empty({ icon: Icon, title, text, action, onClick }) {
       {action && (
         <button className="button small" onClick={onClick}>
           {action}
-          <Icons.ArrowRight size={15} />
         </button>
       )}
     </div>
@@ -1730,7 +1724,6 @@ function MeetingRow({ m, projects, onOpen, onEmail, emailReady }) {
         <span className={"badge " + (n ? "yellow" : "")}>
           {n ? n + " to review" : m.proposals.length + " actions"}
         </span>
-        <Icons.ArrowUpRight size={17} />
       </button>
       <div className="meeting-entry-recap">
         <p className="meeting-summary-excerpt">{m.summary}</p>

@@ -103,3 +103,7 @@ The accounts browser suite simulates Google provider account selection, cancella
 ## Homepage revision (v3.0.3)
 
 The revised public home passes the production build, all 69 unit/API tests, the built landing suite and the account suite. The homepage suite waits for below-fold illustration decoding before full-page screenshots, then checks 320/390/430/768/1440px widths. Homepage browser requests use local fonts and images only; no external integration calls are made.
+
+## PNG artwork and button revision (v3.0.4)
+
+All 69 unit/API tests, the production build and all seven browser suites passed after the illustration/button changes. PNG integrity and the alpha channel were verified for every character and clay icon. Desktop/mobile home screenshots and the Board screenshot were visually reviewed. The actual workspace preview was refreshed from the current fictional demo screenshot; the final built landing asset/layout suite was rerun after that image change. Exact logs are included in `check-results.txt`. External auth, Google imports, emails and Calendar operations are simulated in these tests.

@@ -6,7 +6,6 @@ import {
   X,
   FilePdf,
   Download,
-  ArrowUpRight,
   Quote,
   ChevronDown,
   Layers,
@@ -170,7 +169,7 @@ export default function MeetingDetail({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Open source document <ArrowUpRight size={15} />
+              Open source document
             </a>
           )}
         </div>
@@ -479,7 +478,6 @@ export default function MeetingDetail({
                     onClick={() => onTask(p.taskId)}
                   >
                     Open approved task
-                    <ArrowUpRight size={15} />
                   </button>
                 )}
               </article>

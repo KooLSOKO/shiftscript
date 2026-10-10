@@ -3,7 +3,6 @@ import { api, today, types } from "../lib.js";
 import {
   Save,
   Upload,
-  ArrowRight,
   RefreshCw,
   Video,
   FileText,
@@ -471,7 +470,7 @@ export default function NewMeeting({
                   className="button primary"
                   onClick={usePrevious}
                 >
-                  Use this transcript <ArrowRight size={16} />
+                  Use this transcript
                 </button>
               </div>
             </>
@@ -636,10 +635,7 @@ export default function NewMeeting({
                   Reading the conversation…
                 </>
               ) : (
-                <>
-                  Process transcript
-                  <ArrowRight size={16} />
-                </>
+                <>Process transcript</>
               )}
             </button>
           </div>

@@ -4,7 +4,6 @@ import {
   Video,
   Link,
   RefreshCw,
-  ArrowRight,
   FileText,
   CheckCircle2,
   LogOut,
@@ -335,7 +334,7 @@ export default function GoogleMeet({
                           })
                         }
                       >
-                        View sources <ArrowRight size={16} />
+                        View sources
                       </button>
                     </div>
                   ))}
@@ -412,7 +411,6 @@ export default function GoogleMeet({
                     disabled={busy}
                     onClick={() => onOpenExisting(alreadyImported)}
                   >
-                    <ArrowRight size={16} />
                     Open saved meeting
                   </button>
                 </div>
@@ -536,7 +534,6 @@ export default function GoogleMeet({
                     disabled={busy || readOnly || config.provider !== "gemini"}
                   >
                     {busy ? "Processing…" : "Process meeting"}
-                    <ArrowRight size={17} />
                   </button>
                 </div>
               </form>

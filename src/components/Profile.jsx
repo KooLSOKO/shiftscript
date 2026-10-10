@@ -1,10 +1,4 @@
-import {
-  CheckCircle2,
-  Building,
-  ListTodo,
-  ArrowRight,
-  LogOut,
-} from "./Icons.jsx";
+import { CheckCircle2, Building, ListTodo, LogOut } from "./Icons.jsx";
 import ProfileSettings from "./ProfileSettings.jsx";
 import { isAssignedTo } from "../features/task-filters.js";
 
@@ -37,7 +31,7 @@ export default function Profile({
     <section className="profile-layout" aria-label="Personal profile">
       <article className="panel profile-card">
         <div className="profile-cover">
-          <img src="/art/profile.webp" alt="" width="800" height="400" />
+          <img src="/art/profile.png" alt="" width="800" height="400" />
         </div>
         <div className="profile-content">
           <span className="avatar profile-avatar" aria-hidden="true">
@@ -109,7 +103,7 @@ export default function Profile({
             </div>
           </div>
           <button className="button primary" onClick={onMyWork}>
-            View my tasks <ArrowRight size={17} />
+            View my tasks
           </button>
         </section>
         <section className="panel profile-section">
@@ -131,7 +125,7 @@ export default function Profile({
             ))}
           </ul>
           <button className="button" onClick={onWorkspaces}>
-            Switch or join a workspace <ArrowRight size={17} />
+            Switch or join a workspace
           </button>
         </section>
       </div>

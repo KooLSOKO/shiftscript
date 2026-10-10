@@ -1,13 +1,6 @@
 import { useRef, useState } from "react";
 import { api, fields, statuses } from "../lib.js";
-import {
-  Check,
-  Plus,
-  Trash,
-  MessageSquare,
-  ArrowUpRight,
-  CalendarDays,
-} from "./Icons.jsx";
+import { Check, Plus, Trash, MessageSquare, CalendarDays } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import Fields from "./Fields.jsx";
 import { waitingOn } from "../../shared/productivity.js";
@@ -121,7 +114,6 @@ export default function TaskEditor({
       {task?.meetingId ? (
         <button className="source-link mb-4" onClick={onSource}>
           From: {task.meetingTitle}
-          <ArrowUpRight size={14} />
         </button>
       ) : (
         <p className="hint mb-4">

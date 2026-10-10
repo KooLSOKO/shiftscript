@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../lib.js";
-import { Folder, Plus, Edit, ArrowUpRight } from "./Icons.jsx";
+import { Folder, Plus, Edit } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 export default function Projects({
   projects,
@@ -120,7 +120,6 @@ export default function Projects({
               </p>
               <button className="text-button mt-4" onClick={() => onOpen(p.id)}>
                 Open project work
-                <ArrowUpRight size={16} />
               </button>
             </article>
           );

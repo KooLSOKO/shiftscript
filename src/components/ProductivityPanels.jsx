@@ -12,7 +12,6 @@ import {
   Save,
   Trash,
   Clock,
-  ArrowRight,
 } from "./Icons.jsx";
 export function Notifications({
   data,
@@ -160,7 +159,6 @@ export function GlobalSearch({ data, onTask, onMeeting, onProject, onClose }) {
                   {item.title || item.name}
                   <small>{item.owner || item.type || item.status}</small>
                 </span>
-                <ArrowRight size={16} />
               </button>
             ))}
             {!items.length && (
@@ -374,7 +372,6 @@ export function NeedsAttention({ data, onTasks, onMeetings }) {
           <button key={label} onClick={open}>
             <strong>{count}</strong>
             <span>{label}</span>
-            <ArrowRight size={16} />
           </button>
         ))}
       </div>

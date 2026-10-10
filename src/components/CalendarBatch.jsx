@@ -6,7 +6,7 @@ import {
   calendarDurations,
   deviceTimeZone,
 } from "../features/calendar.js";
-import { ArrowUpRight, Save } from "./Icons.jsx";
+import { Save } from "./Icons.jsx";
 export default function CalendarBatch({
   tasks,
   readOnly,
@@ -170,7 +170,6 @@ export default function CalendarBatch({
               rel="noopener noreferrer"
             >
               Open event draft
-              <ArrowUpRight size={16} />
             </a>
           )}
         </section>

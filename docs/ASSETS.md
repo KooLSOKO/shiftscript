@@ -48,6 +48,14 @@ The current Earny homepage and its established clay reference informed the layou
 
 Four original assets were created with the built-in image generation tool using `earny-art-reference.webp` as a material/lighting reference. The generated originals are in `public/art/clay/*.png`; alpha-preserving WebP deployment copies are in the same folder. Each icon is decorative alongside a text label. The PNGs retain their transparent backgrounds and are not sprite sheets.
 
+## Transparent PNG revision (v3.0.4)
+
+The current homepage and app illustration references use transparent PNGs. Earlier WebP descriptions above document previous releases. Seven character scenes were edited with the built-in image tool to remove their background panels; their deployment copies are `public/art/{meeting-blue,meetings,google-meet,tasks,projects,team,profile}.png`. The app no longer applies a multiply blend to tab artwork.
+
+Two new custom clay input icons, `audio-voice.png` and `meet-notes.png`, complete the homepage input strip. New `review-decisions.png` and `team-handoff.png` scenes illustrate reviewing proposals and sharing agreed work. All are in `public/art/clay/`. The six icon assets have smaller `*-small.png` deployment copies. PNG resizing/encoding retains the alpha channel; artwork creation and background extraction use the built-in image tool. Final prompts and per-asset provenance are recorded in `ARTWORK-v3.0.4.json`.
+
+Original CSS provides a raised base, hover fill and press feedback inspired by [CSSButtons](https://cssbuttons.io/). Button arrows are removed from public and workspace actions. Functional chevrons and disclosure controls remain. Reduced-motion preferences disable animated transitions.
+
 Prompt shared by all four assets:
 
 > Use case: stylized-concept. Asset type: a custom clay illustration icon for ShiftScript by Earny's website. The supplied image is a MATERIAL, LIGHTING AND PALETTE REFERENCE ONLY, not an edit target. Create one original new object composition. Style: handmade clay/plasticine 3D illustration, matte slightly tactile surface, friendly rounded forms, restrained soft studio light, cobalt blue #2458E8 with ivory white, a little soft powder blue and tiny warm yellow details. Slight three-quarter isometric view. Background: genuinely transparent alpha, no floor, no coloured backdrop, no checkerboard baked in, no strong drop shadow. Composition: centered single grouped symbol, fills about 75% of square canvas with generous unclipped padding. No words, no letters, no numerals, no logos, no watermark, no sparkles, no robot, no chrome, no glass, no UI panel. Match the reference's softly imperfect claycraft, not shiny generic 3D.

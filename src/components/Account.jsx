@@ -10,7 +10,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "../lib.js";
-import { ArrowRight, RefreshCw } from "./Icons.jsx";
+import { RefreshCw } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import PolicyLinks from "./PolicyLinks.jsx";
 
@@ -18,7 +18,7 @@ export function AccountFrame({ children }) {
   return (
     <main className="login">
       <div className="login-art">
-        <img src="/art/meeting-blue.webp" alt="Colleagues planning together" />
+        <img src="/art/meeting-blue.png" alt="Colleagues planning together" />
         <h1>
           Talk it through.
           <br />
@@ -270,7 +270,6 @@ export default function AccountAccess({
                   : reset
                     ? "Send reset link"
                     : "Open workspace"}
-              <ArrowRight size={17} />
             </button>
           </fieldset>
         </form>
@@ -407,7 +406,6 @@ export function WorkspaceForm({ user, workspace, onSaved }) {
         </p>
         <button className="button primary w-full" disabled={busy}>
           {busy ? "Saving…" : workspace ? "Save changes" : "Create workspace"}
-          <ArrowRight size={17} />
         </button>
       </fieldset>
       {error && (

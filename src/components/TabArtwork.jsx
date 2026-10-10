@@ -41,7 +41,7 @@ export default function TabArtwork({ tab }) {
         <p>{scene[2]}</p>
       </div>
       <img
-        src={"/art/" + scene[0] + ".webp"}
+        src={"/art/" + scene[0] + ".png"}
         alt=""
         width="800"
         height="400"
