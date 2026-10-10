@@ -128,7 +128,7 @@ const nav = async (label, p = page) => {
   await p.getByRole("button", { name: label, exact: true }).click();
 };
 try {
-  await page.goto(url);
+  await page.goto(url + "/app");
   await page
     .getByRole("heading", { name: "Less follow-up. More follow-through." })
     .waitFor();
@@ -297,7 +297,7 @@ try {
   assert.deepEqual(invitationEmails[0].recipients, ["kopano@example.test"]);
   assert(
     invitationEmails[0].message.text.includes(
-      "https://shiftscript.earny.co.za/?workspaceInvite=soko",
+      "https://shiftscript.earny.co.za/app?workspaceInvite=soko",
     ),
   );
   await page

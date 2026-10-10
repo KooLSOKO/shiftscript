@@ -45,7 +45,7 @@ page.setDefaultTimeout(15000);
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 try {
-  await page.goto("http://127.0.0.1:5179");
+  await page.goto("http://127.0.0.1:5179/app");
   await page
     .getByRole("heading", { name: "Less follow-up. More follow-through." })
     .waitFor();

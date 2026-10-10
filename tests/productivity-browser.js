@@ -121,7 +121,7 @@ const dialog = () => page.getByRole("dialog");
 const close = async () =>
   page.getByRole("button", { name: "Close dialog", exact: true }).click();
 try {
-  await page.goto("http://127.0.0.1:5183");
+  await page.goto("http://127.0.0.1:5183/app");
   await page
     .getByRole("heading", { name: "Less follow-up. More follow-through." })
     .waitFor();

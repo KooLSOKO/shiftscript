@@ -739,7 +739,7 @@ export function installReminderRoute(
           skipped++;
           return;
         }
-        const text = `Earny · ShiftScript\nYour task reminders for ${day}\n\n${lines.join("\n")}\nOpen ShiftScript: ${origin}/\n\nManage email reminders in Profile → Reminder preferences.`;
+        const text = `Earny · ShiftScript\nYour task reminders for ${day}\n\n${lines.join("\n")}\nOpen ShiftScript: ${origin}/app\n\nManage email reminders in Profile → Reminder preferences.`;
         // Consent is checked again immediately before the external send.
         if (
           !(await profiles.getProfile(profile.uid)).preferences?.emailReminders

@@ -201,7 +201,7 @@ async function connect(app, uid = "kiya", workspace = "kiya") {
     callback.headers.location,
     env.GOOGLE_REDIRECT_URI.replace(
       "/api/google/callback",
-      "/?google=connected",
+      "/app?google=connected",
     ),
   );
   return { state, cookie };

@@ -1,10 +1,12 @@
 # Latest update
 
+See **[UPDATE-v3.0.2](docs/UPDATE-v3.0.2.md)** for the public landing page, the `/app` workspace entry and Mac installation instructions.
+
 See **[UPDATE-v3.0.1](docs/UPDATE-v3.0.1.md)** for public policies, About/contact pages, Google sign-in, Firebase setup and the OAuth branding URLs.
 
 See **[UPDATE-v3](docs/UPDATE-v3.md)** for all seven productivity features, QoL updates, Mac installation and optional daily Earny reminders. The new reminder function requires Fluid compute on Vercel. See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
-# ShiftScript v3.0.1
+# ShiftScript v3.0.2
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -24,7 +26,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Open http://localhost:5173. Windows PowerShell: use `Copy-Item .env.example .env`. The command starts the React frontend and Node API together. `npm run preview` previews built frontend files only; it does not start the API.
+Open http://localhost:5173 for the public home, or http://localhost:5173/app for the workspace. Windows PowerShell: use `Copy-Item .env.example .env`. The command starts the React frontend and Node API together. `npm run preview` previews built frontend files only; it does not start the API.
 
 The default is a fictional sample with local storage and no paid/live API calls. **New meeting → Load sample → Process transcript**. Sample mode accepts the included sample transcript only. Local data lives in `.data/workspace.json`; local mode is blocked in production.
 

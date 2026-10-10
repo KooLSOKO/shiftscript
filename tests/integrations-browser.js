@@ -156,7 +156,7 @@ async function screen(name) {
   });
 }
 try {
-  await page.goto("http://127.0.0.1:5182");
+  await page.goto("http://127.0.0.1:5182/app");
   await page.getByRole("button", { name: "New meeting", exact: true }).click();
   await page
     .getByRole("button", { name: "Recent Google Meet", exact: true })

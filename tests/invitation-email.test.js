@@ -97,7 +97,7 @@ test("invitation creation retries are idempotent; email target and join link are
   const message = f.emails[0].message;
   assert(
     message.text.includes(
-      `https://shiftscript.earny.co.za/?workspaceInvite=soko&invite=${invite.id}`,
+      `https://shiftscript.earny.co.za/app?workspaceInvite=soko&invite=${invite.id}`,
     ),
   );
   assert(message.text.includes("Sign up or sign in using kopano@example.test"));

@@ -30,10 +30,10 @@ export function AccountFrame({ children }) {
         </p>
       </div>
       <section className="login-form">
-        <div className="brand mb-8">
+        <a className="brand mb-8" href="/" aria-label="ShiftScript home">
           <img src="/favicon.svg" alt="" />
           ShiftScript
-        </div>
+        </a>
         {children}
         <PolicyLinks />
       </section>
@@ -74,7 +74,12 @@ export default function AccountAccess({
   setError,
   setRegistering,
 }) {
-  const [mode, setMode] = useState("login"),
+  const [mode, setMode] = useState(() =>
+      new URLSearchParams(window.location.search).get("mode") === "signup" &&
+      config.signupEnabled
+        ? "signup"
+        : "login",
+    ),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [name, setName] = useState(""),

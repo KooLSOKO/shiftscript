@@ -95,3 +95,7 @@ All five browser suites and 69 API checks passed on the packaged source. No host
 ## v3.0.1 Google identity and public pages
 
 The accounts browser suite simulates Google provider account selection, cancellation, blocked popup, disabled provider, unauthorised domain and credential conflict. It checks preserved returning workspaces and first-login display-name onboarding. The new sixth browser suite serves the built public pages using their configured Vercel rewrites and verifies no-JavaScript access, canonical/title/contact links, successful image decoding and 320/390px/desktop layout. Live Firebase provider configuration and Vercel deployment still need the checks in `UPDATE-v3.0.1.md`.
+
+## Public landing (v3.0.2)
+
+`tests/landing-browser.js` serves the built homepage and tests readable no-JavaScript content, native FAQs, absence of home API/Auth calls, canonical/social/schema metadata, loaded assets, five viewport widths (320–1440px), workspace navigation and legacy OAuth/invitation links. The account browser suite additionally enters signup from the actual landing CTA. Existing six browser suites now navigate to `/app`; they still test all earlier account, processing, project, workspace and integration flows using simulated external services.

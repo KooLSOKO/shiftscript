@@ -27,7 +27,7 @@ export function invitationMessage(workspace, invite, origin, inviter) {
       503,
       "Set APP_URL to your ShiftScript website before sending invitation emails.",
     );
-  const url = new URL("/", origin);
+  const url = new URL("/app", origin);
   url.searchParams.set("workspaceInvite", workspace.id);
   url.searchParams.set("invite", invite.id);
   const subject = `Join ${workspace.name} on ShiftScript`.replace(

@@ -112,7 +112,19 @@ await page.addInitScript(() => {
   };
 });
 try {
-  await page.goto("http://127.0.0.1:5180");
+  await page.goto("http://127.0.0.1:5180/");
+  await page
+    .getByRole("link", { name: "Get started", exact: false })
+    .first()
+    .click();
+  await page
+    .getByRole("heading", {
+      name: "Your next chapter starts here.",
+      exact: true,
+    })
+    .waitFor();
+  assert(await page.getByLabel("Full name", { exact: true }).isVisible());
+  await page.goto("http://127.0.0.1:5180/app");
   const googleButton = page.getByRole("button", {
     name: "Continue with Google",
     exact: true,

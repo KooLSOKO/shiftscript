@@ -27,7 +27,7 @@ export function calendarEventUrl(task, schedule, origin) {
     const app = new URL(origin);
     if (!["https:", "http:"].includes(app.protocol))
       throw new Error("Invalid ShiftScript address.");
-    details.push(`Open ShiftScript: ${app.origin}/`);
+    details.push(`Open ShiftScript: ${app.origin}/app`);
   }
   const url = new URL("https://calendar.google.com/calendar/r/eventedit");
   url.search = new URLSearchParams({

@@ -466,6 +466,13 @@ export default function App() {
       onClose={() => setSwitcher(false)}
     />
   );
+  if (!config || (config.authRequired && user === undefined))
+    return (
+      <WorkspaceLoading
+        error={error}
+        onRetry={() => window.location.reload()}
+      />
+    );
   if (config?.authRequired && (!user || registering))
     return (
       <AccountAccess

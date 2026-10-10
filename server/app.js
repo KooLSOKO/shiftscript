@@ -100,7 +100,7 @@ export function createApp({
       emailReady: mailer.ready,
       invitationEmailReady: Boolean(mailer.ready && publicOrigin),
       remindersReady,
-      version: "3.0.1",
+      version: "3.0.2",
     }),
   );
   installReminderRoute(app, {
@@ -132,7 +132,7 @@ export function createApp({
     }
     res.clearCookie("shiftscript-google", googleClient.cookieOptions());
     res.set("Referrer-Policy", "no-referrer");
-    res.redirect(303, googleClient.redirect.origin + "/?google=" + status);
+    res.redirect(303, googleClient.redirect.origin + "/app?google=" + status);
   });
   app.use("/api", async (req, _res, next) => {
     try {

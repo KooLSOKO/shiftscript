@@ -37,3 +37,7 @@ v3.0 adds original `Bell` and `History` SVGs using the same 24px rounded outline
 ## v3.0.1 public page assets
 
 Public policy pages reuse the cobalt/ice/navy palette and the original MessageSquare, Users and CalendarDays icon exports. Standalone SVG exports now include the SVG XML namespace so they decode correctly as external images. `public/icons/Google.svg` depicts the Google identity brand mark for the sign-in button; it is separate from Earny’s custom icon system. No new raster artwork was required.
+
+## Public landing page (v3.0.2)
+
+Uses the existing Earny blue `#2458E8`, `meeting-blue.webp`, `google-meet.webp`, favicon and original standalone SVG icons. No new stock assets, external fonts or generated images were added. Flat coloured icon tiles distinguish features; coral and amber distinguish example priorities. The Kiya/Kopano example is fictional and explicitly labelled. `public/landing.css` adds one subtle entry animation and button feedback; reduced-motion preferences disable both.
