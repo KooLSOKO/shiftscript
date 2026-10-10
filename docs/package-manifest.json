@@ -1,9 +1,12 @@
 {
-  "version": "3.0.2",
-  "root": "ShiftScript-v3.0.2",
+  "version": "3.0.3",
+  "root": "ShiftScript-v3.0.3",
   "verification": {
     "unitApiTests": 69,
-    "browserSuites": 7,
+    "browserSuitesRunForThisRevision": [
+      "landing-browser",
+      "accounts-browser"
+    ],
     "productionBuild": "passed",
     "viewports": [
       320,
@@ -37,7 +40,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "ad3f7ece1557d8fa5d292f56f6614845bd5045a84c93e22beb9a225d2988ec04"
+      "sha256": "41977ea7b1a9876ecf7cc51c0c680e4027cb7d06172681c8d481cde180994127"
     },
     {
       "path": "api/index.js",
@@ -49,7 +52,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "5fbb0bcfbf96377717968ee1e307de35773ac997329c45986a740f879e219127"
+      "sha256": "0d48f42e119fa2503150d2de636ee9457f8f3d52dda35821434d5488f0b7885f"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -57,7 +60,7 @@
     },
     {
       "path": "docs/ASSETS.md",
-      "sha256": "de2d238419565602cd9cdd5f465f9b12817e34f46565f4510a4348a6adb848f6"
+      "sha256": "02ddebf72d2ea2deb87cf2ebeba2a236e2f4491f5d84e2a9c57415c9c3c37682"
     },
     {
       "path": "docs/DEMO.md",
@@ -73,7 +76,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "cea68e2d2cdbaf9f07fd333fca45a7d8eafd04bc9f44a886f49597e3764d5271"
+      "sha256": "5dab2d04a6b3983dceb251aa0b661b7fdf51e059eddc6ae8496362464b0b667a"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -112,12 +115,16 @@
       "sha256": "e6a204d5d74d25fc0ec37152927504933b9a380b038bb2e5a7cb630a18c2ebfd"
     },
     {
+      "path": "docs/UPDATE-v3.0.3.md",
+      "sha256": "8483e92fd1f905e4e4a5c000f8a6ad036f70e555a58af691f83f5381ccefcc90"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "307ac1131e2563666fb3702564c628ffa04a3ece3e852f978ea36083243e22c1"
+      "sha256": "37d68059ec972d12369ff569b3498dc7d86a169a004a1a6f57358e4fbf11961e"
     },
     {
       "path": "docs/screenshots/about-public-desktop.png",
@@ -197,7 +204,7 @@
     },
     {
       "path": "docs/screenshots/google-signin-desktop.png",
-      "sha256": "fe31014b7c68f52550f12b00224289abd466323d731c96775c688da2f6aa1493"
+      "sha256": "5da7882ecfbace94ba82c87338e2e0adacbcc94cb96a4641a15f2250a3f4a1b4"
     },
     {
       "path": "docs/screenshots/google-signin-mobile.png",
@@ -213,11 +220,11 @@
     },
     {
       "path": "docs/screenshots/landing-desktop.png",
-      "sha256": "242ef4429cd5f31a4540577ddf164e6389aa13da471e1db8fff9df33136dcf77"
+      "sha256": "11c11df23dea2ed34118274b6cd546070f41dfd189cd75c9f5b589a07f3d7691"
     },
     {
       "path": "docs/screenshots/landing-mobile.png",
-      "sha256": "599b8a2be9c9c065f21ca04932987d7abb7f20270bee15a99f58aebf0bb972b1"
+      "sha256": "b6f4e35311751cd242388c6a77bcbd665bf459c66edee1cfc2120ccaf8ced0e9"
     },
     {
       "path": "docs/screenshots/manual-task-desktop.png",
@@ -345,19 +352,51 @@
     },
     {
       "path": "index.html",
-      "sha256": "09831f4e55af3dada75d41f3f4ae394862743d0848e25094f702e9b96a7bcb28"
+      "sha256": "8941a35c670875024ead4c7a82d61ae90b5d6988008afe6959ba44a7938c3d4a"
     },
     {
       "path": "package-lock.json",
-      "sha256": "d56e85637e41f30eee2412f996f9da3db4ea29bc8ec2cc2de1669079b0688e2f"
+      "sha256": "a67beb7a7f6578fbb598a577c254295e2180c4f4a563636ae14413d7e2799c8e"
     },
     {
       "path": "package.json",
-      "sha256": "a08b0e4402308e4a898e79735f8232e08936137e66e1ab5b078abf21568dd69e"
+      "sha256": "9ce9dae916a08782f70018529512e11727b208cc168e3d1eb41c12b84c689d5b"
     },
     {
       "path": "public/about/index.html",
       "sha256": "72bdb9f69d9a4dbfb267b6f6ec152f045f8fac2cf4abfc740e6e5f8ed47fb756"
+    },
+    {
+      "path": "public/art/clay/meeting-notes.png",
+      "sha256": "db2bd376b888f56fdc592eedc4786bf5bb7781cca4699239c71ce19e96a68140"
+    },
+    {
+      "path": "public/art/clay/meeting-notes.webp",
+      "sha256": "0dac4edbd94343e55fcbe77739a578fc06c9448358198d81f7144a860f728ff0"
+    },
+    {
+      "path": "public/art/clay/reminders-sharing.png",
+      "sha256": "0b6239767a70fbb88fe0ebc4dbee364311a87ae8948ae99f29839927e547285b"
+    },
+    {
+      "path": "public/art/clay/reminders-sharing.webp",
+      "sha256": "99c7d89fa696f63cf7e3a0d42be5481ac2ea488b13b792c1936efc3ae4d6d688"
+    },
+    {
+      "path": "public/art/clay/reviewed-tasks.png",
+      "sha256": "37619023979781f058a0c447667ba7c651b726bae37c2382eb84efdebccc5925"
+    },
+    {
+      "path": "public/art/clay/reviewed-tasks.webp",
+      "sha256": "3c4a29f247727668aebce918cc1dc01dfc94f8429222584fe2810470d2355a76"
+    },
+    {
+      "path": "public/art/clay/shared-projects.png",
+      "sha256": "61c17b8333f118ff0876e71242303fd658f05290b01c49ca69865ab704fe4d1a"
+    },
+    {
+      "path": "public/art/clay/shared-projects.webp",
+      "sha256": "13fc27038562a12f06b3ef3adc446a4af1665d677d4c2bf86e8a406c5b53747f"
     },
     {
       "path": "public/art/google-meet.webp",
@@ -392,6 +431,10 @@
       "sha256": "fb64c77a226d7876d83ce29e391f71234b1a250d3c745e3a242d03e70822ed76"
     },
     {
+      "path": "public/art/workspace-preview.png",
+      "sha256": "2e34640d11522710e6fc500279fbfb110e7cc808a17d17e9d1e8613323100a6b"
+    },
+    {
       "path": "public/data-deletion/index.html",
       "sha256": "6dc737189d5c000bd8be686811e7531d71c9ee7d2e9599da11fe0987aa4cf94c"
     },
@@ -410,6 +453,22 @@
     {
       "path": "public/fonts/LICENSE.txt",
       "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9"
+    },
+    {
+      "path": "public/fonts/Manrope-400.woff",
+      "sha256": "b8fbbaf02e2883620b26154e8a17af5ca1d7d4d1cb31b5a3c7e20a5b8341ce7a"
+    },
+    {
+      "path": "public/fonts/Manrope-700.woff",
+      "sha256": "7d9f18ac718ce4e4a6f80aef809e942ae5a94522fab48ddbb4233400b16a3164"
+    },
+    {
+      "path": "public/fonts/Manrope-800.woff",
+      "sha256": "39085a3e4ea835873db668ba695ae8e5d05db5e5110d6f8f6d4a70538a7575bf"
+    },
+    {
+      "path": "public/fonts/Manrope-LICENSE.txt",
+      "sha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
     },
     {
       "path": "public/icons/AlertCircle.svg",
@@ -601,7 +660,7 @@
     },
     {
       "path": "public/landing.css",
-      "sha256": "676fdfe664a290e25cef1f0e8ffe667aff0b60b5e0d0ee13026bfee7a6989e7e"
+      "sha256": "a05314b8a70c01a675e3cda31e3488c7de67671245e565b51abb5cab4546f82a"
     },
     {
       "path": "public/policies/style.css",
@@ -629,7 +688,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "e957b7f9b15e39e5f13d27a42a376b637e748ad8ac90a76e1ecef45856953694"
+      "sha256": "90fe2643819e2e2c4d27d736b7ec40e64ef020d838c68243b892802f48d065b5"
     },
     {
       "path": "server/audio.js",
@@ -877,7 +936,7 @@
     },
     {
       "path": "tests/landing-browser.js",
-      "sha256": "6165d4f35465ce99e5a31d1e6091c8fd27d628f5a45277567b6407e26db16cd7"
+      "sha256": "1f185939f27d83717e32f7bd54810bd61aee310b45a525785bfea992423caccc"
     },
     {
       "path": "tests/long-transcripts.test.js",

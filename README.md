@@ -1,12 +1,14 @@
 # Latest update
 
+See **[UPDATE-v3.0.3](docs/UPDATE-v3.0.3.md)** for the Earny-inspired homepage, original clay icons and Mac deployment commands.
+
 See **[UPDATE-v3.0.2](docs/UPDATE-v3.0.2.md)** for the public landing page, the `/app` workspace entry and Mac installation instructions.
 
 See **[UPDATE-v3.0.1](docs/UPDATE-v3.0.1.md)** for public policies, About/contact pages, Google sign-in, Firebase setup and the OAuth branding URLs.
 
 See **[UPDATE-v3](docs/UPDATE-v3.md)** for all seven productivity features, QoL updates, Mac installation and optional daily Earny reminders. The new reminder function requires Fluid compute on Vercel. See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
-# ShiftScript v3.0.2
+# ShiftScript v3.0.3
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 

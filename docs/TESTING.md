@@ -99,3 +99,7 @@ The accounts browser suite simulates Google provider account selection, cancella
 ## Public landing (v3.0.2)
 
 `tests/landing-browser.js` serves the built homepage and tests readable no-JavaScript content, native FAQs, absence of home API/Auth calls, canonical/social/schema metadata, loaded assets, five viewport widths (320–1440px), workspace navigation and legacy OAuth/invitation links. The account browser suite additionally enters signup from the actual landing CTA. Existing six browser suites now navigate to `/app`; they still test all earlier account, processing, project, workspace and integration flows using simulated external services.
+
+## Homepage revision (v3.0.3)
+
+The revised public home passes the production build, all 69 unit/API tests, the built landing suite and the account suite. The homepage suite waits for below-fold illustration decoding before full-page screenshots, then checks 320/390/430/768/1440px widths. Homepage browser requests use local fonts and images only; no external integration calls are made.

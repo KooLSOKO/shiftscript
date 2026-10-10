@@ -37,7 +37,7 @@ try {
   });
   await noJs.goto("http://127.0.0.1:3015/");
   await noJs
-    .getByRole("heading", { level: 1, name: /Less “what next/ })
+    .getByRole("heading", { level: 1, name: /Good meetings/ })
     .waitFor();
   await noJs
     .getByText("Do I need to connect Google Meet?", { exact: true })
@@ -67,7 +67,7 @@ try {
   });
   await page.goto("http://127.0.0.1:3015/");
   await page
-    .getByRole("heading", { level: 1, name: /Less “what next/ })
+    .getByRole("heading", { level: 1, name: /Good meetings/ })
     .waitFor();
   await page.waitForLoadState("networkidle");
   assert(
@@ -93,6 +93,11 @@ try {
     )["@type"],
     "SoftwareApplication",
   );
+  // Load below-fold illustrations before taking a full-page screenshot.
+  await page.locator("#home img").evaluateAll(async (images) => {
+    for (const img of images) img.loading = "eager";
+    await Promise.all(images.map((img) => img.decode()));
+  });
   await page.screenshot({
     path: "docs/screenshots/landing-desktop.png",
     fullPage: true,

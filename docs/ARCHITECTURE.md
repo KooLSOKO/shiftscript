@@ -110,3 +110,7 @@ Google account sign-in uses Firebase `signInWithPopup` with `GoogleAuthProvider`
 `index.html` contains the public landing page, semantic sections, native FAQs and social metadata. It is readable without JavaScript or the API. `public/landing.css` is isolated to `.ss-home`, with reduced-motion support. The small `src/main.jsx` entry lazy-loads `src/app-entry.jsx` and Firebase only at `/app` or `/app/`. Sign-up links use `/app?mode=signup` and honour the server signup flag. Authenticated sessions at `/app` retain the existing workspace and onboarding behaviour.
 
 Old root invitation and Google callback query strings redirect to `/app` with all parameters intact. New OAuth returns, invitation emails, reminder links and Calendar draft links use `/app`; the registered OAuth callback URI remains unchanged. Public policy URLs remain unchanged. Vercel rewrites `/app` to the built HTML and serves landing CSS, robots.txt and sitemap.xml as static files. App responses have a noindex header; the client also sets app title/canonical/noindex. The sitemap contains only public pages.
+
+## Homepage styling revision (v3.0.3)
+
+The static home entry and lazy workspace routing remain unchanged. The home uses local Manrope fonts and four original clay illustrations; web delivery uses alpha-preserving WebP files in `public/art/clay`, with original PNGs included. `public/art/workspace-preview.png` copies an automated demo-workspace screenshot. The landing style remains scoped to `.ss-home`. No provider, account, schema, SMTP or cron behaviour changes.
