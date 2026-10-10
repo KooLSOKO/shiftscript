@@ -53,6 +53,7 @@ const browser = await chromium.launch(options);
 const page = await browser.newPage({
   viewport: { width: 1440, height: 1000 },
   reducedMotion: "reduce",
+  timezoneId: "Africa/Johannesburg",
 });
 page.setDefaultTimeout(15000);
 const errors = [];
@@ -93,6 +94,13 @@ await page.route(
     route.fulfill({ contentType: "application/javascript", body: shim }),
 );
 await page.route("https://**", (route) => route.abort());
+await page.addInitScript(() => {
+  window.calendarDrafts = [];
+  window.open = (url) => {
+    window.calendarDrafts.push(url);
+    return null;
+  };
+});
 try {
   await page.goto("http://127.0.0.1:5180");
   await page
@@ -169,7 +177,7 @@ try {
     title: "Profile test " + id,
     description: "Profile assignment test",
     deadline: "",
-    dueDate: null,
+    dueDate: id === "linked" ? "2026-10-13" : null,
     priority: "Med",
     projectId: null,
     meetingId: null,
@@ -228,6 +236,115 @@ try {
         .count(),
       0,
     );
+  await page
+    .getByRole("button", {
+      name: "Add Profile test first to Google Calendar",
+      exact: true,
+    })
+    .click();
+  const calendar = page.getByRole("dialog", {
+    name: "Add task to Google Calendar",
+    exact: true,
+  });
+  assert.equal(
+    await calendar.getByLabel("Calendar date", { exact: true }).inputValue(),
+    "",
+  );
+  assert.equal(
+    await calendar.getByLabel("Start time", { exact: true }).inputValue(),
+    "",
+  );
+  assert(
+    await calendar
+      .getByRole("button", { name: "Open Google Calendar", exact: true })
+      .isDisabled(),
+  );
+  await calendar
+    .getByLabel("Calendar date", { exact: true })
+    .fill("2026-10-12");
+  assert(
+    await calendar
+      .getByRole("button", { name: "Open Google Calendar", exact: true })
+      .isDisabled(),
+  );
+  await calendar.getByLabel("Start time", { exact: true }).fill("09:00");
+  await calendar.getByLabel("Duration", { exact: true }).selectOption("60");
+  await calendar
+    .getByRole("button", { name: "Open Google Calendar", exact: true })
+    .click();
+  const draft = new URL(
+    await page.evaluate(() => window.calendarDrafts.at(-1)),
+  );
+  assert.equal(
+    draft.searchParams.get("dates"),
+    "20261012T070000Z/20261012T080000Z",
+  );
+  assert.equal(draft.searchParams.get("text"), "Profile test first");
+  assert.equal(draft.searchParams.get("stz"), "Africa/Johannesburg");
+  assert.equal(
+    await calendar
+      .getByRole("link", { name: "Open event draft again", exact: true })
+      .getAttribute("href"),
+    draft.toString(),
+  );
+  assert.equal(users.get("soko").tasks[0].dueDate, null);
+  await page.screenshot({
+    path: "docs/screenshots/calendar-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 320, height: 740 });
+  assert(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  assert(
+    await calendar.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+  );
+  await calendar
+    .getByRole("button", { name: "Open Google Calendar", exact: true })
+    .click();
+  assert.equal(await page.evaluate(() => window.calendarDrafts.length), 2);
+  await page.screenshot({
+    path: "docs/screenshots/calendar-mobile.png",
+    fullPage: true,
+  });
+  await calendar
+    .getByRole("button", { name: "Close dialog", exact: true })
+    .click();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page
+    .getByRole("button", { name: "Profile test first", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Add to Google Calendar", exact: true })
+    .click();
+  await calendar.waitFor();
+  await calendar
+    .getByRole("button", { name: "Close dialog", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Add Profile test linked to Google Calendar",
+      exact: true,
+    })
+    .click();
+  assert.equal(
+    await calendar.getByLabel("Calendar date", { exact: true }).inputValue(),
+    "2026-10-13",
+  );
+  assert.equal(
+    await calendar.getByLabel("Start time", { exact: true }).inputValue(),
+    "",
+  );
+  assert(
+    await calendar
+      .getByRole("button", { name: "Open Google Calendar", exact: true })
+      .isDisabled(),
+  );
+  await calendar
+    .getByRole("button", { name: "Close dialog", exact: true })
+    .click();
   await page.getByRole("button", { name: "Overview", exact: true }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page

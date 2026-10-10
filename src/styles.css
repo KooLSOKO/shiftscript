@@ -2899,3 +2899,72 @@ footer {
     font-size: 14px;
   }
 }
+
+/* Google Calendar handoff keeps task scheduling explicit. */
+.task-calendar-link {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  margin-top: 9px;
+  min-height: 32px;
+}
+.calendar-task-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #dce6f8;
+  border-radius: 10px;
+  background: #edf3ff;
+  margin-bottom: 18px;
+}
+.calendar-task-preview > svg {
+  flex-shrink: 0;
+  color: #2458e8;
+}
+.calendar-task-preview > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.calendar-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.calendar-zone span {
+  color: #34456a;
+  font-size: 12px;
+  font-weight: 600;
+}
+.calendar-zone strong {
+  font-size: 13px;
+}
+.calendar-zone small {
+  font-size: 11px;
+  color: #657492;
+}
+.calendar-handoff {
+  border: 1px solid #c7e7df;
+  background: #f0fbf7;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 18px;
+}
+.calendar-handoff .text-button {
+  margin: 10px 0;
+}
+@media (max-width: 650px) {
+  .task-calendar-link {
+    min-height: 44px;
+  }
+  .calendar-open {
+    width: 100%;
+  }
+  .calendar-editor-action .button {
+    width: 100%;
+  }
+}

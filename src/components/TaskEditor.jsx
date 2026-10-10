@@ -1,6 +1,13 @@
 import { useRef, useState } from "react";
 import { api, fields, statuses } from "../lib.js";
-import { Check, Plus, Trash, MessageSquare, ArrowUpRight } from "./Icons.jsx";
+import {
+  Check,
+  Plus,
+  Trash,
+  MessageSquare,
+  ArrowUpRight,
+  CalendarDays,
+} from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import Fields from "./Fields.jsx";
 const editorFields = (task) => ({
@@ -17,6 +24,7 @@ export default function TaskEditor({
   onClose,
   onSaved,
   onSource,
+  onCalendar,
 }) {
   const [value, setValue] = useState(
     task
@@ -117,6 +125,26 @@ export default function TaskEditor({
         <p className="read-only mb-4">
           You have Viewer access. You can read tasks and progress updates.
         </p>
+      )}
+      {task && (
+        <div className="calendar-editor-action mb-4">
+          <button
+            type="button"
+            className="button"
+            onClick={onCalendar}
+            disabled={
+              busy || JSON.stringify(editorFields(value)) !== baseline.current
+            }
+          >
+            <CalendarDays size={17} />
+            Add to Google Calendar
+          </button>
+          {JSON.stringify(editorFields(value)) !== baseline.current && (
+            <p className="hint mt-2">
+              Save your changes before scheduling this task.
+            </p>
+          )}
+        </div>
       )}
       <form onSubmit={save}>
         <fieldset disabled={busy || readOnly}>

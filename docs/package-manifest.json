@@ -1,6 +1,6 @@
 {
-  "version": "2.3.1",
-  "root": "ShiftScript-v2.3.1",
+  "version": "2.4.0",
+  "root": "ShiftScript-v2.4",
   "files": [
     {
       "path": ".env.example",
@@ -24,7 +24,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "8b6b1a4275ba34083c34f6664e65f446578b18174d23de08aeb46f4125c4eb12"
+      "sha256": "d0e1512c89bbe06427642fcae3bda377bb660ba4378259a6e0f39880731cece0"
     },
     {
       "path": "api/index.js",
@@ -56,7 +56,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "3fecf90e8853462c056aec02b6283696326fe5de5f0f3eb308708c0bd3345828"
+      "sha256": "4dd8c9db845b355a26372880f31592966d72866e300eb7901b160667e2795046"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -79,16 +79,28 @@
       "sha256": "72a70466bddf5004fd0628d7f67a0d121d96b1c9f356306dd8b387b014489398"
     },
     {
+      "path": "docs/UPDATE-v2.4.md",
+      "sha256": "290bf65e9286e08624bf9ddd86377759badbe28666be3dab297ffd42b96c29da"
+    },
+    {
       "path": "docs/UPDATE-v2.md",
       "sha256": "5701c53054acdb28a6b36ce2045786593ccef391a0bf9d16ab57d3a7e142a335"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "1cba9e3f743fa9e7f4a5b2d13c98a3acd3910ea4a30d7fece753e606ff74f57a"
+      "sha256": "966fbfd62d3f2cd7a0ae6714579ce57752d7d9e19de90a18b2b90d17164ebcdd"
     },
     {
       "path": "docs/screenshots/board-desktop.png",
-      "sha256": "06aba430f386aadd2a45e7aa26f8819177a70e0c445b70089f366ff3d6b30313"
+      "sha256": "2d2625cf5d8ad211d2da0b931a343d3bf1c4e524bc7bf550612288ac8aa4b5e0"
+    },
+    {
+      "path": "docs/screenshots/calendar-desktop.png",
+      "sha256": "06d9ec882af278017b9928d01a286e5bde431f5d77b2a88f9c93126900d9fe77"
+    },
+    {
+      "path": "docs/screenshots/calendar-mobile.png",
+      "sha256": "b549640572a0cc1099f30590fa7d339781dfc5b4deb75b907e4eff5cfdba4108"
     },
     {
       "path": "docs/screenshots/dashboard-desktop.png",
@@ -120,11 +132,11 @@
     },
     {
       "path": "docs/screenshots/filters-desktop.png",
-      "sha256": "9101ef2d35d8cf0225e1946094b63c2050e307354ef2750e2cc3a316fe2a79ad"
+      "sha256": "e793e70464b69ec8eb4a40805b1d435af526ce1a354bb8bcd70879b0ace43d0e"
     },
     {
       "path": "docs/screenshots/filters-mobile.png",
-      "sha256": "474d927cd916fc523cc11665b1d9d95525ae6151d6ad91ec9de2d2785e1fdd64"
+      "sha256": "65ca1b97dbae731e6c475cbf80e326a6bd104eb82476c06958500c2dd8b9766a"
     },
     {
       "path": "docs/screenshots/google-import-desktop.png",
@@ -132,7 +144,7 @@
     },
     {
       "path": "docs/screenshots/google-import-mobile.png",
-      "sha256": "8abadc3ec543ff7fd0409509f3ff5cbae97c5b478c2923a7ce6a9d3abc4fa685"
+      "sha256": "df0f323b27da1de4e68542a6402182854c0f778df29f6763fb9d33185c08cdf0"
     },
     {
       "path": "docs/screenshots/invitation-email-desktop.png",
@@ -140,11 +152,11 @@
     },
     {
       "path": "docs/screenshots/invitation-email-mobile.png",
-      "sha256": "36d5a65c204bb11bd2b98ef75075a2bb9553f4bf70484dff949344f5f3572db2"
+      "sha256": "9ff65d8926152180a09a2117203b675b6dcf7d420d55096779b6e54edf4ca0a0"
     },
     {
       "path": "docs/screenshots/manual-task-desktop.png",
-      "sha256": "10ce128358b0fc820b0a639f0eec5dec1aabf3157b865fa25140ba957cc7c11d"
+      "sha256": "792939bd1f2f00384daa466f86ccb68dc00ec9ac3b15bad580752aba2e85fd7d"
     },
     {
       "path": "docs/screenshots/meeting-mobile.png",
@@ -164,7 +176,7 @@
     },
     {
       "path": "docs/screenshots/new-meeting-google-mobile.png",
-      "sha256": "93f4500badfcbeb220d3cf71b6b64d88baa8ea5c111eb06627e49b831c82d713"
+      "sha256": "39bfdcc66c9578e4912716e0697f57ac6a743c9443ef368a218aab49c571e6fc"
     },
     {
       "path": "docs/screenshots/profile-desktop.png",
@@ -180,7 +192,7 @@
     },
     {
       "path": "docs/screenshots/projects-mobile.png",
-      "sha256": "4c716f3d3dca9a38fa7031fd8801566b9f5de139d9f55513e42d02a481d99575"
+      "sha256": "f07cbdafa712be4c8ff4ddc914d5989f7ec162c5b89415fa2a3b5cc892dd565c"
     },
     {
       "path": "docs/screenshots/reuse-meeting-mobile.png",
@@ -196,11 +208,11 @@
     },
     {
       "path": "docs/screenshots/task-editor-mobile-v21.png",
-      "sha256": "d977f16ea09e49c579fd4336e22d6848a142ec457b09bc0131b14313ebd8813f"
+      "sha256": "032acdbcf35f642de9b65ba9c0f50de343293fae824a23fb49420a8b8b8d5387"
     },
     {
       "path": "docs/screenshots/tasks-mobile-v21.png",
-      "sha256": "5d6e04f6d7204d84495f1d6582c9e632d65acc6c32483cd16dd4d3fb105e0f6f"
+      "sha256": "0c107594df7fe303e342c0b3b49074dddf8075ff81692950ce13feda8405d466"
     },
     {
       "path": "docs/screenshots/team-desktop.png",
@@ -244,11 +256,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "cf13aa61f75e9b28b8579432d7ecca8667ac0cb1b42dca521897914987cbc05d"
+      "sha256": "f873d1f1af2f3660c29d035b88dcffc07aa844ade9eac14724afbacd3031b70b"
     },
     {
       "path": "package.json",
-      "sha256": "d54b314089ea75e7fd5cea46fdfeb5f5c9befadbcf4b4133cfdb2dc2a0a00b77"
+      "sha256": "81da0a196e180406835aecef1ba1f47a52955720e0c4603ebcf9e965f84b6821"
     },
     {
       "path": "public/art/google-meet.webp",
@@ -480,7 +492,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "6015192eebbe2dad2aef5857d8f50fadd480f532f08ff40a233e9c0174a97d32"
+      "sha256": "f6fef5786a9d2bec04f075f216aaf7267799546ee7575432aa6c0c160ddd9bea"
     },
     {
       "path": "server/audio.js",
@@ -536,7 +548,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "8300a58a4390e6846dfcc544a1822b52543851ad66da958dda8047ed97f9a37e"
+      "sha256": "9c7a5f70bfd07b227658270a4e5b4e18cf274a15eb37ddb8df4c114959e3ad0a"
     },
     {
       "path": "src/components/Account.jsx",
@@ -595,8 +607,12 @@
       "sha256": "9d3c24267610194037b0b5ab3c3ee5278e98c513ed795bba7409e6c5e74d77ea"
     },
     {
+      "path": "src/components/TaskCalendar.jsx",
+      "sha256": "dc6e18cde108d135cc9d55b464ca94f7ed3a59adabb8637e1961c09ab73d4a11"
+    },
+    {
       "path": "src/components/TaskEditor.jsx",
-      "sha256": "7fa843f88dcef6e67abfdec397bcea7af6bcb083a7d1df2baa4764acdcd7de80"
+      "sha256": "fce37661a0ea422bedc32bc969a6730f3a7e52faadf0ec327c62eb1cba5704a9"
     },
     {
       "path": "src/components/TaskFilters.jsx",
@@ -605,6 +621,10 @@
     {
       "path": "src/components/Workspaces.jsx",
       "sha256": "93c90f0511a0047feba037ea786d37394d82a3ce8101e182dcd8a5a68d754455"
+    },
+    {
+      "path": "src/features/calendar.js",
+      "sha256": "f991bd4b23b365032123d3773270305b9d3938397dd4cae56c19098b2a7a3f7f"
     },
     {
       "path": "src/features/exports.js",
@@ -628,11 +648,11 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "3e290b73b5155124d88a3b62314ae44daa246ce7c4f3b9b3751e6239b0680e86"
+      "sha256": "d2783ef20c8bd1ec00af6e7b45c11b5ec002e5bb961c0e1355b93f62111a8260"
     },
     {
       "path": "tests/accounts-browser.js",
-      "sha256": "777c1cd83f6e503546780e88d3ae24995a1f354ce653e18f937be6f8e6379bde"
+      "sha256": "1d3948dbbb467d81c10d68e3ce709af4048e46fc95407777b1c2f6d19fbc309c"
     },
     {
       "path": "tests/accounts.test.js",
@@ -641,6 +661,10 @@
     {
       "path": "tests/browser-smoke.js",
       "sha256": "79de46ab771d5a6fe6d80a84a2e0c9882efa3aad2b54f54bb53af2b539a0bd56"
+    },
+    {
+      "path": "tests/calendar.test.js",
+      "sha256": "e4bd09160b7bc2b3eacd616ddb15c7e065b57bc7c439ba0d9036dfe07e3133e2"
     },
     {
       "path": "tests/collaboration-browser.js",

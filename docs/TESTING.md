@@ -78,3 +78,7 @@ Browser smoke checks the four labelled bottom-navigation buttons, the Meetings a
 ## v2.3.1 assignment matching
 
 My tasks matches full/first/last name for name-only owners, with explicit account ownership taking precedence. Unit tests cover matching and rejection cases plus combined filters. The accounts browser test checks Profile counts and the actual View my tasks shortcut for a user whose server actor name differs from their current display name.
+
+## v2.4 Calendar scheduling
+
+Calendar unit tests validate explicit dates/times, DST gaps and UTC conversion. Account browser tests check scheduling a task with no date, a pre-filled due date, mobile fitting at 320px, correct event parameters and fallback links. Browser navigation is intercepted; no live Google event is created.

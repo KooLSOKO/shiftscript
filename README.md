@@ -1,6 +1,6 @@
 # Latest update
 
-See [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) for name-aware My tasks and deployment instructions. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
+See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
 # ShiftScript v2.3
 

@@ -30,6 +30,7 @@ import { WorkspaceSwitcher, Team } from "./components/Workspaces.jsx";
 import Priority from "./components/Priority.jsx";
 import Profile from "./components/Profile.jsx";
 import TabArtwork from "./components/TabArtwork.jsx";
+import TaskCalendar from "./components/TaskCalendar.jsx";
 const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
@@ -71,6 +72,7 @@ export default function App() {
     [meetingId, setMeetingId] = useState(null),
     [emailMeetingId, setEmailMeetingId] = useState(null),
     [taskId, setTaskId] = useState(null),
+    [calendarTaskId, setCalendarTaskId] = useState(null),
     [filters, setFilters] = useState({ ...defaultFilters }),
     [meetingSearch, setMeetingSearch] = useState(""),
     [meetingProject, setMeetingProject] = useState("All"),
@@ -145,6 +147,7 @@ export default function App() {
     setMeetingId(null);
     setEmailMeetingId(null);
     setTaskId(null);
+    setCalendarTaskId(null);
     setNewMeeting(false);
     setSettings(false);
     setFilters({ ...defaultFilters });
@@ -243,6 +246,7 @@ export default function App() {
       setSwitcher(false);
       setNewMeeting(false);
       setTaskId(null);
+      setCalendarTaskId(null);
       setMeetingId(null);
       setEmailMeetingId(null);
       setSettings(false);
@@ -261,6 +265,7 @@ export default function App() {
     meeting = data.meetings.find((m) => m.id === meetingId),
     emailMeeting = data.meetings.find((m) => m.id === emailMeetingId),
     task = data.tasks.find((t) => t.id === taskId),
+    calendarTask = data.tasks.find((t) => t.id === calendarTaskId),
     pending = data.meetings.reduce(
       (n, m) =>
         n + m.proposals.filter((p) => p.reviewStatus === "pending").length,
@@ -951,6 +956,16 @@ export default function App() {
                                       /{t.checklist.length} steps
                                     </span>
                                   )}
+                                  <button
+                                    className="text-button task-calendar-link"
+                                    aria-label={
+                                      "Add " + t.title + " to Google Calendar"
+                                    }
+                                    onClick={() => setCalendarTaskId(t.id)}
+                                  >
+                                    <Icons.CalendarDays size={15} />
+                                    Add to Calendar
+                                  </button>
                                 </td>
                                 <td data-label="Owner">{t.owner}</td>
                                 <td
@@ -1040,6 +1055,16 @@ export default function App() {
                                     {formatDate(t.dueDate)}
                                   </span>
                                 </div>
+                                <button
+                                  className="text-button task-calendar-link"
+                                  aria-label={
+                                    "Add " + t.title + " to Google Calendar"
+                                  }
+                                  onClick={() => setCalendarTaskId(t.id)}
+                                >
+                                  <Icons.CalendarDays size={15} />
+                                  Add to Calendar
+                                </button>
                                 <select
                                   aria-label={"Status for " + t.title}
                                   disabled={readOnly}
@@ -1167,10 +1192,21 @@ export default function App() {
           readOnly={readOnly}
           onClose={() => setTaskId(null)}
           onSaved={() => reload()}
+          onCalendar={() => {
+            setTaskId(null);
+            setCalendarTaskId(task.id);
+          }}
           onSource={() => {
             setTaskId(null);
             openMeeting(task.meetingId);
           }}
+        />
+      )}
+      {calendarTask && (
+        <TaskCalendar
+          key={calendarTask.id}
+          task={calendarTask}
+          onClose={() => setCalendarTaskId(null)}
         />
       )}
       {settings && (
