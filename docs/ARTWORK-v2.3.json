@@ -1,0 +1,69 @@
+{
+  "method": "Built-in image generation",
+  "styleReference": "public/art/meeting-blue.webp",
+  "assets": [
+    {
+      "path": "public/art/meetings.webp",
+      "generatedOriginal": "exec-a9dc31e4-a54f-463e-9848-088a8bf3b586.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: A friendly Black South African professional organising meeting transcripts, a notebook with blue lines, two speech bubbles and a coral bookmark. Wide landscape composition. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        800,
+        400
+      ]
+    },
+    {
+      "path": "public/art/google-meet.webp",
+      "generatedOriginal": "exec-81c31de3-9ac8-4b45-85d6-1f2d8091d77b.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: Two friendly Black South African colleagues in a recognisable browser video meeting: a laptop with a four-person video grid, a small green camera symbol, muted-microphone controls and a blue notes clipboard beside it. No Google logos or text. Wide landscape composition. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        800,
+        400
+      ]
+    },
+    {
+      "path": "public/art/tasks.webp",
+      "generatedOriginal": "exec-3e9023a6-c94a-434f-b01e-491181ef71d9.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: A friendly Black South African professional completing work beside a large task checklist with cobalt checkmarks, coral yellow and teal priority cards and a tiny clock. Wide landscape composition. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        800,
+        400
+      ]
+    },
+    {
+      "path": "public/art/projects.webp",
+      "generatedOriginal": "exec-67b2defc-b5ac-4f64-8c18-528a0d9a5c37.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: Two friendly Black South African professionals planning a portfolio website project, a large blue folder, simple website page cards and small milestones. Wide landscape composition. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        800,
+        400
+      ]
+    },
+    {
+      "path": "public/art/team.webp",
+      "generatedOriginal": "exec-e1183c19-c61c-4ff6-b799-ae9e253e2263.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: Three friendly Black South African colleagues collaborating, connected blue avatar cards, a small invitation envelope and a coral approval badge. Wide landscape composition. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        800,
+        400
+      ]
+    },
+    {
+      "path": "public/art/profile.webp",
+      "generatedOriginal": "exec-7fb13df9-3088-45e7-97a5-0d9806e39f13.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: A friendly Black South African professional looking at their personal profile card: round portrait, blue identity card and a small shield and teal verification check. Wide landscape composition. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        800,
+        400
+      ]
+    },
+    {
+      "path": "public/art/social-sharing.png",
+      "generatedOriginal": "exec-e93b1111-e9d7-4af7-8662-e56b54cc65d6.png",
+      "prompt": "Use case: illustration-story / ads-marketing. Asset type: ShiftScript product illustration. Input image is a STYLE REFERENCE only, not an edit target. Match its polished clay-like editorial character illustration, matte blue outfits, expressive faces, corporate cobalt #2458E8, navy #152747, pale ice blue #e8f2ff, subtle shadows, tidy sculpted shapes and small vibrant coral yellow teal accents. Primary request: A premium social sharing card for ShiftScript by Earny, wide 1200:630 composition. Left half has polished, very legible navy typography on pale ice-blue background: exact text 'ShiftScript' then smaller 'by Earny' and large headline 'Turn meetings' line break 'into action.' Bottom small text 'shiftscript.earny.co.za'. Right half has two friendly Black South African colleagues with a laptop, oversized blue checklist and three floating coral yellow and teal task cards. Keep all text inset from edges by 70 pixels. Clean uncluttered backdrop #e8f2ff. No robots, sparkles, science-fiction effects, watermark. For all assets except social-sharing: no letters, words or numbers; entire subject centred with generous breathing room; aspect ratio about 2:1.",
+      "dimensions": [
+        1200,
+        630
+      ]
+    }
+  ]
+}

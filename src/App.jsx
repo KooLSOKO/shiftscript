@@ -28,6 +28,8 @@ import TaskFilters from "./components/TaskFilters.jsx";
 import Projects from "./components/Projects.jsx";
 import { WorkspaceSwitcher, Team } from "./components/Workspaces.jsx";
 import Priority from "./components/Priority.jsx";
+import Profile from "./components/Profile.jsx";
+import TabArtwork from "./components/TabArtwork.jsx";
 const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
@@ -36,6 +38,7 @@ const tabs = [
   ["board", "Board", Icons.Columns3],
   ["projects", "Projects", Icons.Folder],
   ["team", "Team & workspace", Icons.Users],
+  ["profile", "Profile", Icons.UserCircle],
 ];
 const emptyData = () => ({
   meetings: [],
@@ -477,6 +480,18 @@ export default function App() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              className="icon-button profile-trigger"
+              aria-label="View your profile"
+              title="Your profile"
+              onClick={() => {
+                setTab("profile");
+                setMeetingId(null);
+                setMenu(false);
+              }}
+            >
+              <Icons.UserCircle size={22} />
+            </button>
             <span className="mode-badge">
               <span />
               {config?.provider === "gemini" ? "Live analysis" : "Sample mode"}
@@ -540,6 +555,7 @@ export default function App() {
                       projects: "Make room for the bigger picture.",
                       team: "Good work happens together.",
                       google: "From Google Meet to a clear next step.",
+                      profile: "Your profile.",
                     }[tab]}
               </h1>
               <p>
@@ -558,10 +574,12 @@ export default function App() {
                       team: "Manage your people, permissions and workspace.",
                       google:
                         "Bring in your notes. Review the work. Keep moving.",
+                      profile:
+                        "Your account, your work and the places you belong.",
                     }[tab]}
               </p>
             </div>
-            {!readOnly && (
+            {!readOnly && tab !== "profile" && (
               <div className="heading-actions">
                 {(tab === "tasks" || tab === "board") && (
                   <button className="button" onClick={() => setTaskId("new")}>
@@ -586,6 +604,23 @@ export default function App() {
             </div>
           ) : (
             <>
+              {!meeting && <TabArtwork tab={tab} />}
+              {tab === "profile" && (
+                <Profile
+                  user={user}
+                  actor={actor}
+                  catalog={catalog}
+                  workspace={data.workspace}
+                  role={data.role}
+                  tasks={data.tasks}
+                  onWorkspaces={() => setSwitcher(true)}
+                  onMyWork={() => {
+                    setFilters({ ...defaultFilters, owner: "Me" });
+                    setTab("tasks");
+                  }}
+                  onSignOut={() => signOut(auth)}
+                />
+              )}
               {tab === "dashboard" && (
                 <>
                   <section className="hero">
@@ -1066,6 +1101,7 @@ export default function App() {
       <nav className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
           ["dashboard", "Overview", Icons.LayoutDashboard],
+          ["meetings", "Meetings", Icons.NotebookPen],
           ["tasks", "Tasks", Icons.ListTodo],
           ["google", "Google Meet", Icons.Video],
         ].map(([id, label, Icon]) => (

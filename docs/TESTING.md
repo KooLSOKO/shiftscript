@@ -70,3 +70,7 @@ Not verified here: your live Firebase credentials/IAM, Google consent/scopes, pe
 The installed tree reports 12 advisories (8 moderate, 4 high). The high findings trace to the Firebase Web SDK's unused Node Firestore transport (`@grpc/grpc-js` 1.9.x); this application imports only browser Auth and uses the Admin SDK's separate 1.14.6 transport for server Firestore. No gRPC server is exposed by ShiftScript. This is a dependency inventory observation, not proof of universal non-exploitability. No force downgrade of Firebase was applied; review upstream updates before adding client-side Firestore/gRPC usage.
 
 The v2.1 final audit still reports those 12 existing findings. The new SMTP dependency was updated to Nodemailer 10.1.0; no Nodemailer advisory was reported in the final audit.
+
+## v2.3 checks
+
+Browser smoke checks the four labelled bottom-navigation buttons, the Meetings active state, artwork decoding, and 44px minimum tap targets with no overflow at 320, 360, 390 and 414px. The accounts browser suite checks signed-in name/email isolation for two users, workspace memberships and profile rendering on desktop and mobile. The existing collaboration and integration suites continue to exercise invitation email, Meet imports and recaps.

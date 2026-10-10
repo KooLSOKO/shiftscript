@@ -130,6 +130,48 @@ try {
     style: ".toast { visibility: hidden !important; }",
   });
   await page.setViewportSize({ width: 390, height: 844 });
+  const quickNav = page.getByRole("navigation", { name: "Quick navigation" });
+  assert.equal(await quickNav.getByRole("button").count(), 4);
+  await quickNav
+    .getByRole("button", { name: "Go to Meetings", exact: true })
+    .click();
+  await page
+    .getByRole("heading", {
+      name: "Every meeting, a clear next step.",
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(
+    await quickNav
+      .getByRole("button", { name: "Go to Meetings", exact: true })
+      .getAttribute("aria-current"),
+    "page",
+  );
+  await page.locator(".tab-artwork img").evaluate(async (img) => {
+    await img.decode();
+    if (!img.naturalWidth) throw new Error("Missing tab art");
+  });
+  await page.screenshot({
+    path: "docs/screenshots/meetings-navigation-mobile.png",
+    fullPage: true,
+  });
+  for (const width of [320, 360, 390, 414]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      "Four-button navigation and art fit " + width,
+    );
+    for (const button of await quickNav.getByRole("button").all()) {
+      const bounds = await button.boundingBox();
+      assert(bounds.width >= 44 && bounds.height >= 44);
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await quickNav
+    .getByRole("button", { name: "Go to Overview", exact: true })
+    .click();
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -193,13 +235,11 @@ try {
   wav.write("RIFF");
   wav.write("WAVE", 8);
   wav.write("fmt ", 12);
-  await page
-    .getByLabel("Upload audio file")
-    .setInputFiles({
-      name: "voice-sample.wav",
-      mimeType: "audio/wav",
-      buffer: wav,
-    });
+  await page.getByLabel("Upload audio file").setInputFiles({
+    name: "voice-sample.wav",
+    mimeType: "audio/wav",
+    buffer: wav,
+  });
   await page
     .getByRole("button", { name: "Transcribe to text", exact: true })
     .click();

@@ -166,6 +166,21 @@ try {
     ).includes("Soko Studio"),
   );
   assert.equal(users.get("soko").meetings.length, 1);
+  await page
+    .getByRole("button", { name: "View your profile", exact: true })
+    .click();
+  const profile = page.getByRole("region", { name: "Personal profile" });
+  await profile.getByRole("heading", { name: "Soko", exact: true }).waitFor();
+  await profile.getByText("soko@example.test", { exact: true }).waitFor();
+  assert.equal(
+    await profile.getByText("kopano@example.test", { exact: true }).count(),
+    0,
+  );
+  await page.screenshot({
+    path: "docs/screenshots/profile-desktop.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Overview", exact: true }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page
     .getByRole("button", { name: "Create an account", exact: true })
@@ -199,6 +214,27 @@ try {
     .getByRole("heading", { name: "Less follow-up. More follow-through." })
     .waitFor();
   assert.deepEqual(users.get("kopano").meetings, []);
+  await page
+    .getByRole("button", { name: "View your profile", exact: true })
+    .click();
+  await profile.getByRole("heading", { name: "Kopano", exact: true }).waitFor();
+  await profile.getByText("kopano@example.test", { exact: true }).waitFor();
+  assert.equal(
+    await profile.getByText("soko@example.test", { exact: true }).count(),
+    0,
+  );
+  assert(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await page.screenshot({
+    path: "docs/screenshots/profile-mobile.png",
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Go to Overview", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Open navigation", exact: true })
     .click();

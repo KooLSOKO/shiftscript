@@ -1,4 +1,8 @@
-# ShiftScript v2.2
+# Latest update
+
+See [UPDATE-v2.3](docs/UPDATE-v2.3.md) for mobile navigation, profiles, artwork, SEO and deployment instructions.
+
+# ShiftScript v2.3
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 

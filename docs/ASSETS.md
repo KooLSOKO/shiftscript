@@ -26,3 +26,7 @@ CSS supplies gentle entrance, hover, dialog, toast and microphone-wave effects. 
 
 
 v2.1 adds the original `Video` icon in `src/components/Icons.jsx` and `public/icons/Video.svg`, using the same rounded outlines and ice-blue secondary fill. No Google logo is copied. New mobile screenshots document import, recap review, task cards and the task editor with fictional data.
+
+## v2.3 branded scenes
+
+New generated scene assets are in `public/art/`. Overview retains `meeting-blue.webp`; Meetings, Google Meet, Tasks/Board, Projects, Team and Profile each have contextual artwork. `social-sharing.png` is the public 1200 × 630 sharing card. Prompts and generation provenance are recorded in `ARTWORK-v2.3.json`. The images were generated using the built-in image tool and resized for deployment.

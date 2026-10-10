@@ -29,6 +29,13 @@ export const LayoutDashboard = frame(
     <rect x="15" y="19" width="6" height="2" rx="1" fill={soft} />
   </>,
 );
+export const UserCircle = frame(
+  <>
+    <circle cx="12" cy="12" r="9" fill={soft} />
+    <circle cx="12" cy="9" r="3" />
+    <path d="M5.5 18a7 7 0 0 1 13 0" />
+  </>,
+);
 export const NotebookPen = frame(
   <>
     <rect x="4" y="3" width="13" height="18" rx="3" fill={soft} />
