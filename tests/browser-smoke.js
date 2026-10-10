@@ -216,12 +216,17 @@ try {
     });
   });
   let voiceUploaded = false;
+  let releaseVoice;
+  const voiceGate = new Promise((resolve) => {
+    releaseVoice = resolve;
+  });
   await page.route("**/api/transcribe", async (route) => {
     const body = route.request().postDataJSON();
     assert.equal(body.name, "voice-sample.wav");
     assert.equal(body.mimeType, "audio/wav");
     assert.ok(body.data.length > 16);
     voiceUploaded = true;
+    await voiceGate;
     await route.fulfill({
       json: {
         transcript: sampleTranscript,
@@ -249,6 +254,12 @@ try {
   await page
     .getByRole("button", { name: "Transcribe to text", exact: true })
     .click();
+  await page
+    .locator(".processing-status")
+    .getByText("Transcribing voice…", { exact: true })
+    .waitFor();
+  assert.equal(await page.locator(".ss-wave-loader li").count(), 9);
+  releaseVoice();
   await page.waitForFunction(
     (expected) =>
       document.querySelector('[aria-label="Meeting transcript"]').value ===

@@ -723,237 +723,467 @@ export default function App() {
               Viewer access · Read meetings, follow tasks and export reports.
             </div>
           )}
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">KEEP THE CONVERSATION MOVING</p>
-              <h1>
-                {meeting
-                  ? meeting.title
-                  : {
-                      dashboard: "Less follow-up. More follow-through.",
-                      meetings: "Every meeting, a clear next step.",
-                      tasks: "The work, all in one place.",
-                      board: "A little clarity goes a long way.",
-                      projects: "Make room for the bigger picture.",
-                      team: "Good work happens together.",
-                      google: "From Google Meet to a clear next step.",
-                      activity: "Keep up with your workspace.",
-                      profile: "Your profile.",
-                    }[tab]}
-              </h1>
-              <p>
-                {meeting
-                  ? `${formatDate(meeting.date)} · ${meeting.type}`
-                  : {
-                      dashboard:
-                        "Your meetings, decisions and everything that comes next.",
-                      meetings:
-                        "Turn conversations into work you can review and trust.",
-                      tasks:
-                        "Keep an eye on who owns what, and what happens next.",
-                      board: "Move tasks from a first step to a finished one.",
-                      projects:
-                        "A shared home for related conversations and commitments.",
-                      team: "Manage your people, permissions and workspace.",
-                      google:
-                        "Bring in your notes. Review the work. Keep moving.",
-                      activity: "See who changed what, and follow the work.",
-                      profile:
-                        "Your account, your work and the places you belong.",
-                    }[tab]}
-              </p>
-            </div>
-            {!readOnly && tab !== "profile" && (
-              <div className="heading-actions">
-                {(tab === "tasks" || tab === "board") && (
-                  <button className="button" onClick={() => setTaskId("new")}>
-                    <Icons.Plus size={17} />
-                    New task
-                  </button>
-                )}
-                <button
-                  className="button primary"
-                  onClick={() => setNewMeeting(true)}
-                >
-                  <Icons.Plus size={18} />
-                  New meeting
-                </button>
+          <div
+            className="page-transition"
+            key={`${workspaceId}:${tab}:${meetingId || "overview"}`}
+          >
+            <div className="page-heading">
+              <div>
+                <p className="eyebrow">KEEP THE CONVERSATION MOVING</p>
+                <h1>
+                  {meeting
+                    ? meeting.title
+                    : {
+                        dashboard: "Less follow-up. More follow-through.",
+                        meetings: "Every meeting, a clear next step.",
+                        tasks: "The work, all in one place.",
+                        board: "A little clarity goes a long way.",
+                        projects: "Make room for the bigger picture.",
+                        team: "Good work happens together.",
+                        google: "From Google Meet to a clear next step.",
+                        activity: "Keep up with your workspace.",
+                        profile: "Your profile.",
+                      }[tab]}
+                </h1>
+                <p>
+                  {meeting
+                    ? `${formatDate(meeting.date)} · ${meeting.type}`
+                    : {
+                        dashboard:
+                          "Your meetings, decisions and everything that comes next.",
+                        meetings:
+                          "Turn conversations into work you can review and trust.",
+                        tasks:
+                          "Keep an eye on who owns what, and what happens next.",
+                        board:
+                          "Move tasks from a first step to a finished one.",
+                        projects:
+                          "A shared home for related conversations and commitments.",
+                        team: "Manage your people, permissions and workspace.",
+                        google:
+                          "Bring in your notes. Review the work. Keep moving.",
+                        activity: "See who changed what, and follow the work.",
+                        profile:
+                          "Your account, your work and the places you belong.",
+                      }[tab]}
+                </p>
               </div>
-            )}
-          </div>
-          {loading ? (
-            <div className="empty">
-              <Icons.RefreshCw className="spin" />
-              <h3>Opening your workspace…</h3>
-            </div>
-          ) : (
-            <>
-              {!meeting && <TabArtwork tab={tab} />}
-              {tab === "profile" && (
-                <Profile
-                  user={user}
-                  actor={actor}
-                  catalog={catalog}
-                  workspace={data.workspace}
-                  role={data.role}
-                  tasks={data.tasks}
-                  onWorkspaces={() => setSwitcher(true)}
-                  onMyWork={() => {
-                    setFilters({ ...defaultFilters, owner: "Me" });
-                    setTab("tasks");
-                  }}
-                  personal={personal}
-                  remindersReady={config.remindersReady}
-                  onProfileSaved={async (profile) => {
-                    if (current.current.uid !== actor.uid) return;
-                    setPersonal(profile);
-                    await refreshCatalog();
-                    await reload();
-                  }}
-                  onSignOut={() => signOut(auth)}
-                />
+              {!readOnly && tab !== "profile" && (
+                <div className="heading-actions">
+                  {(tab === "tasks" || tab === "board") && (
+                    <button className="button" onClick={() => setTaskId("new")}>
+                      <Icons.Plus size={17} />
+                      New task
+                    </button>
+                  )}
+                  <button
+                    className="button primary"
+                    onClick={() => setNewMeeting(true)}
+                  >
+                    <Icons.Plus size={18} />
+                    New meeting
+                  </button>
+                </div>
               )}
-              {tab === "dashboard" && (
-                <>
-                  <section className="hero">
-                    <div>
-                      <span className="badge cream">
-                        FROM THE ROOM TO THE ROADMAP
-                      </span>
-                      <h2>
-                        Talk it through.
-                        <br />
-                        Put it in motion.
-                      </h2>
-                      <p>
-                        Capture the important bits, check the details,
-                        <br className="hidden md:block" /> and give every next
-                        step a place to land.
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {!readOnly && (
-                          <button
-                            className="button primary"
-                            onClick={() => setNewMeeting(true)}
-                          >
-                            {data.draft
-                              ? "Continue your draft"
-                              : "Add your first next step"}
-                          </button>
-                        )}
-                        <button
-                          className="button"
-                          onClick={() => {
-                            setFilters({ ...defaultFilters, owner: "Me" });
-                            setTab("tasks");
-                          }}
-                        >
-                          My work
-                        </button>
-                      </div>
-                    </div>
-                    <img
-                      src="/art/meeting-blue.png"
-                      alt="Illustration of colleagues planning their next steps"
-                    />
-                  </section>
-                  <section className="stats" aria-label="Workspace shortcuts">
-                    {[
-                      [
-                        data.meetings.length,
-                        "Meetings processed",
-                        Icons.NotebookPen,
-                        "sage",
-                        () => meetingView(),
-                      ],
-                      [
-                        data.projects.length,
-                        "Projects",
-                        Icons.Folder,
-                        "sage",
-                        () => {
-                          setMeetingId(null);
-                          setTab("projects");
-                        },
-                      ],
-                      [
-                        pending,
-                        "Awaiting approval",
-                        Icons.Clock,
-                        "peach",
-                        () => meetingView("Pending"),
-                      ],
-                      [
-                        active.length,
-                        "Active tasks",
-                        Icons.ListTodo,
-                        "sage",
-                        () => taskView({ status: "Active" }),
-                      ],
-                      [
-                        completed.length,
-                        "Completed",
-                        Icons.CheckCircle2,
-                        "sage",
-                        () => taskView({ status: "Completed" }),
-                      ],
-                      [
-                        blocked.length,
-                        "Blocked",
-                        Icons.AlertCircle,
-                        "peach",
-                        () => taskView({ status: "Blocked" }),
-                      ],
-                      [
-                        late.length,
-                        "Overdue",
-                        Icons.CalendarDays,
-                        "peach",
-                        () => taskView({ due: "Overdue" }),
-                      ],
-                    ].map(([v, label, Icon, color, onClick]) => (
-                      <button
-                        type="button"
-                        className="stat"
-                        key={label}
-                        onClick={onClick}
-                        aria-label={`View ${label.toLowerCase()}: ${v}`}
-                      >
-                        <span className={"stat-icon " + color}>
-                          <Icon size={32} />
+            </div>
+            {loading ? (
+              <div className="empty">
+                <Icons.RefreshCw className="spin" />
+                <h3>Opening your workspace…</h3>
+              </div>
+            ) : (
+              <>
+                {!meeting && <TabArtwork tab={tab} />}
+                {tab === "profile" && (
+                  <Profile
+                    user={user}
+                    actor={actor}
+                    catalog={catalog}
+                    workspace={data.workspace}
+                    role={data.role}
+                    tasks={data.tasks}
+                    onWorkspaces={() => setSwitcher(true)}
+                    onMyWork={() => {
+                      setFilters({ ...defaultFilters, owner: "Me" });
+                      setTab("tasks");
+                    }}
+                    personal={personal}
+                    remindersReady={config.remindersReady}
+                    onProfileSaved={async (profile) => {
+                      if (current.current.uid !== actor.uid) return;
+                      setPersonal(profile);
+                      await refreshCatalog();
+                      await reload();
+                    }}
+                    onSignOut={() => signOut(auth)}
+                  />
+                )}
+                {tab === "dashboard" && (
+                  <>
+                    <section className="hero">
+                      <div>
+                        <span className="badge cream">
+                          FROM THE ROOM TO THE ROADMAP
                         </span>
-                        <strong>{v}</strong>
-                        <span className="stat-label">{label}</span>
-                      </button>
-                    ))}
-                  </section>
-                  <NeedsAttention
-                    data={data}
-                    onTasks={taskView}
-                    onMeetings={() => {
-                      setTab("meetings");
-                      setMeetingId(
-                        data.meetings.find((m) =>
-                          m.proposals.some((p) => p.reviewStatus === "pending"),
-                        )?.id || null,
+                        <h2>
+                          Talk it through.
+                          <br />
+                          Put it in motion.
+                        </h2>
+                        <p>
+                          Capture the important bits, check the details,
+                          <br className="hidden md:block" /> and give every next
+                          step a place to land.
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {!readOnly && (
+                            <button
+                              className="button primary"
+                              onClick={() => setNewMeeting(true)}
+                            >
+                              {data.draft
+                                ? "Continue your draft"
+                                : "Add your first next step"}
+                            </button>
+                          )}
+                          <button
+                            className="button"
+                            onClick={() => {
+                              setFilters({ ...defaultFilters, owner: "Me" });
+                              setTab("tasks");
+                            }}
+                          >
+                            My work
+                          </button>
+                        </div>
+                      </div>
+                      <img
+                        src="/art/meeting-blue.png"
+                        alt="Illustration of colleagues planning their next steps"
+                      />
+                    </section>
+                    <section className="stats" aria-label="Workspace shortcuts">
+                      {[
+                        [
+                          data.meetings.length,
+                          "Meetings processed",
+                          Icons.NotebookPen,
+                          "sage",
+                          () => meetingView(),
+                        ],
+                        [
+                          data.projects.length,
+                          "Projects",
+                          Icons.Folder,
+                          "sage",
+                          () => {
+                            setMeetingId(null);
+                            setTab("projects");
+                          },
+                        ],
+                        [
+                          pending,
+                          "Awaiting approval",
+                          Icons.Clock,
+                          "peach",
+                          () => meetingView("Pending"),
+                        ],
+                        [
+                          active.length,
+                          "Active tasks",
+                          Icons.ListTodo,
+                          "sage",
+                          () => taskView({ status: "Active" }),
+                        ],
+                        [
+                          completed.length,
+                          "Completed",
+                          Icons.CheckCircle2,
+                          "sage",
+                          () => taskView({ status: "Completed" }),
+                        ],
+                        [
+                          blocked.length,
+                          "Blocked",
+                          Icons.AlertCircle,
+                          "peach",
+                          () => taskView({ status: "Blocked" }),
+                        ],
+                        [
+                          late.length,
+                          "Overdue",
+                          Icons.CalendarDays,
+                          "peach",
+                          () => taskView({ due: "Overdue" }),
+                        ],
+                      ].map(([v, label, Icon, color, onClick]) => (
+                        <button
+                          type="button"
+                          className="stat"
+                          key={label}
+                          onClick={onClick}
+                          aria-label={`View ${label.toLowerCase()}: ${v}`}
+                        >
+                          <span className={"stat-icon " + color}>
+                            <Icon size={32} />
+                          </span>
+                          <strong>{v}</strong>
+                          <span className="stat-label">{label}</span>
+                        </button>
+                      ))}
+                    </section>
+                    <NeedsAttention
+                      data={data}
+                      onTasks={taskView}
+                      onMeetings={() => {
+                        setTab("meetings");
+                        setMeetingId(
+                          data.meetings.find((m) =>
+                            m.proposals.some(
+                              (p) => p.reviewStatus === "pending",
+                            ),
+                          )?.id || null,
+                        );
+                      }}
+                    />
+                    <div className="overview-grid">
+                      <section className="panel">
+                        <div className="section-heading">
+                          <h2>Recent conversations</h2>
+                          <button
+                            className="text-button"
+                            onClick={() => meetingView()}
+                          >
+                            View all
+                          </button>
+                        </div>
+                        {data.meetings.length ? (
+                          data.meetings
+                            .slice(0, 4)
+                            .map((m) => (
+                              <MeetingRow
+                                key={m.id}
+                                m={m}
+                                projects={data.projects}
+                                onOpen={() => openMeeting(m.id)}
+                                onEmail={
+                                  !readOnly
+                                    ? () => setEmailMeetingId(m.id)
+                                    : null
+                                }
+                                emailReady={config?.emailReady}
+                              />
+                            ))
+                        ) : (
+                          <Empty
+                            icon={Icons.NotebookPen}
+                            title="A fresh page for your next meeting"
+                            text="Add a transcript to start building your meeting history."
+                            action={!readOnly ? "Try a sample meeting" : null}
+                            onClick={() => setNewMeeting(true)}
+                          />
+                        )}
+                      </section>
+                      <section className="panel">
+                        <div className="section-heading">
+                          <h2>Needs your attention</h2>
+                          <span className="badge">
+                            {pending + late.length + blocked.length}
+                          </span>
+                        </div>
+                        {pending > 0 && (
+                          <div className="attention">
+                            <Icons.Clock />
+                            <div>
+                              <h3>{pending} proposed tasks to review</h3>
+                              <p>Confirm owners and deadlines.</p>
+                            </div>
+                            <button
+                              className="button small"
+                              aria-label="Review proposed tasks"
+                              onClick={() =>
+                                openMeeting(
+                                  data.meetings.find((m) =>
+                                    m.proposals.some(
+                                      (p) => p.reviewStatus === "pending",
+                                    ),
+                                  ).id,
+                                )
+                              }
+                            >
+                              Review
+                            </button>
+                          </div>
+                        )}
+                        {[
+                          [late, "Overdue tasks", "Overdue"],
+                          [blocked, "Blocked tasks", "Blocked"],
+                        ].map(
+                          ([items, title, kind]) =>
+                            items.length > 0 && (
+                              <div className="attention" key={kind}>
+                                <Icons.Flag />
+                                <div>
+                                  <h3>
+                                    {items.length} {title.toLowerCase()}
+                                  </h3>
+                                  <p>Find what needs a hand.</p>
+                                </div>
+                                <button
+                                  className="button small"
+                                  aria-label={title}
+                                  onClick={() => {
+                                    setFilters({
+                                      ...defaultFilters,
+                                      ...(kind === "Overdue"
+                                        ? { due: kind }
+                                        : { status: kind }),
+                                    });
+                                    setTab("tasks");
+                                  }}
+                                >
+                                  View tasks
+                                </button>
+                              </div>
+                            ),
+                        )}
+                        {pending + late.length + blocked.length === 0 && (
+                          <Empty
+                            icon={Icons.CheckCircle2}
+                            title="A little breathing room."
+                            text="No pending approvals, overdue tasks or blockers."
+                          />
+                        )}
+                      </section>
+                    </div>
+                  </>
+                )}
+                {tab === "activity" && (
+                  <ActivityFeed
+                    activity={data.activity}
+                    onTask={(id) =>
+                      data.tasks.some((task) => task.id === id)
+                        ? setTaskId(id)
+                        : setToast(
+                            "This task was deleted. Its change remains in history.",
+                          )
+                    }
+                    onMeeting={openMeeting}
+                    onProject={(id) => taskView({ project: id })}
+                  />
+                )}
+                {tab === "google" && (
+                  <GoogleMeet
+                    key={workspaceId + ":" + actor.uid}
+                    projects={data.projects}
+                    workspace={data.workspace}
+                    readOnly={readOnly}
+                    config={config}
+                    existingMeetings={data.meetings}
+                    onOpenExisting={(m) => openMeeting(m.id)}
+                    onCreated={async (m) => {
+                      await reload();
+                      openMeeting(m.id);
+                      setToast(
+                        "Google source processed. Review your proposed tasks.",
                       );
                     }}
                   />
-                  <div className="overview-grid">
-                    <section className="panel">
-                      <div className="section-heading">
-                        <h2>Recent conversations</h2>
-                        <button
-                          className="text-button"
-                          onClick={() => meetingView()}
-                        >
-                          View all
-                        </button>
+                )}
+                {tab === "meetings" &&
+                  (meeting ? (
+                    <MeetingDetail
+                      key={meeting.id}
+                      meeting={meeting}
+                      tasks={data.tasks}
+                      meetings={data.meetings}
+                      onMeeting={openMeeting}
+                      onPrepare={(id) => setPreparation({ meetingId: id })}
+                      emailReady={config.emailReady}
+                      workspace={data.workspace}
+                      projects={data.projects}
+                      readOnly={readOnly}
+                      reload={reload}
+                      onBack={() => setMeetingId(null)}
+                      onTask={setTaskId}
+                      onError={setError}
+                    />
+                  ) : (
+                    <>
+                      {!readOnly && (
+                        <div className="agenda-list mb-4">
+                          <button
+                            className="button"
+                            onClick={() => setPreparation({})}
+                          >
+                            <Icons.NotebookPen size={18} />
+                            Prepare meeting agenda
+                          </button>
+                          {data.agendas
+                            ?.filter((item) => !item.meetingId)
+                            .slice(0, 8)
+                            .map((agenda) => (
+                              <button
+                                className="button small"
+                                key={agenda.id}
+                                onClick={() => {
+                                  if (
+                                    data.draft?.transcript &&
+                                    !window.confirm(
+                                      "Start from this agenda and replace your current draft?",
+                                    )
+                                  )
+                                    return;
+                                  setPreparedAgenda(agenda);
+                                  setNewMeeting(true);
+                                }}
+                              >
+                                <Icons.FileText size={16} />
+                                {agenda.title}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                      <div className="panel meeting-filters">
+                        <label>
+                          Search meetings
+                          <input
+                            placeholder="Search title or summary"
+                            value={meetingSearch}
+                            onChange={(e) => setMeetingSearch(e.target.value)}
+                          />
+                        </label>
+                        <label>
+                          Project
+                          <select
+                            aria-label="Project"
+                            value={meetingProject}
+                            onChange={(e) => setMeetingProject(e.target.value)}
+                          >
+                            <option value="All">All projects</option>
+                            <option value="None">No project</option>
+                            {data.projects.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          Review
+                          <select
+                            aria-label="Meeting review"
+                            value={meetingReview}
+                            onChange={(e) => setMeetingReview(e.target.value)}
+                          >
+                            <option value="All">All meetings</option>
+                            <option value="Pending">Needs approval</option>
+                          </select>
+                        </label>
                       </div>
-                      {data.meetings.length ? (
-                        data.meetings
-                          .slice(0, 4)
-                          .map((m) => (
+                      <section className="panel mt-5">
+                        {visibleMeetings.length ? (
+                          visibleMeetings.map((m) => (
                             <MeetingRow
                               key={m.id}
                               m={m}
@@ -965,334 +1195,299 @@ export default function App() {
                               emailReady={config?.emailReady}
                             />
                           ))
-                      ) : (
-                        <Empty
-                          icon={Icons.NotebookPen}
-                          title="A fresh page for your next meeting"
-                          text="Add a transcript to start building your meeting history."
-                          action={!readOnly ? "Try a sample meeting" : null}
-                          onClick={() => setNewMeeting(true)}
-                        />
-                      )}
-                    </section>
-                    <section className="panel">
-                      <div className="section-heading">
-                        <h2>Needs your attention</h2>
-                        <span className="badge">
-                          {pending + late.length + blocked.length}
-                        </span>
-                      </div>
-                      {pending > 0 && (
-                        <div className="attention">
-                          <Icons.Clock />
-                          <div>
-                            <h3>{pending} proposed tasks to review</h3>
-                            <p>Confirm owners and deadlines.</p>
-                          </div>
-                          <button
-                            className="button small"
-                            aria-label="Review proposed tasks"
-                            onClick={() =>
-                              openMeeting(
-                                data.meetings.find((m) =>
-                                  m.proposals.some(
-                                    (p) => p.reviewStatus === "pending",
-                                  ),
-                                ).id,
-                              )
-                            }
-                          >
-                            Review
-                          </button>
-                        </div>
-                      )}
-                      {[
-                        [late, "Overdue tasks", "Overdue"],
-                        [blocked, "Blocked tasks", "Blocked"],
-                      ].map(
-                        ([items, title, kind]) =>
-                          items.length > 0 && (
-                            <div className="attention" key={kind}>
-                              <Icons.Flag />
-                              <div>
-                                <h3>
-                                  {items.length} {title.toLowerCase()}
-                                </h3>
-                                <p>Find what needs a hand.</p>
-                              </div>
-                              <button
-                                className="button small"
-                                aria-label={title}
-                                onClick={() => {
-                                  setFilters({
-                                    ...defaultFilters,
-                                    ...(kind === "Overdue"
-                                      ? { due: kind }
-                                      : { status: kind }),
-                                  });
-                                  setTab("tasks");
-                                }}
-                              >
-                                View tasks
-                              </button>
-                            </div>
-                          ),
-                      )}
-                      {pending + late.length + blocked.length === 0 && (
-                        <Empty
-                          icon={Icons.CheckCircle2}
-                          title="A little breathing room."
-                          text="No pending approvals, overdue tasks or blockers."
-                        />
-                      )}
-                    </section>
-                  </div>
-                </>
-              )}
-              {tab === "activity" && (
-                <ActivityFeed
-                  activity={data.activity}
-                  onTask={(id) =>
-                    data.tasks.some((task) => task.id === id)
-                      ? setTaskId(id)
-                      : setToast(
-                          "This task was deleted. Its change remains in history.",
-                        )
-                  }
-                  onMeeting={openMeeting}
-                  onProject={(id) => taskView({ project: id })}
-                />
-              )}
-              {tab === "google" && (
-                <GoogleMeet
-                  key={workspaceId + ":" + actor.uid}
-                  projects={data.projects}
-                  workspace={data.workspace}
-                  readOnly={readOnly}
-                  config={config}
-                  existingMeetings={data.meetings}
-                  onOpenExisting={(m) => openMeeting(m.id)}
-                  onCreated={async (m) => {
-                    await reload();
-                    openMeeting(m.id);
-                    setToast(
-                      "Google source processed. Review your proposed tasks.",
-                    );
-                  }}
-                />
-              )}
-              {tab === "meetings" &&
-                (meeting ? (
-                  <MeetingDetail
-                    key={meeting.id}
-                    meeting={meeting}
-                    tasks={data.tasks}
-                    meetings={data.meetings}
-                    onMeeting={openMeeting}
-                    onPrepare={(id) => setPreparation({ meetingId: id })}
-                    emailReady={config.emailReady}
-                    workspace={data.workspace}
-                    projects={data.projects}
-                    readOnly={readOnly}
-                    reload={reload}
-                    onBack={() => setMeetingId(null)}
-                    onTask={setTaskId}
-                    onError={setError}
-                  />
-                ) : (
-                  <>
-                    {!readOnly && (
-                      <div className="agenda-list mb-4">
-                        <button
-                          className="button"
-                          onClick={() => setPreparation({})}
-                        >
-                          <Icons.NotebookPen size={18} />
-                          Prepare meeting agenda
-                        </button>
-                        {data.agendas
-                          ?.filter((item) => !item.meetingId)
-                          .slice(0, 8)
-                          .map((agenda) => (
-                            <button
-                              className="button small"
-                              key={agenda.id}
-                              onClick={() => {
-                                if (
-                                  data.draft?.transcript &&
-                                  !window.confirm(
-                                    "Start from this agenda and replace your current draft?",
-                                  )
-                                )
-                                  return;
-                                setPreparedAgenda(agenda);
-                                setNewMeeting(true);
-                              }}
-                            >
-                              <Icons.FileText size={16} />
-                              {agenda.title}
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                    <div className="panel meeting-filters">
-                      <label>
-                        Search meetings
-                        <input
-                          placeholder="Search title or summary"
-                          value={meetingSearch}
-                          onChange={(e) => setMeetingSearch(e.target.value)}
-                        />
-                      </label>
-                      <label>
-                        Project
-                        <select
-                          aria-label="Project"
-                          value={meetingProject}
-                          onChange={(e) => setMeetingProject(e.target.value)}
-                        >
-                          <option value="All">All projects</option>
-                          <option value="None">No project</option>
-                          {data.projects.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Review
-                        <select
-                          aria-label="Meeting review"
-                          value={meetingReview}
-                          onChange={(e) => setMeetingReview(e.target.value)}
-                        >
-                          <option value="All">All meetings</option>
-                          <option value="Pending">Needs approval</option>
-                        </select>
-                      </label>
-                    </div>
-                    <section className="panel mt-5">
-                      {visibleMeetings.length ? (
-                        visibleMeetings.map((m) => (
-                          <MeetingRow
-                            key={m.id}
-                            m={m}
-                            projects={data.projects}
-                            onOpen={() => openMeeting(m.id)}
-                            onEmail={
-                              !readOnly ? () => setEmailMeetingId(m.id) : null
-                            }
-                            emailReady={config?.emailReady}
+                        ) : (
+                          <Empty
+                            icon={Icons.NotebookPen}
+                            title="No meetings in this view"
+                            text="Adjust your filters or add a new conversation."
                           />
-                        ))
-                      ) : (
-                        <Empty
-                          icon={Icons.NotebookPen}
-                          title="No meetings in this view"
-                          text="Adjust your filters or add a new conversation."
-                        />
-                      )}
-                    </section>
-                  </>
-                ))}
-              {(tab === "tasks" || tab === "board") && (
-                <>
-                  <TaskFilters
-                    value={filters}
-                    onChange={setFilters}
-                    tasks={data.tasks}
-                    projects={data.projects}
-                    count={filtered.length}
-                  />
-                  <SavedViews
-                    filters={filters}
-                    personal={personal}
-                    workspaceId={workspaceId}
-                    onChange={setFilters}
-                    onSaved={(views) => patchPersonal({ savedViews: views })}
-                  />
-                  {!readOnly && (
-                    <TaskBulkActions
-                      selected={selected}
-                      filtered={filtered}
-                      members={data.workspace?.members || []}
+                        )}
+                      </section>
+                    </>
+                  ))}
+                {(tab === "tasks" || tab === "board") && (
+                  <>
+                    <TaskFilters
+                      value={filters}
+                      onChange={setFilters}
+                      tasks={data.tasks}
                       projects={data.projects}
-                      onSelect={setSelectedIds}
-                      onClear={() => setSelectedIds([])}
-                      onSaved={taskSaved}
-                      onCalendar={() =>
-                        setCalendarBatchIds(selected.map((task) => task.id))
-                      }
+                      count={filtered.length}
                     />
-                  )}
-                  <div className="export-toolbar">
-                    <p className="hint">
-                      Exports include {filtered.length}{" "}
-                      {filtered.length === 1 ? "task" : "tasks"} in this view.
-                    </p>
-                    <button
-                      className="button small"
-                      onClick={() => exportCsv(filtered, data.projects)}
-                    >
-                      <Icons.FileCsv size={17} />
-                      Export CSV
-                    </button>
-                    <button
-                      className="button small"
-                      disabled={pdfBusy}
-                      onClick={pdf}
-                    >
-                      <Icons.FilePdf size={17} />
-                      {pdfBusy ? "Preparing PDF…" : "Export PDF"}
-                    </button>
-                  </div>
-                  {tab === "tasks" ? (
-                    <section className="panel task-table">
-                      <div className="table-scroll">
-                        <table className="task-table">
-                          <thead>
-                            <tr>
-                              {!readOnly && (
-                                <th className="selection-cell">Select</th>
-                              )}
-                              <th>Task</th>
-                              <th>Owner</th>
-                              <th>Due date</th>
-                              <th>Priority</th>
-                              <th>Status</th>
-                              <th>Project / source</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filtered.map((t) => (
-                              <tr key={t.id}>
+                    <SavedViews
+                      filters={filters}
+                      personal={personal}
+                      workspaceId={workspaceId}
+                      onChange={setFilters}
+                      onSaved={(views) => patchPersonal({ savedViews: views })}
+                    />
+                    {!readOnly && (
+                      <TaskBulkActions
+                        selected={selected}
+                        filtered={filtered}
+                        members={data.workspace?.members || []}
+                        projects={data.projects}
+                        onSelect={setSelectedIds}
+                        onClear={() => setSelectedIds([])}
+                        onSaved={taskSaved}
+                        onCalendar={() =>
+                          setCalendarBatchIds(selected.map((task) => task.id))
+                        }
+                      />
+                    )}
+                    <div className="export-toolbar">
+                      <p className="hint">
+                        Exports include {filtered.length}{" "}
+                        {filtered.length === 1 ? "task" : "tasks"} in this view.
+                      </p>
+                      <button
+                        className="button small"
+                        onClick={() => exportCsv(filtered, data.projects)}
+                      >
+                        <Icons.FileCsv size={17} />
+                        Export CSV
+                      </button>
+                      <button
+                        className="button small"
+                        disabled={pdfBusy}
+                        onClick={pdf}
+                      >
+                        <Icons.FilePdf size={17} />
+                        {pdfBusy ? "Preparing PDF…" : "Export PDF"}
+                      </button>
+                    </div>
+                    {tab === "tasks" ? (
+                      <section className="panel task-table">
+                        <div className="table-scroll">
+                          <table className="task-table">
+                            <thead>
+                              <tr>
                                 {!readOnly && (
-                                  <td
-                                    data-label="Select"
-                                    className="selection-cell"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      aria-label={"Select " + t.title}
-                                      checked={selectedIds.includes(t.id)}
-                                      onChange={() => toggleSelected(t.id)}
-                                    />
-                                  </td>
+                                  <th className="selection-cell">Select</th>
                                 )}
-                                <td data-label="Task">
+                                <th>Task</th>
+                                <th>Owner</th>
+                                <th>Due date</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Project / source</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filtered.map((t) => (
+                                <tr key={t.id}>
+                                  {!readOnly && (
+                                    <td
+                                      data-label="Select"
+                                      className="selection-cell"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        aria-label={"Select " + t.title}
+                                        checked={selectedIds.includes(t.id)}
+                                        onChange={() => toggleSelected(t.id)}
+                                      />
+                                    </td>
+                                  )}
+                                  <td data-label="Task">
+                                    <button
+                                      className="card-title"
+                                      onClick={() => setTaskId(t.id)}
+                                    >
+                                      {t.title}
+                                    </button>
+                                    {t.checklist?.length > 0 && (
+                                      <span className="hint">
+                                        {
+                                          t.checklist.filter((c) => c.done)
+                                            .length
+                                        }
+                                        /{t.checklist.length} steps
+                                      </span>
+                                    )}
+                                    <button
+                                      className="text-button task-calendar-link"
+                                      aria-label={
+                                        "Add " + t.title + " to Google Calendar"
+                                      }
+                                      onClick={() => setCalendarTaskId(t.id)}
+                                    >
+                                      <Icons.CalendarDays size={15} />
+                                      {personal?.calendarMarks?.some(
+                                        (mark) =>
+                                          mark.workspaceId === workspaceId &&
+                                          mark.taskId === t.id,
+                                      )
+                                        ? "Marked added to Calendar"
+                                        : "Add to Calendar"}
+                                    </button>
+                                  </td>
+                                  <td data-label="Owner">{t.owner}</td>
+                                  <td
+                                    data-label="Due date"
+                                    className={overdue(t) ? "late" : ""}
+                                  >
+                                    {formatDate(t.dueDate)}
+                                    {!t.schedule && (
+                                      <small className="saved-schedule">
+                                        Not scheduled
+                                      </small>
+                                    )}
+                                    {t.schedule && (
+                                      <small className="saved-schedule">
+                                        Scheduled {t.schedule.date} ·{" "}
+                                        {t.schedule.time}
+                                      </small>
+                                    )}
+                                  </td>
+                                  <td data-label="Priority">
+                                    <Priority value={t.priority} />
+                                  </td>
+                                  <td data-label="Status">
+                                    <select
+                                      aria-label={"Status for " + t.title}
+                                      disabled={readOnly}
+                                      value={t.status}
+                                      onChange={(e) =>
+                                        changeStatus(t, e.target.value)
+                                      }
+                                    >
+                                      {statuses.map((s) => (
+                                        <option
+                                          key={s}
+                                          disabled={
+                                            s === "Completed" &&
+                                            waitingOn(t, data.tasks).length > 0
+                                          }
+                                        >
+                                          {s}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {waitingOn(t, data.tasks).length > 0 && (
+                                      <span className="badge dependency-badge">
+                                        Waiting on{" "}
+                                        {waitingOn(t, data.tasks).length}{" "}
+                                        task(s)
+                                      </span>
+                                    )}
+                                    <div className="mobile-task-actions">
+                                      <button
+                                        className="button small"
+                                        onClick={() => setTaskId(t.id)}
+                                      >
+                                        <Icons.Edit size={15} />
+                                        Details
+                                      </button>
+                                      <button
+                                        className="button small"
+                                        disabled={
+                                          readOnly ||
+                                          t.status === "Completed" ||
+                                          waitingOn(t, data.tasks).length > 0
+                                        }
+                                        onClick={() =>
+                                          changeStatus(t, "Completed")
+                                        }
+                                      >
+                                        <Icons.Check size={15} />
+                                        Done
+                                      </button>
+                                    </div>
+                                  </td>
+                                  <td data-label="Project / source">
+                                    <p className="hint">
+                                      {data.projects.find(
+                                        (p) => p.id === t.projectId,
+                                      )?.name || "No project"}
+                                    </p>
+                                    {t.meetingId ? (
+                                      <button
+                                        className="text-button"
+                                        onClick={() => openMeeting(t.meetingId)}
+                                      >
+                                        {t.meetingTitle}
+                                      </button>
+                                    ) : (
+                                      <span className="hint">
+                                        Added manually
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {!filtered.length && (
+                          <Empty
+                            icon={Icons.ListTodo}
+                            title="No tasks in this view"
+                            text="Adjust the filters, add a task or approve proposals from a meeting."
+                          />
+                        )}
+                      </section>
+                    ) : (
+                      <div className="kanban">
+                        {statuses.map((s, index) => (
+                          <section className="kanban-column" key={s}>
+                            <h2>
+                              <span className={"column-dot dot-" + index} />
+                              {s}
+                              <span className="badge">
+                                {filtered.filter((t) => t.status === s).length}
+                              </span>
+                            </h2>
+                            {filtered
+                              .filter((t) => t.status === s)
+                              .map((t) => (
+                                <article className="task-card" key={t.id}>
+                                  {!readOnly && (
+                                    <label className="check-option">
+                                      <input
+                                        type="checkbox"
+                                        aria-label={"Select " + t.title}
+                                        checked={selectedIds.includes(t.id)}
+                                        onChange={() => toggleSelected(t.id)}
+                                      />
+                                      Select
+                                    </label>
+                                  )}
+                                  {waitingOn(t, data.tasks).length > 0 && (
+                                    <span className="badge dependency-badge">
+                                      Waiting on{" "}
+                                      {waitingOn(t, data.tasks).length} task(s)
+                                    </span>
+                                  )}
+                                  <Priority value={t.priority} />
                                   <button
                                     className="card-title"
                                     onClick={() => setTaskId(t.id)}
                                   >
                                     {t.title}
                                   </button>
-                                  {t.checklist?.length > 0 && (
-                                    <span className="hint">
-                                      {t.checklist.filter((c) => c.done).length}
-                                      /{t.checklist.length} steps
+                                  <p className="hint">
+                                    {data.projects.find(
+                                      (p) => p.id === t.projectId,
+                                    )?.name || "No project"}
+                                  </p>
+                                  <div className="task-card-foot">
+                                    <span>{t.owner}</span>
+                                    <span className={overdue(t) ? "late" : ""}>
+                                      {formatDate(t.dueDate)}
+                                      {!t.schedule && (
+                                        <small className="saved-schedule">
+                                          Not scheduled
+                                        </small>
+                                      )}
+                                      {t.schedule && (
+                                        <small className="saved-schedule">
+                                          Scheduled {t.schedule.date} ·{" "}
+                                          {t.schedule.time}
+                                        </small>
+                                      )}
                                     </span>
-                                  )}
+                                  </div>
                                   <button
                                     className="text-button task-calendar-link"
                                     aria-label={
@@ -1301,37 +1496,8 @@ export default function App() {
                                     onClick={() => setCalendarTaskId(t.id)}
                                   >
                                     <Icons.CalendarDays size={15} />
-                                    {personal?.calendarMarks?.some(
-                                      (mark) =>
-                                        mark.workspaceId === workspaceId &&
-                                        mark.taskId === t.id,
-                                    )
-                                      ? "Marked added to Calendar"
-                                      : "Add to Calendar"}
+                                    Add to Calendar
                                   </button>
-                                </td>
-                                <td data-label="Owner">{t.owner}</td>
-                                <td
-                                  data-label="Due date"
-                                  className={overdue(t) ? "late" : ""}
-                                >
-                                  {formatDate(t.dueDate)}
-                                  {!t.schedule && (
-                                    <small className="saved-schedule">
-                                      Not scheduled
-                                    </small>
-                                  )}
-                                  {t.schedule && (
-                                    <small className="saved-schedule">
-                                      Scheduled {t.schedule.date} ·{" "}
-                                      {t.schedule.time}
-                                    </small>
-                                  )}
-                                </td>
-                                <td data-label="Priority">
-                                  <Priority value={t.priority} />
-                                </td>
-                                <td data-label="Status">
                                   <select
                                     aria-label={"Status for " + t.title}
                                     disabled={readOnly}
@@ -1352,192 +1518,42 @@ export default function App() {
                                       </option>
                                     ))}
                                   </select>
-                                  {waitingOn(t, data.tasks).length > 0 && (
-                                    <span className="badge dependency-badge">
-                                      Waiting on{" "}
-                                      {waitingOn(t, data.tasks).length} task(s)
-                                    </span>
-                                  )}
-                                  <div className="mobile-task-actions">
-                                    <button
-                                      className="button small"
-                                      onClick={() => setTaskId(t.id)}
-                                    >
-                                      <Icons.Edit size={15} />
-                                      Details
-                                    </button>
-                                    <button
-                                      className="button small"
-                                      disabled={
-                                        readOnly ||
-                                        t.status === "Completed" ||
-                                        waitingOn(t, data.tasks).length > 0
-                                      }
-                                      onClick={() =>
-                                        changeStatus(t, "Completed")
-                                      }
-                                    >
-                                      <Icons.Check size={15} />
-                                      Done
-                                    </button>
-                                  </div>
-                                </td>
-                                <td data-label="Project / source">
-                                  <p className="hint">
-                                    {data.projects.find(
-                                      (p) => p.id === t.projectId,
-                                    )?.name || "No project"}
-                                  </p>
-                                  {t.meetingId ? (
-                                    <button
-                                      className="text-button"
-                                      onClick={() => openMeeting(t.meetingId)}
-                                    >
-                                      {t.meetingTitle}
-                                    </button>
-                                  ) : (
-                                    <span className="hint">Added manually</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                </article>
+                              ))}
+                          </section>
+                        ))}
                       </div>
-                      {!filtered.length && (
-                        <Empty
-                          icon={Icons.ListTodo}
-                          title="No tasks in this view"
-                          text="Adjust the filters, add a task or approve proposals from a meeting."
-                        />
-                      )}
-                    </section>
-                  ) : (
-                    <div className="kanban">
-                      {statuses.map((s, index) => (
-                        <section className="kanban-column" key={s}>
-                          <h2>
-                            <span className={"column-dot dot-" + index} />
-                            {s}
-                            <span className="badge">
-                              {filtered.filter((t) => t.status === s).length}
-                            </span>
-                          </h2>
-                          {filtered
-                            .filter((t) => t.status === s)
-                            .map((t) => (
-                              <article className="task-card" key={t.id}>
-                                {!readOnly && (
-                                  <label className="check-option">
-                                    <input
-                                      type="checkbox"
-                                      aria-label={"Select " + t.title}
-                                      checked={selectedIds.includes(t.id)}
-                                      onChange={() => toggleSelected(t.id)}
-                                    />
-                                    Select
-                                  </label>
-                                )}
-                                {waitingOn(t, data.tasks).length > 0 && (
-                                  <span className="badge dependency-badge">
-                                    Waiting on {waitingOn(t, data.tasks).length}{" "}
-                                    task(s)
-                                  </span>
-                                )}
-                                <Priority value={t.priority} />
-                                <button
-                                  className="card-title"
-                                  onClick={() => setTaskId(t.id)}
-                                >
-                                  {t.title}
-                                </button>
-                                <p className="hint">
-                                  {data.projects.find(
-                                    (p) => p.id === t.projectId,
-                                  )?.name || "No project"}
-                                </p>
-                                <div className="task-card-foot">
-                                  <span>{t.owner}</span>
-                                  <span className={overdue(t) ? "late" : ""}>
-                                    {formatDate(t.dueDate)}
-                                    {!t.schedule && (
-                                      <small className="saved-schedule">
-                                        Not scheduled
-                                      </small>
-                                    )}
-                                    {t.schedule && (
-                                      <small className="saved-schedule">
-                                        Scheduled {t.schedule.date} ·{" "}
-                                        {t.schedule.time}
-                                      </small>
-                                    )}
-                                  </span>
-                                </div>
-                                <button
-                                  className="text-button task-calendar-link"
-                                  aria-label={
-                                    "Add " + t.title + " to Google Calendar"
-                                  }
-                                  onClick={() => setCalendarTaskId(t.id)}
-                                >
-                                  <Icons.CalendarDays size={15} />
-                                  Add to Calendar
-                                </button>
-                                <select
-                                  aria-label={"Status for " + t.title}
-                                  disabled={readOnly}
-                                  value={t.status}
-                                  onChange={(e) =>
-                                    changeStatus(t, e.target.value)
-                                  }
-                                >
-                                  {statuses.map((s) => (
-                                    <option
-                                      key={s}
-                                      disabled={
-                                        s === "Completed" &&
-                                        waitingOn(t, data.tasks).length > 0
-                                      }
-                                    >
-                                      {s}
-                                    </option>
-                                  ))}
-                                </select>
-                              </article>
-                            ))}
-                        </section>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-              {tab === "projects" && (
-                <Projects
-                  projects={data.projects}
-                  tasks={data.tasks}
-                  meetings={data.meetings}
-                  readOnly={readOnly}
-                  onSaved={reload}
-                  onOpen={(id) => {
-                    setFilters({ ...defaultFilters, project: id });
-                    setTab("tasks");
-                  }}
-                />
-              )}
-              {tab === "team" && (
-                <Team
-                  workspace={data.workspace}
-                  role={data.role}
-                  user={user}
-                  reload={reload}
-                  onRefresh={refreshCatalog}
-                  onError={setError}
-                  onToast={setToast}
-                  invitationEmailReady={config.invitationEmailReady}
-                />
-              )}
-            </>
-          )}
+                    )}
+                  </>
+                )}
+                {tab === "projects" && (
+                  <Projects
+                    projects={data.projects}
+                    tasks={data.tasks}
+                    meetings={data.meetings}
+                    readOnly={readOnly}
+                    onSaved={reload}
+                    onOpen={(id) => {
+                      setFilters({ ...defaultFilters, project: id });
+                      setTab("tasks");
+                    }}
+                  />
+                )}
+                {tab === "team" && (
+                  <Team
+                    workspace={data.workspace}
+                    role={data.role}
+                    user={user}
+                    reload={reload}
+                    onRefresh={refreshCatalog}
+                    onError={setError}
+                    onToast={setToast}
+                    invitationEmailReady={config.invitationEmailReady}
+                  />
+                )}
+              </>
+            )}
+          </div>
           <footer className="app-footer">
             ShiftScript · A clear next step, every time.
             <PolicyLinks />
@@ -1587,23 +1603,20 @@ export default function App() {
             setNewMeeting(true);
           }}
         >
-          <svg
-            className="mobile-meeting-ring"
-            viewBox="0 0 80 80"
-            aria-hidden="true"
-          >
-            <defs>
-              <path
-                id="meeting-text-ring"
-                d="M40,11 a29,29 0 1,1 0,58 a29,29 0 1,1 0,-58"
-              />
-            </defs>
-            <text textLength="182" lengthAdjust="spacing">
-              <textPath href="#meeting-text-ring">
-                NEW MEETING • NEW MEETING •{" "}
-              </textPath>
-            </text>
-          </svg>
+          <span className="mobile-meeting-ring" aria-hidden="true">
+            {Array.from("NEW MEETING • NEW MEETING • ").map(
+              (character, index, letters) => (
+                <span
+                  key={index}
+                  style={{
+                    "--letter-angle": `${(index * 360) / letters.length}deg`,
+                  }}
+                >
+                  {character === " " ? "\u00a0" : character}
+                </span>
+              ),
+            )}
+          </span>
           <span className="mobile-meeting-centre" aria-hidden="true">
             <Icons.Plus size={28} />
           </span>

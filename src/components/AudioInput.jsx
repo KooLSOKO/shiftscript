@@ -1,5 +1,6 @@
+import ProcessingLoader from "./ProcessingLoader.jsx";
 import { useEffect, useRef, useState } from "react";
-import { Mic, Square, Upload, Headphones, RefreshCw, X } from "./Icons.jsx";
+import { Mic, Square, Upload, Headphones, X } from "./Icons.jsx";
 import { api } from "../lib.js";
 const formats = {
   mp3: "audio/mpeg",
@@ -253,11 +254,12 @@ export default function AudioInput({ config, disabled, onTranscript, onBusy }) {
             }
             onClick={transcribe}
           >
-            {busy ? <RefreshCw className="spin" size={15} /> : <FileGlyph />}
+            {!busy && <FileGlyph />}
             {busy ? "Transcribing voice…" : "Transcribe to text"}
           </button>
         </div>
       )}
+      {busy && <ProcessingLoader label="Transcribing voice…" />}
       <p className="hint mt-3">
         MP3, WAV, M4A, AAC, OGG, FLAC, WebM · maximum 2.5 MB.{" "}
         {config?.provider === "gemini"

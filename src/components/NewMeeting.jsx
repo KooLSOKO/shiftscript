@@ -1,16 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { api, today, types } from "../lib.js";
-import {
-  Save,
-  Upload,
-  RefreshCw,
-  Video,
-  FileText,
-  NotebookPen,
-} from "./Icons.jsx";
+import { Save, Upload, Video, FileText, NotebookPen } from "./Icons.jsx";
 import GoogleMeet from "./GoogleMeet.jsx";
 import Modal from "./Modal.jsx";
 import AudioInput from "./AudioInput.jsx";
+import ProcessingLoader from "./ProcessingLoader.jsx";
 import {
   MAX_TRANSCRIPT_CHARS,
   MAX_TRANSCRIPT_FILE_BYTES,
@@ -457,6 +451,7 @@ export default function NewMeeting({
                 </summary>
                 <pre>{previousMeeting.transcript}</pre>
               </details>
+              {busy && <ProcessingLoader label="Reading the conversation…" />}
               <div className="modal-actions">
                 <button
                   type="button"
@@ -612,6 +607,7 @@ export default function NewMeeting({
               {error}
             </p>
           )}
+          {busy && <ProcessingLoader label="Reading the conversation…" />}
           <div className="modal-actions">
             <button
               type="button"
@@ -629,14 +625,7 @@ export default function NewMeeting({
                 form.transcript.length > MAX_TRANSCRIPT_CHARS
               }
             >
-              {busy ? (
-                <>
-                  <RefreshCw className="spin" size={16} />
-                  Reading the conversation…
-                </>
-              ) : (
-                <>Process transcript</>
-              )}
+              {busy ? "Processing…" : "Process transcript"}
             </button>
           </div>
         </form>

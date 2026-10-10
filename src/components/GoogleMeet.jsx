@@ -1,3 +1,4 @@
+import ProcessingLoader from "./ProcessingLoader.jsx";
 import { useEffect, useState } from "react";
 import { api, today, types } from "../lib.js";
 import {
@@ -24,6 +25,7 @@ export default function GoogleMeet({
 }) {
   const [connection, setConnection] = useState(null),
     [busy, setBusy] = useState(false),
+    [operation, setOperation] = useState("working"),
     [error, setError] = useState(""),
     [meetings, setMeetings] = useState([]),
     [cursor, setCursor] = useState(null),
@@ -63,7 +65,8 @@ export default function GoogleMeet({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
-  async function run(action) {
+  async function run(action, kind = "working") {
+    setOperation(kind);
     setBusy(true);
     setError("");
     try {
@@ -431,7 +434,7 @@ export default function GoogleMeet({
                       }),
                     });
                     await onCreated(v.meeting);
-                  });
+                  }, "processing");
                 }}
               >
                 <div className="field-grid">
@@ -520,6 +523,9 @@ export default function GoogleMeet({
                     administrator to enable it.
                   </p>
                 )}
+                {busy && operation === "processing" && (
+                  <ProcessingLoader label="Reading your meeting notes…" />
+                )}
                 <div className="modal-actions">
                   <button
                     type="button"
@@ -541,7 +547,7 @@ export default function GoogleMeet({
           )}
         </>
       )}
-      {busy && (
+      {busy && operation !== "processing" && (
         <p className="integration-busy" role="status">
           <RefreshCw className="spin" size={17} /> Working on it…
         </p>

@@ -76,3 +76,7 @@ Subjects appended to that prompt:
 ## Mobile controls and homepage marquee (v3.0.6)
 
 The central mobile action uses the existing original Plus SVG, a code-native SVG text path and Earny's cobalt/navy colours. The circular-text interaction is adapted from the user-supplied Creatlydev Uiverse.io example; it adds no raster image, icon font or runtime dependency. CSS supplies its rotation and the homepage text marquee, with static reduced-motion variants. Sidebar and toolbar icons are enlarged from the same original SVG set. The first-visit notice reuses shared typography and colours.
+
+## Processing waves and circular lettering (v3.0.7)
+
+`src/components/ProcessingLoader.jsx` supplies a reusable nine-bar status display. Its CSS waveform is adapted from the JkHuger Uiverse.io example supplied by the user, with the shared cobalt colour. It is decorative and noninteractive, with separate accessible status text. The central meeting button now uses individually positioned text characters rather than an SVG text path to distribute lettering evenly across browsers. No new raster assets or external runtime dependencies are required. Page transitions and FAQ reveals use short CSS animations with static reduced-motion variants.

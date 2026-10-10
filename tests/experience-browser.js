@@ -60,7 +60,11 @@ const errors = [],
   failures = [];
 page.on("pageerror", (e) => errors.push(e.message));
 page.on("response", (r) => {
-  if (r.status() >= 400) failures.push(r.url());
+  if (
+    r.status() >= 400 &&
+    !(r.status() === 503 && r.url().endsWith("/api/meetings"))
+  )
+    failures.push(r.url());
 });
 const origin = "http://127.0.0.1:3017";
 await mkdir("docs/screenshots", { recursive: true });
@@ -107,12 +111,10 @@ try {
     ),
     false,
   );
-  await page
-    .locator(".ss-marquee")
-    .screenshot({
-      path: "docs/screenshots/home-marquee-desktop.png",
-      animations: "disabled",
-    });
+  await page.locator(".ss-marquee").screenshot({
+    path: "docs/screenshots/home-marquee-desktop.png",
+    animations: "disabled",
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
   await page
@@ -173,7 +175,149 @@ try {
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "docs/screenshots/mobile-meeting-button.png" });
+  // Hold an actual processing request to inspect status, motion and error recovery.
+  const letters = await page
+    .locator(".mobile-meeting-ring > span")
+    .evaluateAll((elements) =>
+      elements.map((el) =>
+        parseFloat(el.style.getPropertyValue("--letter-angle")),
+      ),
+    );
+  assert.equal(
+    letters.length,
+    Array.from("NEW MEETING • NEW MEETING • ").length,
+  );
+  const step = 360 / letters.length;
+  for (let i = 1; i < letters.length; i++)
+    assert(Math.abs(letters[i] - letters[i - 1] - step) < 0.001);
+  assert(
+    Math.abs(360 - letters.at(-1) - step) < 0.001,
+    "Circular text has an oversized closing gap",
+  );
+  let releaseProcessing;
+  let processingFailed = false;
+  let responseGate = new Promise((resolve) => {
+    releaseProcessing = resolve;
+  });
+  await page.route("**/api/meetings", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await responseGate;
+    if (!processingFailed) {
+      processingFailed = true;
+      return route.fulfill({
+        status: 503,
+        json: { error: "Simulated processing failure. Try again." },
+      });
+    }
+    return route.continue();
+  });
+  await action.click();
+  await page.getByRole("button", { name: "Load sample", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Process transcript", exact: true })
+    .click();
+  const loader = page.locator(".processing-status");
+  await loader
+    .getByText("Reading the conversation…", { exact: true })
+    .waitFor();
+  assert.equal(await loader.locator("li").count(), 9);
+  assert.equal(
+    await loader
+      .locator("li")
+      .first()
+      .evaluate((el) => getComputedStyle(el).backgroundColor),
+    "rgb(36, 88, 232)",
+  );
+  assert.equal(
+    await loader
+      .locator("li")
+      .first()
+      .evaluate((el) => getComputedStyle(el).animationName),
+    "none",
+  );
+  assert(
+    await page
+      .getByRole("button", { name: "Processing…", exact: true })
+      .isDisabled(),
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  assert.equal(
+    await loader
+      .locator("li")
+      .first()
+      .evaluate((el) => getComputedStyle(el).animationName),
+    "ss-wave-1",
+  );
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    await loader.scrollIntoViewIfNeeded();
+    const b = await loader.locator(".ss-wave-loader").boundingBox();
+    assert(
+      b.width === 200 && b.height === 45 && b.x >= 0 && b.x + b.width <= width,
+    );
+    assert(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page
+    .getByRole("dialog")
+    .screenshot({ path: "docs/screenshots/transcript-loader-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loader.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: "docs/screenshots/transcript-loader-mobile.png",
+  });
+  releaseProcessing();
+  await page
+    .getByRole("alert")
+    .getByText("Simulated processing failure. Try again.")
+    .waitFor();
+  assert.equal(await loader.count(), 0);
+  assert(
+    !(await page
+      .getByRole("button", { name: "Process transcript", exact: true })
+      .isDisabled()),
+  );
+  responseGate = new Promise((resolve) => {
+    releaseProcessing = resolve;
+  });
+  await page
+    .getByRole("button", { name: "Process transcript", exact: true })
+    .click();
+  await loader.waitFor();
+  releaseProcessing();
+  await page
+    .getByRole("heading", { name: "Meeting summary", exact: true })
+    .waitFor();
+  assert.equal(await loader.count(), 0);
+  await page.unroute("**/api/meetings");
+  await page.evaluate(() => {
+    window.previousView = document.querySelector(".page-transition");
+  });
   await nav.getByRole("button", { name: "Go to Tasks", exact: true }).click();
+  assert(
+    await page.evaluate(
+      () => window.previousView !== document.querySelector(".page-transition"),
+    ),
+    "Tab did not receive a fresh transition",
+  );
+  assert.equal(
+    await page
+      .locator(".page-transition")
+      .evaluate((el) => getComputedStyle(el).animationName),
+    "ss-page-enter",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  assert.equal(
+    await page
+      .locator(".page-transition")
+      .evaluate((el) => getComputedStyle(el).animationName),
+    "none",
+  );
+
   const calendar = page
     .getByRole("button", {
       name: "Add Review the portfolio to Google Calendar",
@@ -247,7 +391,7 @@ try {
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, []);
   console.log(
-    "PASS: first-visit notice, essential-only persistence, policy/app preferences, cross-tab updates, blocked storage, marquee pause/reduced motion, centred mobile action, keyboard activation, four non-overlapping tabs, 320–650px touch targets and desktop toolbar/calendar controls.",
+    "PASS: first-visit notice, essential-only persistence, policy/app preferences, cross-tab updates, blocked storage, marquee pause/reduced motion, centred mobile action with gap-free lettering, keyboard activation, processing loader/request lifecycle/error recovery, tab transitions/reduced motion, four non-overlapping tabs, 320–650px touch targets and desktop toolbar/calendar controls.",
   );
 } catch (error) {
   await page.screenshot({

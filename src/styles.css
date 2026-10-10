@@ -3829,3 +3829,168 @@ textarea {
     animation: none;
   }
 }
+
+/* v3.0.7: evenly spaced circular lettering and small, deliberate transitions. */
+.mobile-meeting-ring > span {
+  position: absolute;
+  inset: 5px;
+  text-align: center;
+  transform: rotate(var(--letter-angle));
+  line-height: 1;
+  font-size: 8.5px;
+  font-weight: 800;
+  user-select: none;
+}
+.processing-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 12px;
+  margin-top: 14px;
+  border: 1px solid #c6d5f8;
+  border-radius: var(--ss-panel-radius);
+  background: var(--ss-soft-blue);
+  color: var(--ss-navy);
+}
+.processing-status p {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+/* Wave pattern adapted from the user-supplied JkHuger Uiverse.io loader. */
+.ss-wave-loader {
+  box-sizing: border-box;
+  border: 4px solid var(--ss-blue);
+  border-radius: 50px;
+  width: 200px;
+  max-width: 100%;
+  height: 45px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  background: #fff;
+}
+.ss-wave-loader li {
+  list-style: none;
+  height: 30px;
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--ss-blue);
+  margin: 0 6px;
+  padding: 0;
+  animation: ss-wave-1 0.3s ease-in-out infinite alternate;
+}
+.ss-wave-loader li:nth-child(2) {
+  animation-name: ss-wave-2;
+  animation-delay: 0.2s;
+}
+.ss-wave-loader li:nth-child(3) {
+  animation-name: ss-wave-3;
+  animation-delay: 0.23s;
+  animation-duration: 0.4s;
+}
+.ss-wave-loader li:nth-child(4) {
+  animation-name: ss-wave-4;
+  animation-delay: 0.1s;
+}
+.ss-wave-loader li:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.ss-wave-loader li:nth-child(6) {
+  animation-name: ss-wave-2;
+  animation-duration: 0.5s;
+}
+.ss-wave-loader li:nth-child(8) {
+  animation-name: ss-wave-4;
+  animation-delay: 0.4s;
+  animation-duration: 0.25s;
+}
+.ss-wave-loader li:nth-child(9) {
+  animation-name: ss-wave-3;
+  animation-delay: 0.15s;
+}
+@keyframes ss-wave-1 {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0.5);
+  }
+}
+@keyframes ss-wave-2 {
+  from {
+    transform: scaleY(0.3);
+  }
+  to {
+    transform: scaleY(0.6);
+  }
+}
+@keyframes ss-wave-3 {
+  from {
+    transform: scaleY(0.6);
+  }
+  to {
+    transform: scaleY(0.8);
+  }
+}
+@keyframes ss-wave-4 {
+  from {
+    transform: scaleY(0.2);
+  }
+  to {
+    transform: scaleY(0.5);
+  }
+}
+.page-transition {
+  animation: ss-page-enter 220ms ease-out backwards;
+}
+@keyframes ss-page-enter {
+  from {
+    opacity: 0.35;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.nav-item,
+.mobile-bottom-nav button {
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+.nav-item > svg,
+.mobile-bottom-nav button > svg {
+  transition: transform 180ms ease;
+}
+.nav-item.selected > svg,
+.mobile-bottom-nav button[aria-current="page"] > svg {
+  transform: scale(1.06);
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition,
+  .ss-wave-loader li {
+    animation: none;
+  }
+  .nav-item,
+  .mobile-bottom-nav button,
+  .nav-item > svg,
+  .mobile-bottom-nav button > svg {
+    transition: none;
+  }
+  .nav-item.selected > svg,
+  .mobile-bottom-nav button[aria-current="page"] > svg {
+    transform: none;
+  }
+  .ss-wave-loader li:nth-child(2n) {
+    height: 15px;
+  }
+  .ss-wave-loader li:nth-child(3n) {
+    height: 22px;
+  }
+}

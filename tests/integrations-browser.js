@@ -209,9 +209,24 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await screen("google-import-mobile");
   await screen("new-meeting-google-mobile");
+  let releaseImport;
+  const importGate = new Promise((resolve) => {
+    releaseImport = resolve;
+  });
+  await page.route("**/api/google/import", async (route) => {
+    await importGate;
+    await route.continue();
+  });
   await page
     .getByRole("button", { name: "Process meeting", exact: true })
     .click();
+  await page
+    .locator(".processing-status")
+    .getByText("Reading your meeting notes…", { exact: true })
+    .waitFor();
+  assert.equal(await page.locator(".ss-wave-loader li").count(), 9);
+  releaseImport();
+
   await page
     .getByRole("heading", { name: "Meeting summary", exact: true })
     .waitFor();
