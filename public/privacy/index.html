@@ -43,7 +43,7 @@
           Google access and your privacy choices.
         </p>
         <p class="date">
-          Last updated: <time datetime="2026-10-10">10 October 2026</time>
+          Last updated: <time datetime="2026-10-11">11 October 2026</time>
         </p>
       </div>
       <div class="page-layout">
@@ -52,7 +52,7 @@
           <a href="#operator">1. Who operates ShiftScript</a
           ><a href="#collection">2. Information we collect</a
           ><a href="#purposes">3. Why we use information</a
-          ><a href="#google">4. Google Meet and Google Docs access</a
+          ><a href="#google">4. Connected Google services</a
           ><a href="#ai">5. AI processing and provider data use</a
           ><a href="#sharing">6. Who receives information</a
           ><a href="#storage">7. Storage, security and retention</a
@@ -112,7 +112,16 @@
                 <strong>Connected Google data:</strong> accessible meeting
                 records and references to their generated transcripts or notes;
                 the text of the source you select; document identifiers, titles
-                and source links; connection status and OAuth tokens.
+                and source links; selected calendar identifiers, upcoming event
+                titles, descriptions, dates, locations and availability;
+                confirmed task blocks; connection status and OAuth tokens.
+              </li>
+              <li>
+                <strong>Personal assistant:</strong> questions, replies, source
+                references and reviewed action proposals. Conversation history
+                is private to your account within each workspace; workspace
+                members do not receive your calendar or chat history through
+                shared workspace records.
               </li>
               <li>
                 <strong>Service records:</strong> email recipient addresses and
@@ -150,7 +159,7 @@
             </p>
           </section>
           <section id="google">
-            <h2>4. Google Meet and Google Docs access</h2>
+            <h2>4. Connected Google services</h2>
             <p>
               Connecting Google is a separate, optional permission flow.
               ShiftScript requests <code>meetings.space.readonly</code> to
@@ -183,10 +192,27 @@
               Google documents or recall emails.
             </p>
             <p>
-              The current Calendar feature opens a prefilled Google Calendar
-              event draft that you choose to save. It sends event details to
-              Google when you open the draft; it does not request Calendar API
-              write access or automatically keep events synchronised.
+              Calendar connection is optional and separate from Meet. The
+              assistant requests <code>calendar.events.readonly</code> and
+              <code>calendar.calendarlist.readonly</code> to read your selected
+              calendars and upcoming events,
+              <code>calendar.events.freebusy</code> to check availability, and
+              <code>calendar.app.created</code> to create a separate ShiftScript
+              task calendar and add blocks you confirm. It reads the next 14
+              days from up to five selected calendars, also including the
+              ShiftScript task calendar when present. Each assistant request
+              sends relevant upcoming events and availability with permitted
+              workspace context to Gemini.
+            </p>
+            <p>
+              Confirmed assistant blocks do not change primary-calendar events
+              or invite guests. Disconnect Calendar in Assistant to delete its
+              saved connection; Meet remains connected. Disconnecting does not
+              remove existing blocks or earlier assistant replies. Clear
+              conversation removes the saved chat for the current workspace.
+              Older task scheduling controls still open an event draft for you
+              to save in Google. Neither route automatically synchronises later
+              task changes with Google events.
             </p>
           </section>
           <section id="ai">
@@ -198,6 +224,15 @@
               summaries and proposed tasks return to ShiftScript for review.
               Names and personal details in the source may be included in that
               processing.
+            </p>
+            <p>
+              Assistant questions also send relevant permitted workspace tasks,
+              summaries, discussion points, decisions, pending proposals,
+              selected transcript excerpts, recent chat messages and your
+              selected upcoming calendar context. Replies are saved privately
+              for your account. Scheduling, task changes and email recaps remain
+              reviewable proposals until you confirm an action or send an email
+              through the existing preview.
             </p>
             <aside class="notice">
               <strong>Unpaid Gemini processing:</strong> Google's unpaid Gemini
@@ -239,8 +274,8 @@
                 <strong>Workspace members:</strong> imported meeting text,
                 generated summaries and tasks are available to members of the
                 selected workspace according to its access controls. Personal
-                Google tokens, private preferences and saved views are kept
-                separately.
+                Google tokens, personal calendar context, assistant chats,
+                private preferences and saved views are kept separately.
               </li>
               <li>
                 <strong>Google / Firebase:</strong> authentication, database
@@ -289,7 +324,11 @@
             <p>
               Meeting and task records remain until removed through an available
               control or an authorised deletion request. The current app does
-              not apply an automatic expiry to every meeting or account.
+              not apply an automatic expiry to every meeting or account. The
+              assistant retains up to 12 messages per conversation across your
+              five most recently used workspace conversations. Reviewed
+              proposals expire after 24 hours. You can clear a conversation
+              without deleting meetings, tasks or Google Calendar blocks.
               Activity history and operational records have feature-specific
               limits. Provider logs, backups and previously delivered emails
               follow their respective retention arrangements and cannot all be

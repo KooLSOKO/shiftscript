@@ -1,7 +1,7 @@
 // Public home is static HTML. Load Firebase and the workspace only on app routes.
 const parameters = new URLSearchParams(window.location.search);
-const legacyAppLink = ["google", "workspaceInvite", "invite"].some((key) =>
-  parameters.has(key),
+const legacyAppLink = ["google", "calendar", "workspaceInvite", "invite"].some(
+  (key) => parameters.has(key),
 );
 if (window.location.pathname === "/" && legacyAppLink) {
   window.location.replace(

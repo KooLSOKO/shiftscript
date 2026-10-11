@@ -7,6 +7,12 @@ const scopes = [
   "https://www.googleapis.com/auth/meetings.space.readonly",
   "https://www.googleapis.com/auth/documents.readonly",
 ];
+export const calendarScopes = [
+  "https://www.googleapis.com/auth/calendar.events.readonly",
+  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+  "https://www.googleapis.com/auth/calendar.events.freebusy",
+  "https://www.googleapis.com/auth/calendar.app.created",
+];
 const digest = (s) => createHash("sha256").update(s).digest("hex");
 const random = () => randomBytes(32).toString("base64url");
 const record = z.string().regex(/^conferenceRecords\/[A-Za-z0-9_-]{1,200}$/);
@@ -173,8 +179,11 @@ export class GoogleIntegration {
       }),
     });
   }
-  async start(uid) {
+  async start(uid, purpose = "meet") {
     this.requireReady();
+    if (!["meet", "calendar"].includes(purpose))
+      fail(400, "Choose a supported Google connection.");
+    const requestedScopes = purpose === "calendar" ? calendarScopes : scopes;
     const nonce = random(),
       binding = random(),
       verifier = random(),
@@ -183,15 +192,21 @@ export class GoogleIntegration {
       s.states = (s.states || []).filter((v) => v.expires > Date.now());
       if (s.states.length >= 5)
         fail(429, "Too many Google connection attempts. Wait ten minutes.");
-      s.states.push({ nonce, binding: digest(binding), verifier, expires });
+      s.states.push({
+        nonce,
+        binding: digest(binding),
+        verifier,
+        expires,
+        purpose,
+      });
     });
-    const state = this.vault.seal({ uid, nonce, expires });
+    const state = this.vault.seal({ uid, nonce, expires, purpose });
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     url.search = new URLSearchParams({
       client_id: this.env.GOOGLE_CLIENT_ID,
       redirect_uri: this.redirect.href,
       response_type: "code",
-      scope: scopes.join(" "),
+      scope: requestedScopes.join(" "),
       access_type: "offline",
       prompt: "select_account consent",
       state,
@@ -232,6 +247,8 @@ export class GoogleIntegration {
       return value;
     });
     if (query.error) fail(400, "Google access was declined.");
+    const purpose = saved.purpose || "meet";
+    const requestedScopes = purpose === "calendar" ? calendarScopes : scopes;
     const tokens = await this.token({
       grant_type: "authorization_code",
       code: z.string().min(1).max(3000).parse(query.code),
@@ -241,22 +258,27 @@ export class GoogleIntegration {
     if (
       !tokens.access_token ||
       !tokens.refresh_token ||
-      (tokens.scope && scopes.some((s) => !tokens.scope.split(" ").includes(s)))
+      (tokens.scope &&
+        requestedScopes.some((s) => !tokens.scope.split(" ").includes(s)))
     )
       fail(
         403,
-        "Google did not grant the required permissions. Reconnect and approve Meet and Docs read access.",
+        purpose === "calendar"
+          ? "Google did not grant the required Calendar permissions. Reconnect and approve Calendar access."
+          : "Google did not grant the required permissions. Reconnect and approve Meet and Docs read access.",
       );
     await this.vault.mutate(state.uid, (s) => {
-      s.connection = {
+      s[purpose === "calendar" ? "calendarConnection" : "connection"] = {
         access: tokens.access_token,
         refresh: tokens.refresh_token,
         expires: Date.now() + Number(tokens.expires_in || 3600) * 1000,
         id: random(),
         connectedAt: new Date().toISOString(),
+        scopes: tokens.scope || requestedScopes.join(" "),
       };
-      s.previews = [];
+      if (purpose === "meet") s.previews = [];
     });
+    return { purpose };
   }
   async status(uid) {
     if (!this.ready) return { ready: false, connected: false };
@@ -275,9 +297,10 @@ export class GoogleIntegration {
       s.states = [];
     });
   }
-  async access(uid) {
+  async access(uid, purpose = "meet") {
     this.requireReady();
-    const { connection: c } = await this.vault.get(uid);
+    const key = purpose === "calendar" ? "calendarConnection" : "connection";
+    const c = (await this.vault.get(uid))[key];
     if (!c) fail(409, "Connect your Google account first.");
     if (c.expires > Date.now() + 60000) return c.access;
     const token = await this.token({
@@ -286,13 +309,12 @@ export class GoogleIntegration {
     });
     if (!token.access_token) fail(502, "Reconnect your Google account.");
     return this.vault.mutate(uid, (s) => {
-      if (s.connection?.id !== c.id)
+      if (s[key]?.id !== c.id)
         fail(409, "Google connection changed. Try again.");
-      s.connection.access = token.access_token;
-      s.connection.expires =
-        Date.now() + Number(token.expires_in || 3600) * 1000;
-      if (token.refresh_token) s.connection.refresh = token.refresh_token;
-      return s.connection.access;
+      s[key].access = token.access_token;
+      s[key].expires = Date.now() + Number(token.expires_in || 3600) * 1000;
+      if (token.refresh_token) s[key].refresh = token.refresh_token;
+      return s[key].access;
     });
   }
   async limit(uid) {

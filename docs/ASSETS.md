@@ -12,7 +12,7 @@ Final creative prompt/specification:
 
 ## Icons
 
-`src/components/Icons.jsx` contains 46 original code-native SVG icons. Reusable standalone files are under `public/icons/`. Each uses a 24 × 24 viewBox, rounded lines and subtle blue fill, with `currentColor` for flexible theming. React icons are decorative; button/field labels provide their accessible names. Priority badges add text to colour.
+`src/components/Icons.jsx` contains 48 original code-native SVG icons. Reusable standalone files are under `public/icons/`. Each uses a 24 × 24 viewBox, rounded lines and subtle blue fill, with `currentColor` for flexible theming. React icons are decorative; button/field labels provide their accessible names. Priority badges add text to colour.
 
 `public/favicon.svg` is the ShiftScript vector brand mark. Icon paths and colours can be edited directly; no image service or external icon font is required at runtime.
 
@@ -92,3 +92,8 @@ MeetingSourcePicker adapts the Uiverse GreyD097 dial as scoped React/CSS with Ea
 ## Directional travel refinement (v3.0.11)
 
 The existing Uiverse / GreyD097-inspired selector uses 17px desktop/13px phone travel, 24-degree tilt and a spring easing curve. All four selected directions share the same motion geometry. The control keeps the existing Earny blue palette, custom icons and reduced-motion static selection; no new raster assets are needed.
+
+
+## Assistant (v3.1.0)
+
+Compass and Send are original code-native SVGs using the established soft blue fills, navy outlines and rounded geometry. They are available in the React icon set and public/icons. The assistant empty state reuses the existing transparent team-handoff clay PNG. The processing state reuses the blue nine-bar loader. No new external artwork or animation dependency is needed.

@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 // Both transcription and analysis use the current free-tier-capable Flash-Lite.
 export const defaultModel = "gemini-3.5-flash-lite";
 export async function geminiJson(
-  { input, schema, instruction, maxTokens = 6000 },
+  { input, schema, instruction, maxTokens = 6000, model, timeout = 45000 },
   clientOverride,
 ) {
   if (!clientOverride && !process.env.GEMINI_API_KEY)
@@ -17,7 +17,7 @@ export async function geminiJson(
       clientOverride || new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await client.interactions.create(
       {
-        model: process.env.GEMINI_MODEL || defaultModel,
+        model: model || process.env.GEMINI_MODEL || defaultModel,
         store: false,
         input,
         system_instruction: instruction,
@@ -28,7 +28,7 @@ export async function geminiJson(
           schema,
         },
       },
-      { timeout: 45000, maxRetries: 0 },
+      { timeout, maxRetries: 0 },
     );
     if (response.status && response.status !== "completed")
       throw Object.assign(

@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { z } from "zod";
 import { GoogleIntegration } from "./google.js";
+import { CalendarIntegration } from "./calendar.js";
+import { installAssistantRoutes, assistantModel } from "./assistant.js";
 import { RecapMailer, recap, emailInput } from "./recap-email.js";
 import {
   invitationOrigin,
@@ -57,6 +59,8 @@ const workspaceInput = z
 export function createApp({
   store,
   google,
+  calendar,
+  assistant,
   mailer = new RecapMailer(),
   appUrl = process.env.APP_URL || process.env.GOOGLE_REDIRECT_URI,
   analyzer = analyze,
@@ -75,6 +79,7 @@ export function createApp({
   const repo =
     store || (storage === "firebase" ? new FirebaseStore() : new LocalStore());
   const googleClient = google || new GoogleIntegration({ storage });
+  const calendarClient = calendar || new CalendarIntegration(googleClient);
   const publicOrigin = invitationOrigin(appUrl);
   const profiles =
     profileStore ||
@@ -100,7 +105,10 @@ export function createApp({
       emailReady: mailer.ready,
       invitationEmailReady: Boolean(mailer.ready && publicOrigin),
       remindersReady,
-      version: "3.0.3",
+      assistantModel: assistantModel(),
+      assistantReady:
+        provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
+      version: "3.1.0",
     }),
   );
   installReminderRoute(app, {
@@ -125,14 +133,28 @@ export function createApp({
       .slice(1)
       .join("=");
     let status = "connected";
+    let purpose = "meet";
     try {
-      await googleClient.callback(req.query, cookie);
+      purpose = googleClient.vault?.open(req.query.state)?.purpose || "meet";
+    } catch {
+      /* Keep the standard error return. */
+    }
+    try {
+      const result = await googleClient.callback(req.query, cookie);
+      purpose = result?.purpose || purpose;
     } catch {
       status = "error";
     }
     res.clearCookie("shiftscript-google", googleClient.cookieOptions());
     res.set("Referrer-Policy", "no-referrer");
-    res.redirect(303, googleClient.redirect.origin + "/app?google=" + status);
+    res.redirect(
+      303,
+      googleClient.redirect.origin +
+        "/app?" +
+        (purpose === "calendar" ? "calendar" : "google") +
+        "=" +
+        status,
+    );
   });
   app.use("/api", async (req, _res, next) => {
     try {
@@ -325,6 +347,16 @@ export function createApp({
     } catch (e) {
       next(e);
     }
+  });
+  installAssistantRoutes(app, {
+    profiles,
+    read,
+    mutate,
+    calendar: calendarClient,
+    google: googleClient,
+    provider,
+    brain: assistant,
+    origin: publicOrigin,
   });
   app.get("/api/workspace", async (req, res) => {
     const d = await read(req.workspaceId),

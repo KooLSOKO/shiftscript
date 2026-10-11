@@ -274,3 +274,21 @@ export const History = frame(
     <path d="M12 7v5l4 2M3 3v5h5" />
   </>,
 );
+export const Compass = frame(
+  <>
+    <circle cx="12" cy="12" r="9" fill={soft} />
+    <path
+      d="m16.8 7.2-3 6.6-6.6 3 3-6.6z"
+      fill="currentColor"
+      strokeWidth="1.2"
+    />
+    <circle cx="12" cy="12" r="1.2" fill="white" stroke="white" />
+    <path d="M12 3V1m9 11h2M12 21v2M3 12H1" />
+  </>,
+);
+export const Send = frame(
+  <>
+    <path d="m3 3 18 9-18 9 3-9z" fill={soft} />
+    <path d="M6 12h15" />
+  </>,
+);

@@ -1,5 +1,7 @@
 # Latest update
 
+See **[UPDATE-v3.1.0](docs/UPDATE-v3.1.0.md)** for the workspace assistant, optional Google Calendar connection, reviewed task blocks/changes/email recaps and Google Cloud setup.
+
 See **[UPDATE-v3.0.11](docs/UPDATE-v3.0.11.md)** for stronger directional movement, mobile Google sign-in return and the required one-time callback setup before deployment.
 
 See **[UPDATE-v3.0.10](docs/UPDATE-v3.0.10.md)** for the directional meeting source dial, blue Disconnect button and Mac deployment commands.
@@ -20,7 +22,7 @@ See **[UPDATE-v3.0.1](docs/UPDATE-v3.0.1.md)** for public policies, About/contac
 
 See **[UPDATE-v3](docs/UPDATE-v3.md)** for all seven productivity features, QoL updates, Mac installation and optional daily Earny reminders. The new reminder function requires Fluid compute on Vercel. See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
-# ShiftScript v3.0.11
+# ShiftScript v3.1.0
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -32,7 +34,7 @@ Read **[docs/UPDATE-v3.md](docs/UPDATE-v3.md)** for the complete v3 update, Mac 
 
 ## New project in VS Code
 
-Open the extracted **ShiftScript-v3.0.11** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
+Open the extracted **ShiftScript-v3.1.0** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
 
 ```bash
 npm ci
@@ -54,6 +56,8 @@ Notifications and optional daily Earny digests; saved single/bulk Calendar sched
 
 ## What is included
 
+- Personal workspace assistant with task/meeting sources, selected upcoming Google Calendar events, planning and reviewed actions. It reuses the existing Gemini server key.
+
 - Editable pasted / `.txt` transcripts, audio upload and microphone recording.
 - Structured meeting summaries, discussion points, decisions, follow-ups and evidence-linked action proposals.
 - Individual or bulk approval/rejection, with editable owners, dates and priorities. Nothing is approved automatically.
@@ -63,7 +67,7 @@ Notifications and optional daily Earny digests; saved single/bulk Calendar sched
 - Filtered PDF/CSV task exports and PDF/JSON meeting exports.
 - Projects, multiple workspaces, email-bound invitation links, Owner/Member/Viewer roles.
 - Signup, full names, sign-in, password reset and email verification for invitations.
-- 46 original native SVG icons, corporate cobalt, vivid urgency badges and reduced-motion-aware animations.
+- 48 original native SVG icons, corporate cobalt, vivid urgency badges and reduced-motion-aware animations.
 
 ## Connect Gemini
 

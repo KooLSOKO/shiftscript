@@ -1,3 +1,13 @@
+# Latest verification: ShiftScript v3.1.0
+
+See [check-results.txt](check-results.txt) for the final run, and [UPDATE-v3.1.0.md](UPDATE-v3.1.0.md) for owner setup and live acceptance steps. The new assistant suite checks private per-user/per-workspace history and calendars, separate OAuth purpose/scope consent, grounded source/action allowlists, idempotency, missing dates, stale task guards, role/dependency checks, conflict detection, app-created-only events, uncertain outcomes and explicit email preview/send.
+
+The assistant browser suite uses the actual React/API application with fictional model, Calendar and SMTP adapters. It covers chat sources and persisted history, calendar selection, review/approval forms, required scheduling fields, 320/390/768/1440px layouts, keyboard input, invalid time-zone editing, existing recap modal recipient prefill, pending-task exclusion, email send matching, provider errors and clear-history behavior. Tests never send live mail or use user credentials.
+
+The earlier nine browser suites also run against the updated source/build. Provider account configuration and a live Google/Firebase/Zoho round trip remain owner-managed checks.
+
+---
+
 # ShiftScript v2.2 testing
 
 Tested 10 October 2026 using Node.js 24.19.0. No private credentials supplied in chat were used.

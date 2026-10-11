@@ -1,6 +1,13 @@
 import AuthTransition from "./components/AuthTransition.jsx";
 import { hasGoogleReturn, clearGoogleReturn } from "./auth-flow.js";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import * as Icons from "./components/Icons.jsx";
 import {
   api,
@@ -46,10 +53,12 @@ import TaskBulkActions from "./components/TaskBulkActions.jsx";
 import CalendarBatch from "./components/CalendarBatch.jsx";
 import MeetingPreparation from "./components/MeetingPreparation.jsx";
 import { taskNotifications, waitingOn } from "../shared/productivity.js";
+const Assistant = lazy(() => import("./components/Assistant.jsx"));
 const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
   ["google", "Google Meet", Icons.Video],
+  ["assistant", "Assistant", Icons.Compass],
   ["tasks", "Task tracker", Icons.ListTodo],
   ["board", "Board", Icons.Columns3],
   ["projects", "Projects", Icons.Folder],
@@ -107,6 +116,8 @@ export default function App() {
     [undoBusy, setUndoBusy] = useState(false);
   const [authTransition, setAuthTransition] = useState(null);
   const [googleReturning, setGoogleReturning] = useState(hasGoogleReturn);
+  const [assistantRecap, setAssistantRecap] = useState(null);
+  const [assistantRevision, setAssistantRevision] = useState(0);
   const authSequence = useRef(0);
   function beginAuthTransition() {
     setAuthTransition({ id: ++authSequence.current });
@@ -278,6 +289,27 @@ export default function App() {
           );
         const url = new URL(window.location.href);
         url.searchParams.delete("google");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + url.search + url.hash,
+        );
+      }
+      const calendarStatus = new URLSearchParams(window.location.search).get(
+        "calendar",
+      );
+      if (calendarStatus) {
+        setTab("assistant");
+        if (calendarStatus === "connected")
+          setToast(
+            "Google Calendar connected. Choose the calendars for your assistant.",
+          );
+        else
+          setError(
+            "Calendar connection could not finish. Enable Calendar API and approve the requested access, then try again.",
+          );
+        const url = new URL(window.location.href);
+        url.searchParams.delete("calendar");
         window.history.replaceState(
           {},
           "",
@@ -836,6 +868,7 @@ export default function App() {
                           projects: "Make room for the bigger picture.",
                           team: "Good work happens together.",
                           google: "From Google Meet to a clear next step.",
+                          assistant: "Make room for your next step.",
                           activity: "Keep up with your workspace.",
                           profile: "Your profile.",
                         }[tab]}
@@ -857,6 +890,8 @@ export default function App() {
                           team: "Manage your people, permissions and workspace.",
                           google:
                             "Bring in your notes. Review the work. Keep moving.",
+                          assistant:
+                            "Ask about your tasks, meetings and the time ahead.",
                           activity:
                             "See who changed what, and follow the work.",
                           profile:
@@ -864,7 +899,7 @@ export default function App() {
                         }[tab]}
                   </p>
                 </div>
-                {!readOnly && tab !== "profile" && (
+                {!readOnly && tab !== "profile" && tab !== "assistant" && (
                   <div className="heading-actions">
                     {(tab === "tasks" || tab === "board") && (
                       <button
@@ -953,6 +988,16 @@ export default function App() {
                               }}
                             >
                               My work
+                            </button>
+                            <button
+                              className="button"
+                              onClick={() => {
+                                setMeetingId(null);
+                                setTab("assistant");
+                              }}
+                            >
+                              <Icons.Compass size={19} />
+                              Ask assistant
                             </button>
                           </div>
                         </div>
@@ -1173,6 +1218,31 @@ export default function App() {
                       onMeeting={openMeeting}
                       onProject={(id) => taskView({ project: id })}
                     />
+                  )}
+                  {tab === "assistant" && (
+                    <Suspense
+                      fallback={<p role="status">Opening your assistant…</p>}
+                    >
+                      <Assistant
+                        key={workspaceId + ":" + actor.uid}
+                        actor={actor}
+                        workspaceId={workspaceId}
+                        config={config}
+                        readOnly={readOnly}
+                        revision={assistantRevision}
+                        timeZone={
+                          personal?.preferences?.timeZone ||
+                          "Africa/Johannesburg"
+                        }
+                        onTask={(id) => setTaskId(id)}
+                        onMeeting={openMeeting}
+                        onChange={reload}
+                        onEmail={(action) => {
+                          setAssistantRecap({ ...action, workspaceId });
+                          setEmailMeetingId(action.meetingId);
+                        }}
+                      />
+                    </Suspense>
                   )}
                   {tab === "google" && (
                     <GoogleMeet
@@ -1784,7 +1854,38 @@ export default function App() {
             key={workspaceId + ":" + emailMeeting.id}
             meeting={emailMeeting}
             reload={reload}
-            onClose={() => setEmailMeetingId(null)}
+            initialRecipients={
+              assistantRecap?.workspaceId === workspaceId &&
+              assistantRecap.meetingId === emailMeeting.id
+                ? assistantRecap.recipients
+                : []
+            }
+            onSent={async (send) => {
+              if (
+                assistantRecap?.workspaceId === workspaceId &&
+                assistantRecap.meetingId === emailMeeting.id &&
+                ["accepted", "partial"].includes(send.status)
+              ) {
+                try {
+                  await api(
+                    "/assistant/actions/" + assistantRecap.id + "/recap-result",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({ requestId: send.id }),
+                    },
+                  );
+                  setAssistantRevision((v) => v + 1);
+                } catch {
+                  setToast(
+                    "Recap sent. The assistant's status could not refresh; the send is recorded on the meeting.",
+                  );
+                }
+              }
+            }}
+            onClose={() => {
+              setEmailMeetingId(null);
+              setAssistantRecap(null);
+            }}
           />
         )}
         {(task || taskId === "new") && (

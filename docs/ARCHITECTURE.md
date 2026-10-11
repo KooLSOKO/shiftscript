@@ -114,3 +114,18 @@ Old root invitation and Google callback query strings redirect to `/app` with al
 ## Homepage styling revision (v3.0.3)
 
 The static home entry and lazy workspace routing remain unchanged. The home uses local Manrope fonts and four original clay illustrations; web delivery uses alpha-preserving WebP files in `public/art/clay`, with original PNGs included. `public/art/workspace-preview.png` copies an automated demo-workspace screenshot. The landing style remains scoped to `.ss-home`. No provider, account, schema, SMTP or cron behaviour changes.
+
+
+## Workspace assistant and connected Calendar (v3.1.0)
+
+`server/assistant.js` builds bounded context from the authorized workspace (60 ranked tasks, six ranked meetings with excerpts) and `server/calendar.js` (next 14 days from selected calendars, 60 events, free/busy checks). Context carries task/meeting/event references; output references are allowlisted and source links come from server data. Calendar descriptions, transcripts and task text are untrusted evidence in the system instruction. Model proposals cannot call arbitrary endpoints or access credentials.
+
+Gemini Interactions reuses GEMINI_API_KEY with configurable ASSISTANT_MODEL, structured JSON, store:false, 30-second timeout and no automatic retries. Defaults: Gemini 3.8 Flash for chat, existing Flash-Lite for meeting analysis/audio. Sample chat is deterministic.
+
+The existing encrypted per-UID integration vault holds separate Meet and Calendar connections. Calendar OAuth requests events.readonly, calendarlist.readonly, events.freebusy and app.created. PKCE, encrypted state, browser-bound cookies and scope verification remain in the common callback; its purpose selects the connection and return page. Selection is validated against that user's Calendar list. Connection IDs are rechecked around provider requests, preventing a reconnect from mixing accounts.
+
+Private profile assistantThreads store 12 messages per workspace, bounded to five recent workspaces, plus quota and a single active-request lease. Chat request IDs/fingerprints support idempotent replies. Quota defaults to 40 attempts/day/account and 6/minute; failures count. Profile/catalog views omit the threads. Firestore browser rules deny these records along with all other direct database access.
+
+The server creates only typed, existing-resource proposals: update_task, schedule_task and email_recap. Proposals expire after 24 hours. Task writes use the existing authorized workspace transaction, stale-version guard, dependency validation and activity/undo mechanism. Calendar approval rechecks workspace access, task version and availability; inserts a deterministic event ID into an app-created secondary calendar with no attendees. A creation claim prevents uncertain calendar-creation retries; ambiguous event outcomes stay uncertain. Google event changes after approval are not synchronized to tasks.
+
+Email proposals open the existing fingerprinted recap preview and recipient review. Normalized recipients written in the question may prefill that form; the user can edit them. Actual SMTP results are matched by meeting, actor and send request ID before marking a proposal done. Viewer roles can use private chat/calendar blocks but cannot modify shared tasks or send recaps. All external provider operations remain outside Firestore transaction callbacks.

@@ -4,9 +4,15 @@ import Modal from "./Modal.jsx";
 import { Mail, CheckCircle2 } from "./Icons.jsx";
 import { parseRecipients } from "../../shared/recipients.js";
 import { MAX_RECAP_RECIPIENTS } from "../../shared/limits.js";
-export default function RecapEmail({ meeting, onClose, reload }) {
+export default function RecapEmail({
+  meeting,
+  onClose,
+  reload,
+  initialRecipients = [],
+  onSent,
+}) {
   const [preview, setPreview] = useState(null),
-    [addresses, setAddresses] = useState(""),
+    [addresses, setAddresses] = useState(() => initialRecipients.join(", ")),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [sent, setSent] = useState(null);
@@ -47,6 +53,7 @@ export default function RecapEmail({ meeting, onClose, reload }) {
         }),
       });
       setSent(v.send);
+      await onSent?.(v.send);
       await reload();
     } catch (e) {
       setError(e.message);
