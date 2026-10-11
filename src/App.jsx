@@ -53,12 +53,14 @@ import TaskBulkActions from "./components/TaskBulkActions.jsx";
 import CalendarBatch from "./components/CalendarBatch.jsx";
 import MeetingPreparation from "./components/MeetingPreparation.jsx";
 import { taskNotifications, waitingOn } from "../shared/productivity.js";
+const Notes = lazy(() => import("./components/Notes.jsx"));
 const Assistant = lazy(() => import("./components/Assistant.jsx"));
 const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
   ["google", "Google Meet", Icons.Video],
   ["assistant", "Shifty", Icons.Compass],
+  ["notes", "Notes", Icons.FileText],
   ["tasks", "Task tracker", Icons.ListTodo],
   ["board", "Board", Icons.Columns3],
   ["projects", "Projects", Icons.Folder],
@@ -69,6 +71,7 @@ const tabs = [
 const emptyData = () => ({
   activity: [],
   agendas: [],
+  notes: [],
   meetings: [],
   tasks: [],
   projects: [],
@@ -97,6 +100,7 @@ export default function App() {
     [settings, setSettings] = useState(false),
     [newMeeting, setNewMeeting] = useState(false),
     [meetingId, setMeetingId] = useState(null),
+    [noteToOpen, setNoteToOpen] = useState(null),
     [emailMeetingId, setEmailMeetingId] = useState(null),
     [taskId, setTaskId] = useState(null),
     [calendarTaskId, setCalendarTaskId] = useState(null),
@@ -222,6 +226,7 @@ export default function App() {
     setData(emptyData());
     setLoading(true);
     setMeetingId(null);
+    setNoteToOpen(null);
     setEmailMeetingId(null);
     setTaskId(null);
     setCalendarTaskId(null);
@@ -869,6 +874,7 @@ export default function App() {
                           team: "Good work happens together.",
                           google: "From Google Meet to a clear next step.",
                           assistant: "Make room for your next step.",
+                          notes: "Your notebook, with a next step.",
                           activity: "Keep up with your workspace.",
                           profile: "Your profile.",
                         }[tab]}
@@ -892,6 +898,8 @@ export default function App() {
                             "Bring in your notes. Review the work. Keep moving.",
                           assistant:
                             "Ask about your tasks, meetings and the time ahead.",
+                          notes:
+                            "Capture a page, keep a note or turn it into work for review.",
                           activity:
                             "See who changed what, and follow the work.",
                           profile:
@@ -899,26 +907,29 @@ export default function App() {
                         }[tab]}
                   </p>
                 </div>
-                {!readOnly && tab !== "profile" && tab !== "assistant" && (
-                  <div className="heading-actions">
-                    {(tab === "tasks" || tab === "board") && (
+                {!readOnly &&
+                  tab !== "profile" &&
+                  tab !== "assistant" &&
+                  tab !== "notes" && (
+                    <div className="heading-actions">
+                      {(tab === "tasks" || tab === "board") && (
+                        <button
+                          className="button"
+                          onClick={() => setTaskId("new")}
+                        >
+                          <Icons.Plus size={17} />
+                          New task
+                        </button>
+                      )}
                       <button
-                        className="button"
-                        onClick={() => setTaskId("new")}
+                        className="button primary"
+                        onClick={() => setNewMeeting(true)}
                       >
-                        <Icons.Plus size={17} />
-                        New task
+                        <Icons.Plus size={18} />
+                        New meeting
                       </button>
-                    )}
-                    <button
-                      className="button primary"
-                      onClick={() => setNewMeeting(true)}
-                    >
-                      <Icons.Plus size={18} />
-                      New meeting
-                    </button>
-                  </div>
-                )}
+                    </div>
+                  )}
               </div>
               {loading ? (
                 <div className="empty">
@@ -1217,7 +1228,37 @@ export default function App() {
                       }
                       onMeeting={openMeeting}
                       onProject={(id) => taskView({ project: id })}
+                      onNote={(id) => {
+                        setNoteToOpen(id);
+                        setMeetingId(null);
+                        setTab("notes");
+                      }}
                     />
+                  )}
+                  {tab === "notes" && (
+                    <Suspense
+                      fallback={<p role="status">Opening your notes…</p>}
+                    >
+                      <Notes
+                        key={workspaceId + ":" + actor.uid}
+                        notes={data.notes}
+                        projects={data.projects}
+                        meetings={data.meetings}
+                        workspaceId={workspaceId}
+                        config={config}
+                        readOnly={readOnly}
+                        onChange={reload}
+                        onMeeting={openMeeting}
+                        onProcessed={(m) => {
+                          openMeeting(m.id);
+                          setToast(
+                            "Note processed. Review the proposed tasks.",
+                          );
+                        }}
+                        openId={noteToOpen}
+                        onOpenConsumed={() => setNoteToOpen(null)}
+                      />
+                    </Suspense>
                   )}
                   {tab === "assistant" && (
                     <Suspense fallback={<p role="status">Opening Shifty…</p>}>
@@ -1234,6 +1275,11 @@ export default function App() {
                         }
                         onTask={(id) => setTaskId(id)}
                         onMeeting={openMeeting}
+                        onNote={(id) => {
+                          setNoteToOpen(id);
+                          setMeetingId(null);
+                          setTab("notes");
+                        }}
                         onChange={reload}
                         onEmail={(action) => {
                           setAssistantRecap({ ...action, workspaceId });
@@ -1268,6 +1314,11 @@ export default function App() {
                         tasks={data.tasks}
                         meetings={data.meetings}
                         onMeeting={openMeeting}
+                        onNote={(id) => {
+                          setNoteToOpen(id);
+                          setMeetingId(null);
+                          setTab("notes");
+                        }}
                         onPrepare={(id) => setPreparation({ meetingId: id })}
                         emailReady={config.emailReady}
                         workspace={data.workspace}
@@ -1938,6 +1989,11 @@ export default function App() {
             onTask={setTaskId}
             onMeeting={openMeeting}
             onProject={(id) => taskView({ project: id })}
+            onNote={(id) => {
+              setNoteToOpen(id);
+              setMeetingId(null);
+              setTab("notes");
+            }}
             onClose={() => setSearchOpen(false)}
           />
         )}

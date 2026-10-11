@@ -5032,3 +5032,228 @@ textarea {
     align-items: center;
   }
 }
+/* Workspace Notes: the shared Earny controls and clay artwork. */
+.notes-page {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.notes-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.notes-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2458e8;
+  flex: 1 1 220px;
+  max-width: 480px;
+}
+.notes-search input {
+  min-height: 48px;
+  width: 100%;
+  font-size: 16px;
+}
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 18px;
+}
+.notes-page .note-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  min-width: 0;
+  color: #172c58;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease;
+}
+.note-card:hover {
+  transform: translateY(-3px);
+  border-color: #2458e8;
+}
+.note-card h2 {
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+.note-card > svg {
+  color: #2458e8;
+}
+.note-excerpt {
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.notes-empty {
+  text-align: center;
+  padding: 28px;
+}
+.notes-empty img {
+  display: block;
+  margin: 0 auto 16px;
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+}
+.notes-empty p {
+  margin: 12px auto 22px;
+  max-width: 460px;
+  line-height: 1.7;
+}
+.note-editor {
+  display: grid;
+  gap: 18px;
+}
+.note-editor label,
+.note-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 700;
+  min-width: 0;
+}
+.note-editor input,
+.note-editor select,
+.note-editor textarea,
+.note-fields input {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+}
+.note-editor textarea {
+  font-weight: 400;
+  line-height: 1.7;
+}
+.note-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.note-photo {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  margin: 18px 0 24px;
+  border: 1px solid #d6e1ff;
+  border-radius: 16px;
+  background: #f8faff;
+}
+.note-photo-actions,
+.note-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.note-photo-actions .button {
+  position: relative;
+}
+.note-photo-actions .button:focus-within {
+  outline: 3px solid #2458e8;
+  outline-offset: 3px;
+}
+.note-photo-actions .button:has(input:disabled) {
+  opacity: 0.55;
+  cursor: default;
+}
+.note-photo-preview {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+  background: #e9efff;
+  border-radius: 10px;
+}
+.note-crop {
+  padding: 12px 0;
+}
+.note-crop summary {
+  min-height: 44px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.note-crop .note-fields {
+  margin: 14px 0;
+}
+.note-working {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 14px 0;
+}
+.note-scan-warning,
+.note-delete {
+  background: #fff8e5;
+  color: #5c4214;
+  padding: 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+}
+.note-scan-warning ul {
+  padding-left: 20px;
+}
+.note-text {
+  white-space: pre-wrap;
+  font: inherit;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  max-height: 55dvh;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid #e0e7f3;
+  border-radius: 12px;
+  margin: 14px 0 20px;
+}
+.notes-page .button,
+.notes-page .text-button,
+.note-editor .button,
+.note-photo .button,
+.note-detail-actions .button,
+.note-detail-actions .text-button,
+.note-delete .button,
+.note-delete .text-button {
+  min-height: 48px;
+  white-space: normal;
+  line-height: 1.5;
+}
+.note-detail-actions .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.note-delete {
+  margin-top: 20px;
+}
+@media (max-width: 650px) {
+  .note-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .note-photo {
+    padding: 14px;
+  }
+  .note-photo-actions > .button {
+    flex: 1 1 120px;
+  }
+  .note-detail-actions > .button {
+    width: 100%;
+  }
+  .notes-toolbar > .button {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-card:hover {
+    transform: none;
+  }
+  .notes-page .note-card {
+    transition: none;
+  }
+}

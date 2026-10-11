@@ -100,10 +100,25 @@ export function Notifications({
     </Modal>
   );
 }
-export function GlobalSearch({ data, onTask, onMeeting, onProject, onClose }) {
+export function GlobalSearch({
+  data,
+  onTask,
+  onMeeting,
+  onProject,
+  onNote,
+  onClose,
+}) {
   const [query, setQuery] = useState(""),
     term = query.trim().toLowerCase();
   const groups = [
+    [
+      "Notes",
+      NotebookPen,
+      (data.notes || []).filter((item) =>
+        (item.title + " " + item.text).toLowerCase().includes(term),
+      ),
+      onNote,
+    ],
     [
       "Tasks",
       ListTodo,
@@ -134,7 +149,7 @@ export function GlobalSearch({ data, onTask, onMeeting, onProject, onClose }) {
   return (
     <Modal title="Search your workspace" onClose={onClose}>
       <label className="block">
-        Search meetings, tasks and projects
+        Search meetings, tasks, projects and notes
         <input
           autoFocus
           value={query}
@@ -174,7 +189,13 @@ export function GlobalSearch({ data, onTask, onMeeting, onProject, onClose }) {
     </Modal>
   );
 }
-export function ActivityFeed({ activity = [], onTask, onMeeting, onProject }) {
+export function ActivityFeed({
+  activity = [],
+  onTask,
+  onMeeting,
+  onProject,
+  onNote,
+}) {
   const [filter, setFilter] = useState("All");
   return (
     <section className="panel">
@@ -189,6 +210,7 @@ export function ActivityFeed({ activity = [], onTask, onMeeting, onProject }) {
           <option value="task">Tasks</option>
           <option value="meeting">Meetings</option>
           <option value="project">Projects</option>
+          <option value="note">Notes</option>
         </select>
       </div>
       <div className="activity-list">
@@ -205,9 +227,12 @@ export function ActivityFeed({ activity = [], onTask, onMeeting, onProject }) {
                 <button
                   className="text-button"
                   onClick={() =>
-                    ({ task: onTask, meeting: onMeeting, project: onProject })[
-                      item.targetType
-                    ]?.(item.targetId)
+                    ({
+                      task: onTask,
+                      meeting: onMeeting,
+                      project: onProject,
+                      note: onNote,
+                    })[item.targetType]?.(item.targetId)
                   }
                 >
                   {item.title}

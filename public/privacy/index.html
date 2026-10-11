@@ -220,7 +220,11 @@
             <p>
               When you request analysis, selected transcript or notes text and
               meeting metadata are sent to Google's Gemini API. Audio
-              transcription sends the recording to Gemini. AI-generated
+              transcription sends the recording to Gemini. When you select
+              Extract text in Notes, the compressed notebook or document photo
+              is sent to Gemini to read its writing. ShiftScript stores saved
+              note text and photo filename metadata, not the original image.
+              Notes are shared with permitted members of the selected workspace. AI-generated
               summaries and proposed tasks return to ShiftScript for review.
               Names and personal details in the source may be included in that
               processing.
@@ -228,7 +232,7 @@
             <p>
               Assistant questions also send relevant permitted workspace tasks,
               summaries, discussion points, decisions, pending proposals,
-              selected transcript excerpts, recent chat messages and your
+              selected transcript excerpts, relevant saved workspace notes, recent chat messages and your
               selected upcoming calendar context. Replies are saved privately
               for your account. Scheduling, task changes and email recaps remain
               reviewable proposals until you confirm an action or send an email

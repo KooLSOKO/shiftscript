@@ -254,6 +254,7 @@ export default function Assistant({
   readOnly,
   onTask,
   onMeeting,
+  onNote,
   onEmail,
   onChange,
   revision = 0,
@@ -604,7 +605,9 @@ export default function Assistant({
                           onClick={() =>
                             source.type === "task"
                               ? onTask(source.targetId)
-                              : onMeeting(source.targetId)
+                              : source.type === "note"
+                                ? onNote(source.targetId)
+                                : onMeeting(source.targetId)
                           }
                         >
                           {source.type === "task" ? (

@@ -145,3 +145,7 @@ The browser smoke suite checks four directional choices, keyboard focus, all mou
 ## v3.0.11 authentication and directional regression
 
 `npm run check` includes mobile-device detection, pending-return expiration/storage failures, auth-domain selection and Firebase helper routing/header checks. The account browser suite simulates full-page Google returns on iPhone/Android, checks a single tab, a single redirect result, a single welcome transition, cancellation/errors and Google signup name preservation. The source selector browser checks measure actual transform travel at phone/tablet/desktop widths and exercise native touch drag. `npm run test:ui` covers all nine browser suites. Live OAuth acceptance still requires the callback configuration in UPDATE-v3.0.11.md.
+
+## Notes workflows (v3.1.2)
+
+`notes.test.js` verifies strict Gemini image contracts, signature/size validation, quota, no stored image bytes, workspace permissions, link validation, idempotent saves, stale versions, reviewed task processing, canonical source versions, historical tasks after deletion, revocation during OCR and Shifty note excerpts. `notes-browser.js` uses a synthetic noisy 3200×2200 notebook PNG and the real browser compression/crop/rotation code. It verifies extraction does not happen on upload, text correction/save, save without tasks, process/approve, backlinks, Shifty sources, deletion, recoverable errors and 320/390/768/1440px layouts. Provider adapters are fictional and never send photos to Google or real mail.

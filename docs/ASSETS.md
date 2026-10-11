@@ -101,3 +101,7 @@ Compass and Send are original code-native SVGs using the established soft blue f
 ## Shifty (v3.1.1)
 
 Four original portraits were generated with the built-in image-generation tool, with the ready portrait establishing identity and the other three using it as their edit target. The design matches Earny’s matte clay characters, cobalt #2458E8, navy #172c58, braided hair and transparent cutout treatment. Public deployment PNGs preserve the generated alpha and are resized to 512×512 for mobile performance. Source prompts are recorded in SHIFTY-ARTWORK.json. No external images, icon fonts or animation dependencies are required. State selection follows actual React request activity; reduced motion disables the thinking movement.
+
+## Notes (v3.1.2)
+
+Notes reuses the original transparent meeting-notes clay PNG for its empty state. Camera is a new original code-native SVG following the same navy outlines, blue second tone and rounded geometry as the existing ShiftScript icon set. It is available in the React icon library and public/icons/Camera.svg. Browser canvas only resizes, rotates and crops user-provided document photos; it does not create replacement brand artwork. No new generated media or image-processing dependency is needed.

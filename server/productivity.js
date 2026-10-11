@@ -221,6 +221,20 @@ export function recordChanges(s, before, actor, withUndo = true) {
         project.name,
       );
   }
+  for (const note of s.notes || []) {
+    const prior = (before.notes || []).find((n) => n.id === note.id);
+    if (!prior || prior.version !== note.version)
+      log(
+        prior ? "updated a note" : "saved a note",
+        "note",
+        note.id,
+        note.title,
+      );
+  }
+  for (const prior of before.notes || []) {
+    if (!(s.notes || []).some((n) => n.id === prior.id))
+      log("deleted a note", "note", prior.id, prior.title);
+  }
   s.activity = s.activity.slice(-200);
   s.undoRecords = s.undoRecords
     .filter((record) => record.expires > Date.now())

@@ -30,6 +30,7 @@ export default function MeetingDetail({
   meetings = [],
   onPrepare,
   onMeeting,
+  onNote,
 }) {
   const [email, setEmail] = useState(false);
   const [edits, setEdits] = useState({}),
@@ -148,6 +149,20 @@ export default function MeetingDetail({
           <pre>{m.preparation.agenda}</pre>
         </details>
       )}
+      {m.source?.kind === "note" && (
+        <div className="source-banner">
+          <span className="badge">
+            Workspace note · {m.source.name} · v{m.source.noteVersion}
+          </span>
+          <p className="hint">
+            Processed from a saved note. Evidence quotes the note rather than a
+            verbatim conversation.
+          </p>
+          <button className="button" onClick={() => onNote(m.source.noteId)}>
+            Open source note
+          </button>
+        </div>
+      )}
       {m.source?.kind?.startsWith("google-") && (
         <div className="source-banner">
           <span className="badge">
@@ -241,7 +256,8 @@ export default function MeetingDetail({
           <details className="panel transcript mt-5">
             <summary>
               {m.source?.kind === "google-notes" ||
-              m.source?.kind === "google-document"
+              m.source?.kind === "google-document" ||
+              m.source?.kind === "note"
                 ? "Original source document"
                 : "Original transcript"}
             </summary>

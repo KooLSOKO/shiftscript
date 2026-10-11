@@ -16,6 +16,7 @@ import { ownerCandidates } from "../shared/identity.js";
 import { firebase } from "./firebase.js";
 import { analyze, sampleTranscript } from "./analyze.js";
 import { transcribe, validateAudio, MAX_AUDIO_BYTES } from "./audio.js";
+import { installNotesRoutes, assertNoteSource } from "./notes.js";
 import { defaultModel } from "./gemini.js";
 import {
   MemoryProfiles,
@@ -65,6 +66,7 @@ export function createApp({
   appUrl = process.env.APP_URL || process.env.GOOGLE_REDIRECT_URI,
   analyzer = analyze,
   transcriber = transcribe,
+  noteExtractor,
   storage = process.env.STORAGE_MODE || "local",
   provider = process.env.AI_PROVIDER || "sample",
   signupEnabled = process.env.PUBLIC_SIGNUP_ENABLED === "true",
@@ -108,7 +110,7 @@ export function createApp({
       assistantModel: assistantModel(),
       assistantReady:
         provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
-      version: "3.1.1",
+      version: "3.1.2",
     }),
   );
   installReminderRoute(app, {
@@ -377,6 +379,9 @@ export function createApp({
       tasks: d.tasks.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       activity: d.activity.slice().reverse(),
       agendas: d.agendas.slice().reverse(),
+      notes: d.notes
+        .slice()
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     });
   });
   installWorkspaceRoutes(app, { read, mutate, profiles });
@@ -701,10 +706,20 @@ export function createApp({
   });
   async function processMeeting(req, res, body, trustedSource) {
     const input = meetingInput.parse(body),
-      meetingKey = meetingId(input),
+      meetingKey =
+        trustedSource?.kind === "note"
+          ? hash(
+              meetingId(input) +
+                ":note:" +
+                trustedSource.noteId +
+                ":" +
+                trustedSource.noteVersion,
+            )
+          : meetingId(input),
       data = await read(req.workspaceId);
     authorize(data, req.actor, req.workspaceId, "write");
     checkProject(data, input.projectId);
+    assertNoteSource(data, trustedSource, input.transcript);
     if (
       input.preparation?.parentMeetingId &&
       !data.meetings.some(
@@ -752,6 +767,17 @@ export function createApp({
     };
     const saved = await mutate(req, (s) => {
       checkProject(s, meeting.projectId);
+      const sourceNote = assertNoteSource(s, trustedSource, input.transcript);
+      if (
+        sourceNote &&
+        !sourceNote.processed.some((p) => p.meetingId === meetingKey)
+      ) {
+        sourceNote.processed.push({
+          version: sourceNote.version,
+          meetingId: meetingKey,
+          at: createdAt,
+        });
+      }
       const current = s.meetings.find((m) => m.id === meetingKey);
       if (current) return current;
       if (s.meetings.length >= 50)
@@ -768,6 +794,14 @@ export function createApp({
     });
     res.status(201).json({ meeting: saved, cached: false });
   }
+  installNotesRoutes(app, {
+    read,
+    mutate,
+    claimQuota,
+    provider,
+    extractor: noteExtractor,
+    processMeeting,
+  });
   app.post("/api/meetings", async (req, res) =>
     processMeeting(req, res, req.body),
   );

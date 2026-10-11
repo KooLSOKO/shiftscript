@@ -10,6 +10,7 @@ export const collections = [
   "activity",
   "undoRecords",
   "agendas",
+  "notes",
 ];
 export function hydrate(record = {}, id) {
   const s = { ...record, quota: record.quota || {} };
