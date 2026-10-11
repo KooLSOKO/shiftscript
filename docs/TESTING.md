@@ -161,3 +161,5 @@ The browser smoke suite checks four directional choices, keyboard focus, all mou
 ## v3.1.4 layout regression
 
 After `npm run build`, run `node tests/meet-layout-browser.js` with Playwright Chromium installed. The suite uses fictional local data and mocked Google sources. It verifies side/inline placement, loading/empty/error states, selection changes, preview actions, narrow embedded layouts, horizontal scroll bounds, diagonal touch scrolling, and page scroll restoration. The test is included in `npm run test:ui`.
+
+The v3.1.5 Meet layout suite also asserts the import-review heading is within the viewport/dialog bounds and receives focus after source selection. It covers both normal smooth scrolling and reduced-motion immediate scrolling.

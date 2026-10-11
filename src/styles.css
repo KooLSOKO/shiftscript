@@ -5268,6 +5268,12 @@ textarea {
 }
 
 /* v3.1.4: sources stay beside their meeting; dialogs scroll vertically. */
+.import-preview {
+  scroll-margin-top: 96px;
+}
+.modal .import-preview {
+  scroll-margin-top: 16px;
+}
 .google-page {
   container-type: inline-size;
 }

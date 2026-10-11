@@ -243,6 +243,20 @@ try {
         () => document.documentElement.scrollWidth <= innerWidth + 1,
       ),
     );
+    await inline
+      .getByRole("button", { name: "Gemini notes 1 · Preview", exact: true })
+      .click();
+    await page.waitForFunction(() => {
+      const heading = document.querySelector(
+        ".google-page:not(.google-embedded) .import-preview h2",
+      );
+      const rect = heading?.getBoundingClientRect();
+      return (
+        heading === document.activeElement &&
+        rect?.top >= 70 &&
+        rect.bottom < innerHeight - 80
+      );
+    });
     if (width === 390)
       await page.locator(".google-meeting").first().screenshot({
         path: "/workspace/scratch/d0cf15ef849a/qa-layout/meet-sources-mobile.png",
@@ -251,6 +265,32 @@ try {
       .getByRole("button", { name: "Hide sources", exact: true })
       .click();
   }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .locator(".google-meeting")
+    .first()
+    .getByRole("button", { name: "View sources", exact: true })
+    .click();
+  await page
+    .locator(".google-meeting")
+    .first()
+    .locator(".meet-inline-sources")
+    .getByRole("button", { name: "Gemini notes 1 · Preview", exact: true })
+    .click();
+  await page.waitForFunction(() => {
+    const heading = document.querySelector(
+      ".google-page:not(.google-embedded) .import-preview h2",
+    );
+    const rect = heading?.getBoundingClientRect();
+    return (
+      heading === document.activeElement &&
+      rect?.top >= 70 &&
+      rect.bottom < innerHeight - 80
+    );
+  });
+  await page.getByRole("button", { name: "Hide sources", exact: true }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page
     .locator(".google-meeting")
@@ -291,6 +331,17 @@ try {
     await embedded
       .getByRole("heading", { name: "Review your import", exact: true })
       .waitFor();
+    await page.waitForFunction(() => {
+      const dialog = document.querySelector("dialog[open]");
+      const heading = dialog?.querySelector(".import-preview h2");
+      const rect = heading?.getBoundingClientRect();
+      const bounds = dialog?.getBoundingClientRect();
+      return (
+        heading === document.activeElement &&
+        rect?.top >= bounds.top &&
+        rect.bottom < bounds.bottom
+      );
+    });
     await page
       .getByRole("dialog")
       .getByLabel("Meeting title", { exact: true })
@@ -338,7 +389,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: Desktop side sources, independent list scrolling, mobile inline expansion, loading/empty/error states, preview actions, embedded layouts, modal fit at 320/390/430/768/1440, diagonal touch scroll and background scroll restoration.",
+    "PASS: Desktop side sources, independent list scrolling, mobile inline expansion, loading/empty/error states, preview actions, embedded layouts, modal fit at 320/390/430/768/1440, diagonal touch scroll, background scroll restoration and automatic review scroll/focus after source selection on mobile and in dialogs.",
   );
 } catch (e) {
   console.error("Viewport", page.viewportSize());

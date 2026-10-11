@@ -1,3 +1,5 @@
+See **[Import review scroll update](docs/UPDATE-v3.1.5.md)** for automatic mobile and dialog navigation after choosing a Google source.
+
 See **[Meet sources and mobile dialog update](docs/UPDATE-v3.1.4.md)** for the desktop side panel, inline mobile sources, vertical popup scrolling and installation commands.
 
 See **[Duplicate protection and selector update](docs/UPDATE-v3.1.3.md)** for safer reprocessing, a steadier desktop dial and installation commands.
@@ -30,7 +32,7 @@ See **[UPDATE-v3.0.1](docs/UPDATE-v3.0.1.md)** for public policies, About/contac
 
 See **[UPDATE-v3](docs/UPDATE-v3.md)** for all seven productivity features, QoL updates, Mac installation and optional daily Earny reminders. The new reminder function requires Fluid compute on Vercel. See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
-# ShiftScript v3.1.4
+# ShiftScript v3.1.5
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -42,7 +44,7 @@ Read **[docs/UPDATE-v3.md](docs/UPDATE-v3.md)** for the complete v3 update, Mac 
 
 ## New project in VS Code
 
-Open the extracted **ShiftScript-v3.1.4** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
+Open the extracted **ShiftScript-v3.1.5** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
 
 ```bash
 npm ci

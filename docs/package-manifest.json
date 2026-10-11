@@ -1,12 +1,11 @@
 {
-  "version": "3.1.4",
-  "root": "ShiftScript-v3.1.4",
+  "version": "3.1.5",
+  "root": "ShiftScript-v3.1.5",
   "verification": {
     "unitApiTests": 105,
     "productionBuild": "passed",
     "browserSuitesPassed": [
-      "meet-layout-browser",
-      "integrations-browser"
+      "meet-layout-browser"
     ],
     "viewports": [
       320,
@@ -15,7 +14,10 @@
       768,
       1440
     ],
-    "experienceSuite": "blocked by browser screenshot timeout; not counted as passed",
+    "motion": [
+      "smooth",
+      "reduced-motion immediate"
+    ],
     "externalServices": "simulated"
   },
   "files": [
@@ -41,7 +43,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "d098545610098b7e90221423c0bb4fa314f951306705e70d143f95fc51eb5a73"
+      "sha256": "ec7187db8003ef936b3639f665e9b51679c993dcd63d16f16037ef236ea781d6"
     },
     {
       "path": "api/index.js",
@@ -89,7 +91,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "4ab84dcf211bb5630f9b177dcf8b3a273ba3275421b2c208a831be7f7b225b66"
+      "sha256": "7e4905d83e4d6f653aee7931bfee4952d23bf2c932da4c3597b39a87a34f451e"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -184,12 +186,16 @@
       "sha256": "5939189d6663f85f40b687500c766cb27b4496402f063381f46a9689077ee03b"
     },
     {
+      "path": "docs/UPDATE-v3.1.5.md",
+      "sha256": "d21311100d2535c7257bda22034f8721cd49e73a10a37ba15ed988a9aac59202"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "2fc1a66b6a9b394b4f1c38c5cb567f96369c64f4692fdd2a6844ee5532521d59"
+      "sha256": "09e7f41211f7254fd67097e9c5da16d0844fb5446839b230da23d022b80eca56"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -573,11 +579,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "d41cdfa35e3a1dc8962927782e39fe29cca21577487eb56f54c0a074f5cb5c6d"
+      "sha256": "6cf3b8a9f0bc3afca7a913f10e89b0888fc1eac6a15b99a027058e49693415a6"
     },
     {
       "path": "package.json",
-      "sha256": "43d5c32f5fcfdeb6d9866c73f3aabdac21a2e028daa3a487d0fe53a375bec475"
+      "sha256": "d82d86aeeb472efce800ba3f062981960de54707403762bd315f3a5c043ad570"
     },
     {
       "path": "public/about/index.html",
@@ -1013,7 +1019,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "c0f1b96a647fe3e91696055de14dec34edbe90a0e2f0078f1428214242619be3"
+      "sha256": "0391ea8cdffc4368f10ca2a92c40a486d3d6cf37055847c45a9fb9af8a2312f5"
     },
     {
       "path": "server/assistant.js",
@@ -1137,7 +1143,7 @@
     },
     {
       "path": "src/components/GoogleMeet.jsx",
-      "sha256": "e07f814b02ef7e69d66f93584722c528f591f694f29d102309addfa20a6f7aad"
+      "sha256": "7dcc1132839bce90a4f924602d8e6b483a7641f4e883369a64b9d4338d00d80f"
     },
     {
       "path": "src/components/Icons.jsx",
@@ -1265,7 +1271,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "21e48d0de97da3a9563d2676a5d2f44e8b2f6b8885f932750f65203ae3da1d73"
+      "sha256": "c545cd843f19f272831556ffce11bc20d5bb292142fe899d39c4f1c0b51f05d7"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -1341,7 +1347,7 @@
     },
     {
       "path": "tests/meet-layout-browser.js",
-      "sha256": "a7fe098d2ebed35ba2986db63e62264e1b7763e031d82866bafc1360e99bd85a"
+      "sha256": "9fc65b3b6de546291d0598ac35e28e3bcd564000d4bc02f7f713f6715cca8619"
     },
     {
       "path": "tests/meeting-duplicates.test.js",

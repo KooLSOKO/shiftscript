@@ -1,7 +1,7 @@
 import DisconnectButton from "./DisconnectButton.jsx";
 import MeetSources from "./MeetSources.jsx";
 import ProcessingLoader from "./ProcessingLoader.jsx";
-import { useEffect, useState, useId } from "react";
+import { useEffect, useState, useId, useRef } from "react";
 import { api, today, types } from "../lib.js";
 import { Video, Link, RefreshCw, FileText, CheckCircle2 } from "./Icons.jsx";
 export default function GoogleMeet({
@@ -19,6 +19,7 @@ export default function GoogleMeet({
   onBusyChange,
 }) {
   const sourcesId = useId();
+  const reviewRef = useRef(null);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [sourcesError, setSourcesError] = useState("");
   const [connection, setConnection] = useState(null),
@@ -63,6 +64,27 @@ export default function GoogleMeet({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+  useEffect(() => {
+    if (
+      !preview ||
+      (!embedded && !window.matchMedia("(max-width: 850px)").matches)
+    )
+      return;
+    // Wait for the fetched preview to mount before moving the page or dialog.
+    const frame = requestAnimationFrame(() => {
+      const review = reviewRef.current;
+      if (!review) return;
+      review.querySelector("h2")?.focus({ preventScroll: true });
+      review.scrollIntoView({
+        block: "start",
+        inline: "nearest",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [preview, embedded]);
   async function run(action, kind = "working") {
     setOperation(kind);
     setBusy(true);
@@ -441,9 +463,9 @@ export default function GoogleMeet({
             </section>
           )}
           {preview && (
-            <section className="panel import-preview">
+            <section ref={reviewRef} className="panel import-preview">
               <div className="section-heading">
-                <h2>Review your import</h2>
+                <h2 tabIndex={-1}>Review your import</h2>
                 <span className="badge">{sourceLabel}</span>
               </div>
               {alreadyImported && onOpenExisting && (
