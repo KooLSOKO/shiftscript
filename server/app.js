@@ -31,6 +31,7 @@ import {
 import {
   meetingInput,
   meetingId,
+  actionId,
   reviewSchema,
   bulkReviewInput,
   taskPatch,
@@ -110,7 +111,7 @@ export function createApp({
       assistantModel: assistantModel(),
       assistantReady:
         provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
-      version: "3.1.2",
+      version: "3.1.3",
     }),
   );
   installReminderRoute(app, {
@@ -706,17 +707,15 @@ export function createApp({
   });
   async function processMeeting(req, res, body, trustedSource) {
     const input = meetingInput.parse(body),
-      meetingKey =
-        trustedSource?.kind === "note"
-          ? hash(
-              meetingId(input) +
-                ":note:" +
-                trustedSource.noteId +
-                ":" +
-                trustedSource.noteVersion,
-            )
-          : meetingId(input),
+      meetingKey = meetingId(input, trustedSource),
       data = await read(req.workspaceId);
+    // Compute from saved snapshots too: pre-upgrade IDs included title/project.
+    // Preserve those IDs and all existing task/source links without a migration.
+    const findExisting = (s) =>
+      s.meetings.find(
+        (m) =>
+          m.processingFingerprint === meetingKey || meetingId(m) === meetingKey,
+      );
     authorize(data, req.actor, req.workspaceId, "write");
     checkProject(data, input.projectId);
     assertNoteSource(data, trustedSource, input.transcript);
@@ -732,7 +731,7 @@ export function createApp({
       !data.agendas.some((agenda) => agenda.id === input.preparation.agendaId)
     )
       fail(400, "This agenda is not in this workspace.");
-    const existing = data.meetings.find((m) => m.id === meetingKey);
+    const existing = findExisting(data);
     if (existing) return res.json({ meeting: existing, cached: true });
     if (data.meetings.length >= 50)
       fail(409, "Workspace meeting limit reached (50).");
@@ -747,6 +746,7 @@ export function createApp({
       ...(trustedSource ? { source: trustedSource } : {}),
       projectId: input.projectId || null,
       id: meetingKey,
+      processingFingerprint: meetingKey,
       createdAt,
       createdBy: req.uid,
       provider,
@@ -754,9 +754,10 @@ export function createApp({
       discussionPoints: result.discussionPoints,
       decisions: result.decisions,
       followUps: result.followUps,
-      proposals: result.actions.map((a, i) => ({
+      proposals: result.actions.map((a) => ({
         ...a,
-        id: hash(meetingKey + ":" + i),
+        id: hash(meetingKey + ":" + actionId(a)),
+        actionKey: actionId(a),
         owner: a.owner || "Unassigned",
         ownerUid: null,
         deadline: a.deadline || "Not specified",
@@ -768,18 +769,19 @@ export function createApp({
     const saved = await mutate(req, (s) => {
       checkProject(s, meeting.projectId);
       const sourceNote = assertNoteSource(s, trustedSource, input.transcript);
+      const current = findExisting(s);
+      const savedMeeting = current || meeting;
       if (
         sourceNote &&
-        !sourceNote.processed.some((p) => p.meetingId === meetingKey)
+        !sourceNote.processed.some((p) => p.meetingId === savedMeeting.id)
       ) {
         sourceNote.processed.push({
           version: sourceNote.version,
-          meetingId: meetingKey,
+          meetingId: savedMeeting.id,
           at: createdAt,
         });
       }
-      const current = s.meetings.find((m) => m.id === meetingKey);
-      if (current) return current;
+      if (current) return { meeting: current, cached: true };
       if (s.meetings.length >= 50)
         fail(409, "Workspace meeting limit reached.");
       if (meeting.preparation?.agendaId) {
@@ -790,9 +792,9 @@ export function createApp({
         agenda.meetingId = meeting.id;
       }
       s.meetings.push(meeting);
-      return meeting;
+      return { meeting, cached: false };
     });
-    res.status(201).json({ meeting: saved, cached: false });
+    res.status(saved.cached ? 200 : 201).json(saved);
   }
   installNotesRoutes(app, {
     read,
@@ -980,6 +982,8 @@ export function createApp({
     if (p.reviewStatus !== "pending") return false;
     const { decision, ...value } = input,
       fields = taskFields(value, s);
+    // Keep the AI action identity independent of edits made during review.
+    p.actionKey ||= actionId(p);
     if (decision === "approved") {
       if (
         !fields.ownerUid &&
@@ -989,10 +993,18 @@ export function createApp({
           400,
           "More than one member matches this owner. Choose the correct account before approval.",
         );
-      if (s.tasks.length >= 250)
-        fail(409, "Workspace task limit reached (250).");
-      const taskId = hash(meeting.id + ":" + p.id);
-      if (!s.tasks.some((t) => t.id === taskId))
+      const existingTask = s.tasks.find(
+        (t) =>
+          t.meetingId === meeting.id &&
+          (t.proposalId === p.id ||
+            (t.actionKey ||
+              meeting.proposals.find((v) => v.id === t.proposalId)
+                ?.actionKey) === p.actionKey),
+      );
+      const taskId = existingTask?.id || hash(meeting.id + ":" + p.id);
+      if (!existingTask && !s.tasks.some((t) => t.id === taskId)) {
+        if (s.tasks.length >= 250)
+          fail(409, "Workspace task limit reached (250).");
         s.tasks.push({
           ...fields,
           id: taskId,
@@ -1000,6 +1012,7 @@ export function createApp({
           meetingId: meeting.id,
           meetingTitle: meeting.title,
           proposalId: p.id,
+          actionKey: p.actionKey,
           evidence: p.evidence,
           sourceType: "meeting",
           status: "To Do",
@@ -1009,6 +1022,7 @@ export function createApp({
           notes: [],
           checklist: [],
         });
+      }
       p.taskId = taskId;
     }
     Object.assign(p, fields, {

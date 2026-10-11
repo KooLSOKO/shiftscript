@@ -1,3 +1,11 @@
+# Latest verification: ShiftScript v3.1.3
+
+Meeting duplicate regression coverage includes metadata changes, normalized text, legacy IDs, concurrent create/review, immutable action keys, retained edited/completed tasks, separate dates/discussions and workspace isolation. Notes repeats also preserve their original reviewed meeting after metadata changes.
+
+Browser smoke tests cover desktop immediate tracking, short mouse drags, diagonal hysteresis, accidental movement, touch/multitouch, arrow keys, reduced motion and disabled states at 320/390/768/1440px. The voice workflow reuses the existing transcript meeting and checks its review decisions, task count, status and notes. Integration and Notes browser suites cover their actual React/API flows with simulated providers. See [UPDATE-v3.1.3.md](UPDATE-v3.1.3.md) and [check-results.txt](check-results.txt).
+
+---
+
 # Latest verification: ShiftScript v3.1.0
 
 See [check-results.txt](check-results.txt) for the final run, and [UPDATE-v3.1.0.md](UPDATE-v3.1.0.md) for owner setup and live acceptance steps. The new assistant suite checks private per-user/per-workspace history and calendars, separate OAuth purpose/scope consent, grounded source/action allowlists, idempotency, missing dates, stale task guards, role/dependency checks, conflict detection, app-created-only events, uncertain outcomes and explicit email preview/send.

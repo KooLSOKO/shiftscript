@@ -227,6 +227,10 @@ try {
     .getByRole("heading", { name: "Portfolio notebook updated", exact: true })
     .waitFor();
   assert.equal((await store.list()).notes[0].version, 2);
+  assert.equal(
+    (await store.list()).notes[0].title,
+    "Portfolio notebook updated",
+  );
   for (const w of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width: w, height: 844 });
     await width("Note detail " + w);
@@ -251,6 +255,7 @@ try {
   assert.equal(data.tasks.length, 0);
   assert.equal(data.meetings.length, 1);
   assert.equal(data.meetings[0].source.noteVersion, 2);
+  assert.equal(data.notes[0].title, "Portfolio notebook updated");
   assert.equal(data.notes[0].processed[0].meetingId, data.meetings[0].id);
   await page.getByRole("button", { name: "Approve task", exact: true }).click();
   await page.waitForFunction(
@@ -289,6 +294,7 @@ try {
     )
     .waitFor();
   assert.equal(assistantNotes.length, 1);
+  assert.equal(assistantNotes[0].title, "Portfolio notebook updated");
   assert.match(assistantNotes[0].text, /Launch after approval/);
   await page
     .getByRole("log")
@@ -299,6 +305,8 @@ try {
     .getByRole("heading", { name: "Portfolio notebook updated", exact: true })
     .waitFor();
   await page.getByRole("button", { name: "Delete note", exact: true }).click();
+  assert.equal((await store.list()).meetings.length, 1);
+  assert.equal((await store.list()).tasks.length, 1);
   await page
     .getByRole("button", { name: "Confirm delete note", exact: true })
     .click();

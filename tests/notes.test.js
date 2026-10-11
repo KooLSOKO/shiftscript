@@ -262,6 +262,14 @@ test("processing a saved note preserves its source version and keeps all tasks p
       priority: p.priority,
     })
     .expect(200);
+  const repeated = await f
+    .call("post", "/notes/" + n.id + "/process")
+    .send({ ...fields, title: "Renamed notebook meeting", type: "Other" })
+    .expect(200);
+  assert.equal(repeated.body.cached, true);
+  assert.equal(repeated.body.meeting.id, m.id);
+  assert.equal(repeated.body.meeting.proposals[0].reviewStatus, "approved");
+  assert.equal(f.counts().analyses, 1);
   await f
     .call("delete", "/notes/" + n.id)
     .send({ expectedVersion: 1 })

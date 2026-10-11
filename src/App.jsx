@@ -1249,10 +1249,12 @@ export default function App() {
                         readOnly={readOnly}
                         onChange={reload}
                         onMeeting={openMeeting}
-                        onProcessed={(m) => {
+                        onProcessed={(m, result) => {
                           openMeeting(m.id);
                           setToast(
-                            "Note processed. Review the proposed tasks.",
+                            result?.cached
+                              ? "Already processed. Opened the saved meeting; reviews and task progress are unchanged."
+                              : "Note processed. Review the proposed tasks.",
                           );
                         }}
                         openId={noteToOpen}
@@ -1297,11 +1299,13 @@ export default function App() {
                       config={config}
                       existingMeetings={data.meetings}
                       onOpenExisting={(m) => openMeeting(m.id)}
-                      onCreated={async (m) => {
+                      onCreated={async (m, result) => {
                         await reload();
                         openMeeting(m.id);
                         setToast(
-                          "Google source processed. Review your proposed tasks.",
+                          result?.cached
+                            ? "Already processed. Opened the saved meeting; reviews and task progress are unchanged."
+                            : "Google source processed. Review your proposed tasks.",
                         );
                       }}
                     />
@@ -1889,12 +1893,16 @@ export default function App() {
                 setError(e.message);
               }
             }}
-            onCreated={async (m) => {
+            onCreated={async (m, result) => {
               await reload();
               setNewMeeting(false);
               setPreparedAgenda(null);
               openMeeting(m.id);
-              setToast("Meeting processed. Review the proposed tasks.");
+              setToast(
+                result?.cached
+                  ? "Already processed. Opened the saved meeting; reviews and task progress are unchanged."
+                  : "Meeting processed. Review the proposed tasks.",
+              );
             }}
           />
         )}

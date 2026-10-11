@@ -50,12 +50,14 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
   const buttons = useRef({});
   const gesture = useRef(null);
   const [preview, setPreview] = useState(null);
+  const [drag, setDrag] = useState(null);
   const chosen = modes.find((m) => m.id === (preview || value)) || modes[0];
   const SelectedIcon = chosen.Icon;
   useEffect(() => {
     if (disabled) {
       gesture.current = null;
       setPreview(null);
+      setDrag(null);
     }
   }, [disabled]);
   function select(id, focus = false) {
@@ -68,7 +70,20 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
     if (!start || e.pointerId !== start.pointerId) return null;
     const dx = e.clientX - start.x,
       dy = e.clientY - start.y;
-    return Math.hypot(dx, dy) >= 18 ? directionFrom(dx, dy) : null;
+    if (Math.hypot(dx, dy) < start.threshold) return null;
+    const next = directionFrom(dx, dy);
+    // Keep a near-diagonal movement from repeatedly flipping between modes.
+    if (start.candidate && start.candidate !== next) {
+      const horizontal = ["voice", "previous"].includes(start.candidate);
+      const nextHorizontal = ["voice", "previous"].includes(next);
+      if (
+        horizontal !== nextHorizontal &&
+        Math.abs(Math.abs(dx) - Math.abs(dy)) < 8
+      )
+        return start.candidate;
+    }
+    start.candidate = next;
+    return next;
   }
   return (
     <section
@@ -78,7 +93,8 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
       <div className="source-picker-heading">
         <h3>Start with your conversation</h3>
         <p id="source-picker-help">
-          Tap a mode, drag the dial or use arrow keys.
+          Click or tap a mode, or drag the dial and release. Arrow keys work
+          too.
         </p>
       </div>
       <div
@@ -99,6 +115,7 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
             role="radio"
             aria-label={label}
             aria-checked={value === id}
+            data-preview={preview === id || undefined}
             tabIndex={value === id ? 0 : -1}
             disabled={disabled}
             key={id}
@@ -119,7 +136,18 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
           className="source-stick"
           aria-hidden="true"
           data-direction={chosen.direction}
+          data-dragging={Boolean(drag) || undefined}
           data-disabled={disabled || undefined}
+          style={
+            drag
+              ? {
+                  "--drag-x": `${drag.x}px`,
+                  "--drag-y": `${drag.y}px`,
+                  "--drag-tilt-x": `${(-drag.y / 26) * 12}deg`,
+                  "--drag-tilt-y": `${(drag.x / 26) * 12}deg`,
+                }
+              : undefined
+          }
           onPointerDown={(e) => {
             if (
               disabled ||
@@ -132,18 +160,30 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
               x: e.clientX,
               y: e.clientY,
               pointerId: e.pointerId,
+              threshold: e.pointerType === "mouse" ? 10 : 18,
+              candidate: null,
+              baseX: value === "voice" ? 17 : value === "previous" ? -17 : 0,
+              baseY: value === "google" ? 17 : value === "text" ? -17 : 0,
             };
+            setDrag({ x: gesture.current.baseX, y: gesture.current.baseY });
             e.currentTarget.setPointerCapture(e.pointerId);
           }}
           onPointerMove={(e) => {
-            if (!disabled && gesture.current?.pointerId === e.pointerId)
+            if (!disabled && gesture.current?.pointerId === e.pointerId) {
+              const start = gesture.current;
+              const x = start.baseX + e.clientX - start.x;
+              const y = start.baseY + e.clientY - start.y;
+              const scale = Math.min(1, 26 / Math.max(1, Math.hypot(x, y)));
+              setDrag({ x: x * scale, y: y * scale });
               setPreview(offset(e));
+            }
           }}
           onPointerUp={(e) => {
             if (gesture.current?.pointerId !== e.pointerId) return;
             const id = offset(e);
             gesture.current = null;
             setPreview(null);
+            setDrag(null);
             if (e.currentTarget.hasPointerCapture(e.pointerId))
               e.currentTarget.releasePointerCapture(e.pointerId);
             if (id) select(id, true);
@@ -152,11 +192,13 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
             if (gesture.current?.pointerId !== e.pointerId) return;
             gesture.current = null;
             setPreview(null);
+            setDrag(null);
           }}
           onLostPointerCapture={(e) => {
             if (gesture.current?.pointerId !== e.pointerId) return;
             gesture.current = null;
             setPreview(null);
+            setDrag(null);
           }}
         >
           <div className="source-stick-around">

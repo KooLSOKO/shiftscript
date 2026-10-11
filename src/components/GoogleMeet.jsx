@@ -424,7 +424,7 @@ export default function GoogleMeet({
                           : {}),
                       }),
                     });
-                    await onCreated(v.meeting);
+                    await onCreated(v.meeting, { cached: v.cached });
                   }, "processing");
                 }}
               >

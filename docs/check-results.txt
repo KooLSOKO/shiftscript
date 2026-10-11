@@ -1,15 +1,13 @@
-ShiftScript v3.1.2 — verification record
+ShiftScript v3.1.3 — verification record
 Date: 2026-10-11
 
-npm test: PASS — 98 tests, 0 failures (foreground execution, exit 0).
-npm run build: PASS — 331 modules; production build completed in 2.60s (exit 0).
-Main JavaScript chunk: 497.72 kB. Notes is lazy loaded (15.79 kB).
+npm test: PASS — 105 tests, 0 failures (exit 0).
+npm run build: PASS — 331 modules; production build completed in 2.69s (exit 0).
+Main JavaScript chunk: 498.87 kB. Notes is lazy loaded (15.82 kB).
 
-Provider adapters were simulated. No live Gemini, Firebase, Calendar or email calls were made.
+PASS: meeting duplicate regression tests for metadata changes, normalized transcript, review retention, edited task status/checklist/notes, legacy IDs/links, concurrent submissions/approvals, equivalent proposal approval, distinct meetings and workspace isolation.
+PASS: browser smoke workflow, desktop pointer tracking/diagonal stability, short deliberate drags and accidental movement, touch/multitouch, click/keyboard selection, reduced motion, disabled states, 320/390/768/1440px layouts, actual reuse message after voice transcription, retained reviews/task count/progress and no page errors.
+PASS: Google import, task approval, email preview/send, 320/390/430px phone layouts, 768px tablet, 844px landscape, modal controls and drawer keyboard checks.
+PASS: Notes real photo compression/crop/rotation, extraction review/edit/save, typed notes, errors, processing/approval/source links, Shifty note citations, deletion safety and 320/390/768/1440px layouts. Re-run in isolation after an intermittent source-label mismatch in the first parallel browser run.
 
-Browser verification:
-
-PASS: Notes real photo compression/crop/rotation, extraction review/edit/save, typed notes, safe errors, processing/approval/source links, Shifty note citations, deletion safety and mobile layouts (320/390/768/1440). No live provider calls.
-PASS: Shifty four avatar states, reduced motion and grounded chat, private history, calendar selection/review, task approval, recap review/send, recovery, keyboard and mobile layouts (320/390/768/1440).
-PASS: notifications/read, aliases/profile, dependencies, bulk priority/undo, saved views, global search, persisted schedules/bulk Calendar, saved agendas/follow-up comparison, activity, mobile 390/320 px; no live external calls.
-PASS: completed cards/rows collapse and reopen at 320/390/768/1440px, details and selection preserved, no inline Calendar, persistence after reload; all seven dashboard shortcuts, keyboard Enter/Space, correct task subsets, all pending meetings, stale filter reset, workspace isolation/reset, zero totals, Manrope and 320/390/768/2048px layouts.
+Provider adapters were simulated. No live Gemini, Firebase, Calendar or email calls were made. Live deployment acceptance is owner-managed.

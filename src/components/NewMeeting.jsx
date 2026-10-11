@@ -217,7 +217,7 @@ export default function NewMeeting({
       } catch {
         /* Storage unavailable. */
       }
-      await onCreated(result.meeting);
+      await onCreated(result.meeting, { cached: result.cached });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -280,7 +280,7 @@ export default function NewMeeting({
     setSourceMode("text");
     setError("");
   }
-  async function importedCreated(meeting) {
+  async function importedCreated(meeting, result) {
     // A Google import must not delete an unrelated text draft. Clear only an
     // empty draft created while opening this modal.
     if (!latest.current.transcript.trim() && !latest.current.title.trim()) {
@@ -298,7 +298,7 @@ export default function NewMeeting({
         /* Existing local drafts remain available on failure. */
       }
     }
-    await onCreated(meeting);
+    await onCreated(meeting, result);
   }
   async function openSaved(meeting) {
     try {

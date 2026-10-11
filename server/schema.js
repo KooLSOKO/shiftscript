@@ -189,15 +189,25 @@ export const bulkReviewInput = z
 export const hash = (v) =>
   createHash("sha256").update(v).digest("hex").slice(0, 28);
 export const normalize = (t) => t.replace(/\s+/g, " ").trim().toLowerCase();
-export const meetingId = (i) =>
+// Identity follows the discussion, not editable labels or where it is filed.
+// Notes keep their explicit source version so historical snapshots stay separate.
+export const meetingId = (i, source = i.source) =>
   hash(
     JSON.stringify([
-      normalize(i.title),
       i.date,
-      i.type,
       normalize(i.transcript),
-      ...(i.projectId ? [i.projectId] : []),
-      ...(i.preparation ? [i.preparation] : []),
+      ...(source?.kind === "note"
+        ? ["note", source.noteId, source.noteVersion]
+        : []),
+    ]),
+  );
+export const actionId = (a) =>
+  hash(
+    JSON.stringify([
+      normalize(a.title),
+      normalize(a.evidence),
+      normalize(a.owner || "Unassigned"),
+      normalize(a.deadline || "Not specified"),
     ]),
   );
 export function resolveDeadline(wording, meetingDate) {
@@ -234,7 +244,7 @@ export function groundAnalysis(raw, input) {
       a.owner = null;
     if (a.deadline && !normalize(a.evidence).includes(normalize(a.deadline)))
       a.deadline = null;
-    const key = hash(normalize(a.title) + normalize(a.evidence));
+    const key = actionId(a);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

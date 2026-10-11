@@ -460,7 +460,7 @@ function ProcessNote({
         method: "POST",
         body: JSON.stringify({ ...form, expectedVersion: note.version }),
       });
-      if (mounted.current) await onCreated(r.meeting);
+      if (mounted.current) await onCreated(r.meeting, { cached: r.cached });
     } catch (e) {
       if (mounted.current) setError(e.message);
     } finally {
@@ -805,10 +805,10 @@ export default function Notes({
           workspaceId={workspaceId}
           projects={projects}
           onClose={() => setProcessing(null)}
-          onCreated={async (m) => {
+          onCreated={async (m, result) => {
             setProcessing(null);
             await onChange();
-            onProcessed(m);
+            onProcessed(m, result);
           }}
         />
       )}

@@ -4298,8 +4298,8 @@ textarea {
     inset 0 3px 3px #ffffff70,
     inset 0 -3px 3px #173f9c;
   transition:
-    transform 360ms cubic-bezier(0.22, 1.35, 0.36, 1),
-    box-shadow 300ms ease-out;
+    transform 180ms ease-out,
+    box-shadow 180ms ease-out;
 }
 .source-stick-inside {
   position: relative;
@@ -4343,16 +4343,25 @@ textarea {
   box-shadow: 0 0 4px #fff;
 }
 .source-stick[data-direction="up"] .source-stick-knob {
-  transform: translateY(calc(-1 * var(--stick-travel))) rotateX(24deg);
+  transform: translateY(calc(-1 * var(--stick-travel))) rotateX(12deg);
 }
 .source-stick[data-direction="right"] .source-stick-knob {
-  transform: translateX(var(--stick-travel)) rotateY(24deg);
+  transform: translateX(var(--stick-travel)) rotateY(12deg);
 }
 .source-stick[data-direction="down"] .source-stick-knob {
-  transform: translateY(var(--stick-travel)) rotateX(-24deg);
+  transform: translateY(var(--stick-travel)) rotateX(-12deg);
 }
 .source-stick[data-direction="left"] .source-stick-knob {
-  transform: translateX(calc(-1 * var(--stick-travel))) rotateY(-24deg);
+  transform: translateX(calc(-1 * var(--stick-travel))) rotateY(-12deg);
+}
+.source-stick[data-dragging] .source-stick-knob {
+  transform: translate(var(--drag-x), var(--drag-y))
+    rotateX(var(--drag-tilt-x)) rotateY(var(--drag-tilt-y));
+  transition: none;
+}
+.source-direction[data-preview="true"] {
+  outline: 2px solid #2458e8;
+  outline-offset: 2px;
 }
 /* Sliding icon panel inspired by Uiverse / AKAspidey01. */
 .disconnect-button {
