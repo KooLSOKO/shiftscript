@@ -157,3 +157,7 @@ The browser smoke suite checks four directional choices, keyboard focus, all mou
 ## Notes workflows (v3.1.2)
 
 `notes.test.js` verifies strict Gemini image contracts, signature/size validation, quota, no stored image bytes, workspace permissions, link validation, idempotent saves, stale versions, reviewed task processing, canonical source versions, historical tasks after deletion, revocation during OCR and Shifty note excerpts. `notes-browser.js` uses a synthetic noisy 3200×2200 notebook PNG and the real browser compression/crop/rotation code. It verifies extraction does not happen on upload, text correction/save, save without tasks, process/approve, backlinks, Shifty sources, deletion, recoverable errors and 320/390/768/1440px layouts. Provider adapters are fictional and never send photos to Google or real mail.
+
+## v3.1.4 layout regression
+
+After `npm run build`, run `node tests/meet-layout-browser.js` with Playwright Chromium installed. The suite uses fictional local data and mocked Google sources. It verifies side/inline placement, loading/empty/error states, selection changes, preview actions, narrow embedded layouts, horizontal scroll bounds, diagonal touch scrolling, and page scroll restoration. The test is included in `npm run test:ui`.

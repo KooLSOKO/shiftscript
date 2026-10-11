@@ -143,3 +143,7 @@ Meeting identity hashes the normalized transcript and meeting date. Title, type,
 Proposals carry an immutable action key built from original normalized title, evidence, owner and deadline. IDs no longer depend on array order. Review checks that key and the proposal/task link before inserting a task; linking existing work leaves task fields and progress intact. Cached flags propagate through text/voice, Google and Notes callbacks to the reuse message.
 
 The directional dial uses immediate pointer tracking with bounded travel, a 10px mouse dead zone (18px for touch), diagonal hysteresis and release-to-commit. Held movement has no transition; settled movement uses 180ms ease-out with no overshoot. Click/tap labels and keyboard selection remain available.
+
+## v3.1.4 responsive Meet sources
+
+GoogleMeet keeps the selected meeting separate from its fetched artifacts, so loading and lookup errors appear beside the selection. MeetSources renders the same source choices in a right panel for sufficiently wide containers and beneath the selected row for narrow/embedded views. CSS container queries use available panel width rather than device labels. The meeting list has independent desktop scrolling. Modal bounds and minmax form columns prevent horizontal overflow; a reference-counted page scroll lock restores prior overflow styles when the final dialog closes.

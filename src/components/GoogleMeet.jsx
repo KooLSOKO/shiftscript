@@ -1,6 +1,7 @@
 import DisconnectButton from "./DisconnectButton.jsx";
+import MeetSources from "./MeetSources.jsx";
 import ProcessingLoader from "./ProcessingLoader.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
 import { api, today, types } from "../lib.js";
 import { Video, Link, RefreshCw, FileText, CheckCircle2 } from "./Icons.jsx";
 export default function GoogleMeet({
@@ -17,6 +18,9 @@ export default function GoogleMeet({
   onBeforeConnect,
   onBusyChange,
 }) {
+  const sourcesId = useId();
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [sourcesError, setSourcesError] = useState("");
   const [connection, setConnection] = useState(null),
     [busy, setBusy] = useState(false),
     [operation, setOperation] = useState("working"),
@@ -87,7 +91,61 @@ export default function GoogleMeet({
     );
     setCursor(result.cursor);
     setListed(true);
+    if (!next) {
+      setArtifacts(null);
+      setSelectedMeeting(null);
+      setSourcesError("");
+    }
+  }
+  async function showSources(meeting) {
+    if (selectedMeeting?.name === meeting.name) {
+      setSelectedMeeting(null);
+      setArtifacts(null);
+      return;
+    }
+    setSelectedMeeting(meeting);
     setArtifacts(null);
+    setSourcesError("");
+    setPreview(null);
+    await run(async () => {
+      try {
+        const result = await api(
+          "/google/artifacts?name=" + encodeURIComponent(meeting.name),
+        );
+        setArtifacts({ ...result, meeting });
+      } catch (e) {
+        setSourcesError(e.message);
+      }
+    }, "sources");
+  }
+  function sourcePanel(id) {
+    return (
+      <MeetSources
+        id={id}
+        meeting={selectedMeeting}
+        artifacts={artifacts?.artifacts}
+        loading={busy && operation === "sources"}
+        error={sourcesError}
+        busy={busy}
+        readOnly={readOnly}
+        onClose={() => {
+          setSelectedMeeting(null);
+          setArtifacts(null);
+        }}
+        onPreview={(artifact, meeting) =>
+          run(() =>
+            select(
+              { kind: "artifact", name: artifact.name },
+              meeting.startTime
+                ? new Date(meeting.startTime).toLocaleDateString("en-CA", {
+                    timeZone: "Africa/Johannesburg",
+                  })
+                : today(),
+            ),
+          )
+        }
+      />
+    );
   }
   async function select(selection, date) {
     const v = await api("/google/preview", {
@@ -203,6 +261,7 @@ export default function GoogleMeet({
                     setPreview(null);
                     setMeetings([]);
                     setArtifacts(null);
+                    setSelectedMeeting(null);
                     setListed(false);
                   })
                 }
@@ -274,118 +333,111 @@ export default function GoogleMeet({
           </section>
           {listed && (
             <section className="panel recent-meeting-panel">
-              <div className="section-heading">
-                <h2>Recent meetings</h2>
-                <span className="badge">{meetings.length}</span>
-              </div>
-              {meetings.length > 0 && (
-                <label className="block mb-3">
-                  Search recent meetings
-                  <input
-                    aria-label="Search recent Google meetings"
-                    placeholder="Search date, time or meeting reference"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </label>
-              )}
-              {meetings.length ? (
-                <div className="google-meetings">
-                  {displayedMeetings.length === 0 && (
-                    <p className="hint">
-                      No meetings match your search. Clear it to see all loaded
-                      meetings.
-                    </p>
+              <div className="meet-source-layout">
+                <div className="meet-list-column">
+                  <div className="section-heading">
+                    <h2>Recent meetings</h2>
+                    <span className="badge">{meetings.length}</span>
+                  </div>
+                  {meetings.length > 0 && (
+                    <label className="block mb-3">
+                      Search recent meetings
+                      <input
+                        aria-label="Search recent Google meetings"
+                        placeholder="Search date, time or meeting reference"
+                        value={search}
+                        onChange={(e) => {
+                          setSearch(e.target.value);
+                          setSelectedMeeting(null);
+                          setArtifacts(null);
+                        }}
+                      />
+                    </label>
                   )}
-                  {displayedMeetings.map((m, i) => (
-                    <div className="google-meeting" key={m.name}>
-                      <div>
-                        <h3>
-                          {m.startTime
-                            ? new Date(m.startTime).toLocaleString("en-ZA", {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })
-                            : "Meeting " + (i + 1)}
-                        </h3>
+                  {meetings.length ? (
+                    <div className="google-meetings">
+                      {displayedMeetings.length === 0 && (
                         <p className="hint">
-                          {m.endTime ? "Completed" : "In progress"}
-                          {existingMeetings.some((saved) =>
-                            saved.source?.artifact?.startsWith(m.name + "/"),
-                          ) && " · Already imported"}
+                          No meetings match your search. Clear it to see all
+                          loaded meetings.
                         </p>
-                      </div>
-                      <button
-                        className="button small"
-                        disabled={busy}
-                        onClick={() =>
-                          run(async () => {
-                            const v = await api(
-                              "/google/artifacts?name=" +
-                                encodeURIComponent(m.name),
-                            );
-                            setArtifacts({ ...v, meeting: m });
-                          })
-                        }
-                      >
-                        View sources
-                      </button>
+                      )}
+                      {displayedMeetings.map((m, i) => (
+                        <div
+                          className={
+                            "google-meeting" +
+                            (selectedMeeting?.name === m.name
+                              ? " is-selected"
+                              : "")
+                          }
+                          key={m.name}
+                        >
+                          <div className="google-meeting-row">
+                            <div>
+                              <h3>
+                                {m.startTime
+                                  ? new Date(m.startTime).toLocaleString(
+                                      "en-ZA",
+                                      {
+                                        dateStyle: "medium",
+                                        timeStyle: "short",
+                                      },
+                                    )
+                                  : "Meeting " + (i + 1)}
+                              </h3>
+                              <p className="hint">
+                                {m.endTime ? "Completed" : "In progress"}
+                                {existingMeetings.some((saved) =>
+                                  saved.source?.artifact?.startsWith(
+                                    m.name + "/",
+                                  ),
+                                ) && " · Already imported"}
+                              </p>
+                            </div>
+                            <button
+                              className="button small"
+                              disabled={busy}
+                              aria-expanded={selectedMeeting?.name === m.name}
+                              aria-controls={
+                                selectedMeeting?.name === m.name
+                                  ? `${sourcesId}-desktop ${sourcesId}-inline`
+                                  : undefined
+                              }
+                              onClick={() => showSources(m)}
+                            >
+                              {selectedMeeting?.name === m.name
+                                ? "Hide sources"
+                                : "View sources"}
+                            </button>
+                          </div>
+                          {selectedMeeting?.name === m.name && (
+                            <div className="meet-inline-sources">
+                              {sourcePanel(`${sourcesId}-inline`)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="summary">
-                  No meetings were returned. Try your Google Docs notes link
-                  above.
-                </p>
-              )}
-              {cursor && (
-                <button
-                  className="button mt-4"
-                  disabled={busy}
-                  onClick={() => run(() => load(true))}
-                >
-                  Load more meetings
-                </button>
-              )}
-              {artifacts && (
-                <div className="source-picker">
-                  <h3>Available sources</h3>
-                  {artifacts.artifacts.length ? (
-                    artifacts.artifacts.map((a, i) => (
-                      <button
-                        className="button"
-                        key={a.name}
-                        disabled={busy || readOnly || !a.ready}
-                        onClick={() =>
-                          run(() =>
-                            select(
-                              { kind: "artifact", name: a.name },
-                              artifacts.meeting.startTime
-                                ? new Date(
-                                    artifacts.meeting.startTime,
-                                  ).toLocaleDateString("en-CA", {
-                                    timeZone: "Africa/Johannesburg",
-                                  })
-                                : today(),
-                            ),
-                          )
-                        }
-                      >
-                        <FileText size={17} />{" "}
-                        {a.kind === "notes" ? "Gemini notes" : "Transcript"}{" "}
-                        {i + 1} · {a.ready ? "Preview" : "Still preparing"}
-                      </button>
-                    ))
                   ) : (
-                    <p className="hint">
-                      No generated notes or transcripts yet. Enable note-taking
-                      in Meet for your next eligible meeting, or use an existing
-                      notes link.
+                    <p className="summary">
+                      No meetings were returned. Try your Google Docs notes link
+                      above.
                     </p>
                   )}
+                  {cursor && (
+                    <button
+                      className="button mt-4"
+                      disabled={busy}
+                      onClick={() => run(() => load(true))}
+                    >
+                      Load more meetings
+                    </button>
+                  )}
                 </div>
-              )}
+                <aside className="meet-desktop-sources">
+                  {sourcePanel(`${sourcesId}-desktop`)}
+                </aside>
+              </div>
             </section>
           )}
           {preview && (
@@ -538,7 +590,7 @@ export default function GoogleMeet({
           )}
         </>
       )}
-      {busy && operation !== "processing" && (
+      {busy && operation !== "processing" && operation !== "sources" && (
         <p className="integration-busy" role="status">
           <RefreshCw className="spin" size={17} /> Working on it…
         </p>

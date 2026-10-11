@@ -1060,7 +1060,7 @@ td select {
 }
 .field-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
 }
 .modal-actions {
@@ -4355,8 +4355,8 @@ textarea {
   transform: translateX(calc(-1 * var(--stick-travel))) rotateY(-12deg);
 }
 .source-stick[data-dragging] .source-stick-knob {
-  transform: translate(var(--drag-x), var(--drag-y))
-    rotateX(var(--drag-tilt-x)) rotateY(var(--drag-tilt-y));
+  transform: translate(var(--drag-x), var(--drag-y)) rotateX(var(--drag-tilt-x))
+    rotateY(var(--drag-tilt-y));
   transition: none;
 }
 .source-direction[data-preview="true"] {
@@ -5265,4 +5265,154 @@ textarea {
   .notes-page .note-card {
     transition: none;
   }
+}
+
+/* v3.1.4: sources stay beside their meeting; dialogs scroll vertically. */
+.google-page {
+  container-type: inline-size;
+}
+.meet-source-layout,
+.meet-list-column,
+.meet-desktop-sources,
+.meet-inline-sources {
+  min-width: 0;
+}
+.meet-desktop-sources {
+  display: none;
+}
+.google-meeting {
+  display: block;
+}
+.google-meeting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.google-meeting-row > div {
+  min-width: 0;
+}
+.google-meeting-row > .button {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.google-meeting.is-selected {
+  border-color: #99b4ff;
+}
+.google-meeting.is-selected .google-meeting-row > .button {
+  color: var(--ss-blue);
+  background: #eaf1ff;
+  border-color: #99b4ff;
+}
+.meet-sources {
+  border: 1px solid #dce5f8;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.meet-sources .section-heading {
+  margin-bottom: 0;
+  gap: 12px;
+}
+.meet-sources h3 {
+  font-size: 16px;
+  font-weight: 800;
+}
+.meet-source-date {
+  color: #34456a;
+  font-weight: 700;
+}
+.meet-sources .button {
+  min-height: 48px;
+  width: 100%;
+}
+.meet-sources .button > span {
+  min-width: 0;
+}
+.meet-sources .button > svg {
+  flex-shrink: 0;
+}
+@container (min-width: 760px) {
+  .meet-source-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+    align-items: start;
+    gap: 28px;
+  }
+  .meet-desktop-sources {
+    display: block;
+  }
+  .meet-desktop-sources .source-picker {
+    margin: 0;
+    max-height: min(640px, 65dvh);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+  .meet-inline-sources {
+    display: none;
+  }
+  .meet-list-column .google-meetings {
+    max-height: min(560px, 60dvh);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-right: 10px;
+  }
+}
+@media (max-width: 650px) {
+  .google-meeting-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .google-meeting-row > .button {
+    width: 100%;
+  }
+  .meet-inline-sources .source-picker {
+    margin-top: 12px;
+    padding: 15px;
+  }
+}
+.modal {
+  max-width: calc(100% - 16px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  overflow-wrap: anywhere;
+}
+.modal > *,
+.modal .field-grid > *,
+.modal .panel,
+.modal label {
+  min-width: 0;
+  max-width: 100%;
+}
+.modal input,
+.modal select,
+.modal textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+.modal-heading {
+  gap: 16px;
+}
+.modal-heading h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modal-heading > .icon-button {
+  flex-shrink: 0;
+}
+.modal pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* Keep list actions under the pointer when the layout changes. */
+.google-meeting-row > .button:hover:not(:disabled),
+.google-meeting-row > .button:active:not(:disabled) {
+  transform: none;
 }
