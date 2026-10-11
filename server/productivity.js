@@ -211,6 +211,10 @@ export function recordChanges(s, before, actor, withUndo = true) {
           );
       }
   }
+  for (const prior of before.meetings) {
+    if (!s.meetings.some((meeting) => meeting.id === prior.id))
+      log("deleted a meeting", "meeting", prior.id, prior.title);
+  }
   for (const project of s.projects) {
     const prior = before.projects.find((item) => item.id === project.id);
     if (!prior || JSON.stringify(prior) !== JSON.stringify(project))

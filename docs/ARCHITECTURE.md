@@ -147,3 +147,7 @@ The directional dial uses immediate pointer tracking with bounded travel, a 10px
 ## v3.1.4 responsive Meet sources
 
 GoogleMeet keeps the selected meeting separate from its fetched artifacts, so loading and lookup errors appear beside the selection. MeetSources renders the same source choices in a right panel for sufficiently wide containers and beneath the selected row for narrow/embedded views. CSS container queries use available panel width rather than device labels. The meeting list has independent desktop scrolling. Modal bounds and minmax form columns prevent horizontal overflow; a reference-counted page scroll lock restores prior overflow styles when the final dialog closes.
+
+## Meeting deletion (v3.1.6)
+
+Workspace responses include a SHA-256 `deletionVersion` derived from canonical meeting content and all linked tasks. `DELETE /api/meetings/:id` requires `{ confirm: true, expectedVersion }`. The transaction rechecks write permission, email reservations and the current revision, removes the meeting and linked tasks, prunes dependent-task/source references, invalidates relevant undo groups and records activity. No external files or calendar events are deleted. Task deletion retains its existing version guard, dependency block and five-minute undo.

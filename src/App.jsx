@@ -501,6 +501,25 @@ export default function App() {
         expires: Date.now() + 300000,
       });
   }
+  async function meetingDeleted(result) {
+    const id = workspaceId,
+      uid = actor.uid;
+    if (current.current.uid !== uid || current.current.workspaceId !== id)
+      return;
+    setMeetingId(null);
+    if (result.deletedTaskIds.includes(taskId)) setTaskId(null);
+    setUndo(null);
+    setToast(
+      `Meeting deleted${result.deletedTaskCount ? ` with ${result.deletedTaskCount} linked task${result.deletedTaskCount === 1 ? "" : "s"}` : ""}.`,
+    );
+    try {
+      await reload(id);
+    } catch (error) {
+      setError(
+        "Meeting deleted, but the workspace could not refresh. Refresh the page to load the latest data.",
+      );
+    }
+  }
   function toggleSelected(id) {
     setSelectedIds((previous) =>
       previous.includes(id)
@@ -1330,6 +1349,7 @@ export default function App() {
                         readOnly={readOnly}
                         reload={reload}
                         onBack={() => setMeetingId(null)}
+                        onDeleted={meetingDeleted}
                         onTask={setTaskId}
                         onError={setError}
                       />
@@ -1954,7 +1974,15 @@ export default function App() {
             readOnly={readOnly}
             onClose={() => setTaskId(null)}
             tasks={data.tasks}
-            onDeleted={taskSaved}
+            onDeleted={async (result) => {
+              try {
+                await taskSaved(result);
+              } catch (error) {
+                setError(
+                  "Task deleted, but the workspace could not refresh. Refresh the page to load the latest data.",
+                );
+              }
+            }}
             onSaved={taskSaved}
             onCalendar={() => {
               setTaskId(null);

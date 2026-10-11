@@ -1,24 +1,19 @@
 {
-  "version": "3.1.5",
-  "root": "ShiftScript-v3.1.5",
+  "version": "3.1.6",
+  "root": "ShiftScript-v3.1.6",
   "verification": {
-    "unitApiTests": 105,
+    "unitApiTests": 110,
     "productionBuild": "passed",
     "browserSuitesPassed": [
-      "meet-layout-browser"
+      "deletion-browser"
     ],
     "viewports": [
       320,
       390,
-      430,
       768,
       1440
     ],
-    "motion": [
-      "smooth",
-      "reduced-motion immediate"
-    ],
-    "externalServices": "simulated"
+    "externalServices": "isolated local / simulated"
   },
   "files": [
     {
@@ -43,7 +38,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "ec7187db8003ef936b3639f665e9b51679c993dcd63d16f16037ef236ea781d6"
+      "sha256": "9fee0cd080096e027ad30b8bea07ab8c1e65690f72554d851325f02c2717787d"
     },
     {
       "path": "api/index.js",
@@ -55,7 +50,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "de363bc177d30d9434aa927ad90cc677b4e49538ab4660f5e21e2f4481bffeb8"
+      "sha256": "5640e498c5d48c460b0d467efd9a46f60cb185da0b0b7232dfbe973d28bd3bee"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -91,7 +86,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "7e4905d83e4d6f653aee7931bfee4952d23bf2c932da4c3597b39a87a34f451e"
+      "sha256": "4c23a626c84055d9bc19d83dcccedecd746a129033ddfc233c919358eb593dc5"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -190,12 +185,16 @@
       "sha256": "d21311100d2535c7257bda22034f8721cd49e73a10a37ba15ed988a9aac59202"
     },
     {
+      "path": "docs/UPDATE-v3.1.6.md",
+      "sha256": "20c4c756eb8295ec6e21bfc5e3b687af9077cf14086f89f0130b8951ff2696be"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "09e7f41211f7254fd67097e9c5da16d0844fb5446839b230da23d022b80eca56"
+      "sha256": "18afd0224313061eae6377ff49f7ee90daf34be57aafcb8d1e46bbb7fe132130"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -579,11 +578,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "6cf3b8a9f0bc3afca7a913f10e89b0888fc1eac6a15b99a027058e49693415a6"
+      "sha256": "584707fed0af34c43d6a3bc8850e920f22a8046e15d7c6dc62c2ac03c70aaf6e"
     },
     {
       "path": "package.json",
-      "sha256": "d82d86aeeb472efce800ba3f062981960de54707403762bd315f3a5c043ad570"
+      "sha256": "339fda278f7089677adb237bafca4d996e73ee51c418409539c35b449bd4e936"
     },
     {
       "path": "public/about/index.html",
@@ -1019,7 +1018,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "0391ea8cdffc4368f10ca2a92c40a486d3d6cf37055847c45a9fb9af8a2312f5"
+      "sha256": "e0e083a05c2c22ff0ad1ae9582048088c91697fff26b8a9186c252090f712e46"
     },
     {
       "path": "server/assistant.js",
@@ -1036,6 +1035,10 @@
     {
       "path": "server/collaboration.js",
       "sha256": "79d96ef76f15756077c5ce72f7587169ee31bff1cd57d29b4300e5637f50ca30"
+    },
+    {
+      "path": "server/deletion.js",
+      "sha256": "388454366f6ae0de36130c9390c868991f5df81aeda11e648d7994a364eecd45"
     },
     {
       "path": "server/firebase.js",
@@ -1067,7 +1070,7 @@
     },
     {
       "path": "server/productivity.js",
-      "sha256": "dcde3405fe1c221b9ab11cd1d0e30b39d2ec36b8e6ca85e5bf52c7738198e6a5"
+      "sha256": "cec97bfb64433ab7dca93917f0577395f7ba541731cc56ca8168c170d4ea6356"
     },
     {
       "path": "server/recap-email.js",
@@ -1103,7 +1106,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "1d81f8dec7961c31b83efd4b8287e4ed5bfb998775765057c0b61052bd2dba4d"
+      "sha256": "3eab5b6f5bc293e95a7663a510eefa0c3442606de818ce657ba0bbc8e6ee5be6"
     },
     {
       "path": "src/app-entry.jsx",
@@ -1134,6 +1137,10 @@
       "sha256": "ff57151f514f805ce1af4f6689b2098a5ccb953d8c8941c40cb951cf082efb63"
     },
     {
+      "path": "src/components/ConfirmDelete.jsx",
+      "sha256": "6163d105edb41776d2619c786d0ee8e65715d9136653f1fc562e9a36eb84bf97"
+    },
+    {
       "path": "src/components/DisconnectButton.jsx",
       "sha256": "e4cdef2c48bd4f88932fb703554981da8d30341187b5a26c42229f2f7d9fd2ae"
     },
@@ -1155,7 +1162,7 @@
     },
     {
       "path": "src/components/MeetingDetail.jsx",
-      "sha256": "bb05f83520fc505b17444ff4094b7a1b64de5bac879572c37a382512cb756cf1"
+      "sha256": "8744ba797b4cb1fba3a909d0a1cbf826373f24ff01d54c0e9962e3f707933754"
     },
     {
       "path": "src/components/MeetingPreparation.jsx",
@@ -1231,7 +1238,7 @@
     },
     {
       "path": "src/components/TaskEditor.jsx",
-      "sha256": "084e28138e2a86ce806b3e49fa2966a3722980c30fc876414dd5c4e1b9a49759"
+      "sha256": "d4191bba38ab48ed703b70da3ec06839b9f5ff14fc5e234dff48be96ad0a7547"
     },
     {
       "path": "src/components/TaskFilters.jsx",
@@ -1271,7 +1278,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "c545cd843f19f272831556ffce11bc20d5bb292142fe899d39c4f1c0b51f05d7"
+      "sha256": "1513dc293e55f23fa1326686584e9b4c4ff926158e00e3ef346fe1b3bcc458db"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -1312,6 +1319,14 @@
     {
       "path": "tests/dashboard-browser.js",
       "sha256": "ac98c444ec1fe3ffa1c1f9369f86bb3243e051229ac40c5aae1b67d3773448ba"
+    },
+    {
+      "path": "tests/deletion-browser.js",
+      "sha256": "280c86035f3969127bc098b6f20279eb8526ed7525a8e779aad0e1792ae46473"
+    },
+    {
+      "path": "tests/deletion.test.js",
+      "sha256": "e0f23f48b81b4898d59ac9fe64e99e66078cc6fe6974201865ad9793a971f9b1"
     },
     {
       "path": "tests/experience-browser.js",

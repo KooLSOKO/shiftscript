@@ -5422,3 +5422,49 @@ textarea {
 .google-meeting-row > .button:active:not(:disabled) {
   transform: none;
 }
+
+/* Destructive actions stay legible and touch-friendly on every screen. */
+.button.delete-outline {
+  min-height: 44px;
+  color: #b42318;
+  border: 1px solid #f2b8b5;
+  background: #fff5f4;
+}
+.button.delete-outline:hover {
+  background: #ffe5e2;
+  border-color: #b42318;
+}
+.button.delete-primary {
+  min-height: 44px;
+  color: white;
+  background: #b42318;
+  border: 1px solid #b42318;
+}
+.button.delete-primary:hover {
+  background: #911c13;
+}
+.delete-confirm-content {
+  display: grid;
+  gap: 14px;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.delete-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+.delete-confirm-actions .button {
+  min-height: 44px;
+}
+.task-delete-action {
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width: 480px) {
+  .delete-confirm-actions .button {
+    flex: 1 1 160px;
+  }
+}

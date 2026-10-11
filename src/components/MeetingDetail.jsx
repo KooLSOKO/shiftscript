@@ -10,12 +10,14 @@ import {
   ChevronDown,
   Layers,
   Mail,
+  Trash,
 } from "./Icons.jsx";
 import Fields from "./Fields.jsx";
 import { ownerCandidates } from "../../shared/identity.js";
 import { MeetingFollowUp } from "./MeetingPreparation.jsx";
 import Priority from "./Priority.jsx";
 import RecapEmail from "./RecapEmail.jsx";
+import ConfirmDelete from "./ConfirmDelete.jsx";
 export default function MeetingDetail({
   meeting: m,
   emailReady,
@@ -24,6 +26,7 @@ export default function MeetingDetail({
   readOnly,
   reload,
   onBack,
+  onDeleted,
   onTask,
   onError,
   tasks = [],
@@ -33,6 +36,9 @@ export default function MeetingDetail({
   onNote,
 }) {
   const [email, setEmail] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const linkedTasks = tasks.filter((task) => task.meetingId === m.id);
   const [edits, setEdits] = useState({}),
     [selected, setSelected] = useState([]),
     [editing, setEditing] = useState({}),
@@ -122,6 +128,19 @@ export default function MeetingDetail({
             <Mail size={16} /> Email recap
           </button>
         )}
+        {!readOnly && (
+          <button
+            type="button"
+            className="button delete-outline"
+            disabled={busy}
+            onClick={() => {
+              setDeleteError("");
+              setDeleting(true);
+            }}
+          >
+            <Trash size={18} /> Delete meeting
+          </button>
+        )}
         <span className="badge">
           {m.provider === "sample"
             ? "Fictional sample · preset results"
@@ -131,6 +150,54 @@ export default function MeetingDetail({
           <span className="badge">Voice source · {m.source.name}</span>
         )}
       </div>
+      {deleting && (
+        <ConfirmDelete
+          title="Delete this meeting?"
+          label={
+            linkedTasks.length ? "Delete meeting & tasks" : "Delete meeting"
+          }
+          busy={busy}
+          error={deleteError}
+          onClose={() => setDeleting(false)}
+          onConfirm={async () => {
+            setBusy(true);
+            setDeleteError("");
+            try {
+              const result = await api("/meetings/" + m.id, {
+                method: "DELETE",
+                body: JSON.stringify({
+                  confirm: true,
+                  expectedVersion: m.deletionVersion,
+                }),
+              });
+              setDeleting(false);
+              await onDeleted(result);
+            } catch (error) {
+              setDeleteError(error.message);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <p>
+            Permanently remove <strong>{m.title}</strong>, its transcript,
+            summary and proposals from this shared workspace?
+          </p>
+          <p>
+            <strong>
+              {linkedTasks.length} linked{" "}
+              {linkedTasks.length === 1 ? "task will" : "tasks will"} also be
+              deleted.
+            </strong>{" "}
+            Other tasks will stop waiting on the removed tasks.
+          </p>
+          <p>
+            Original notes, Google documents and existing Calendar events stay
+            in place. Everyone in this workspace will see this deletion. This
+            cannot be undone.
+          </p>
+        </ConfirmDelete>
+      )}
       {!readOnly && (
         <button className="button small mb-4" onClick={() => onPrepare(m.id)}>
           Prepare follow-up meeting

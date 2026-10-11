@@ -18,6 +18,7 @@ import { analyze, sampleTranscript } from "./analyze.js";
 import { transcribe, validateAudio, MAX_AUDIO_BYTES } from "./audio.js";
 import { installNotesRoutes, assertNoteSource } from "./notes.js";
 import { defaultModel } from "./gemini.js";
+import { installDeletionRoutes, meetingDeletionVersion } from "./deletion.js";
 import {
   MemoryProfiles,
   installPersonalRoutes,
@@ -111,7 +112,7 @@ export function createApp({
       assistantModel: assistantModel(),
       assistantReady:
         provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
-      version: "3.1.5",
+      version: "3.1.6",
     }),
   );
   installReminderRoute(app, {
@@ -374,9 +375,12 @@ export function createApp({
       role,
       projects: d.projects,
       draft: d.drafts.find((d) => d.ownerUid === req.uid) || null,
-      meetings: d.meetings.sort((a, b) =>
-        b.createdAt.localeCompare(a.createdAt),
-      ),
+      meetings: d.meetings
+        .map((meeting) => ({
+          ...meeting,
+          deletionVersion: meetingDeletionVersion(meeting, d.tasks),
+        }))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       tasks: d.tasks.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       activity: d.activity.slice().reverse(),
       agendas: d.agendas.slice().reverse(),
@@ -386,6 +390,7 @@ export function createApp({
     });
   });
   installWorkspaceRoutes(app, { read, mutate, profiles });
+  installDeletionRoutes(app, { mutate });
   app.patch("/api/workspace", async (req, res) => {
     const input = workspaceInput.parse(req.body);
     const workspace = await mutate(

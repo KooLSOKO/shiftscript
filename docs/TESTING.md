@@ -1,3 +1,11 @@
+# Latest verification: ShiftScript v3.1.6
+
+110 unit/API tests pass; the production build passes. The isolated browser suite passes at 320, 390, 768 and 1440 pixels, covering task cancellation/deletion/undo, meeting cancellation/cascade deletion, keyboard focus, 44px minimum touch targets, automatic history refresh and modal viewport bounds. API tests cover stale meeting/task changes, permission/workspace isolation, explicit confirmation, sending-email conflicts, persisted deletion, source/dependency cleanup and undo invalidation.
+
+Only isolated local/simulated services were used. See [UPDATE-v3.1.6.md](UPDATE-v3.1.6.md) for installation and deployed acceptance steps.
+
+---
+
 # Latest verification: ShiftScript v3.1.3
 
 Meeting duplicate regression coverage includes metadata changes, normalized text, legacy IDs, concurrent create/review, immutable action keys, retained edited/completed tasks, separate dates/discussions and workspace isolation. Notes repeats also preserve their original reviewed meeting after metadata changes.

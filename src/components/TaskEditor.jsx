@@ -3,6 +3,7 @@ import { api, fields, statuses } from "../lib.js";
 import { Check, Plus, Trash, MessageSquare, CalendarDays } from "./Icons.jsx";
 import Modal from "./Modal.jsx";
 import Fields from "./Fields.jsx";
+import ConfirmDelete from "./ConfirmDelete.jsx";
 import { waitingOn } from "../../shared/productivity.js";
 const editorFields = (task) => ({
   ...fields(task),
@@ -54,6 +55,8 @@ export default function TaskEditor({
     [success, setSuccess] = useState(""),
     [note, setNote] = useState(""),
     [item, setItem] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const baseline = useRef(task ? JSON.stringify(editorFields(task)) : null);
   const version = useRef(task?.updatedAt),
     clientId = useRef(crypto.randomUUID());
@@ -111,6 +114,55 @@ export default function TaskEditor({
         if (!busy) onClose();
       }}
     >
+      {task && !readOnly && (
+        <div className="task-delete-action mb-4">
+          <button
+            type="button"
+            className="button delete-outline"
+            disabled={busy}
+            onClick={() => {
+              setDeleteError("");
+              setDeleting(true);
+            }}
+          >
+            <Trash size={18} /> Delete task
+          </button>
+        </div>
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title="Delete this task?"
+          label="Delete task"
+          busy={busy}
+          error={deleteError}
+          onClose={() => setDeleting(false)}
+          onConfirm={async () => {
+            setBusy(true);
+            setDeleteError("");
+            try {
+              const result = await api("/tasks/" + task.id, {
+                method: "DELETE",
+                body: JSON.stringify({ expectedUpdatedAt: version.current }),
+              });
+              setDeleting(false);
+              onClose();
+              await onDeleted(result);
+            } catch (error) {
+              setDeleteError(error.message);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <p>
+            Remove <strong>{task.title}</strong> from this workspace?
+          </p>
+          <p>
+            You can undo this deletion for five minutes. Any existing Google
+            Calendar event stays in your calendar.
+          </p>
+        </ConfirmDelete>
+      )}
       {task?.meetingId ? (
         <button className="source-link mb-4" onClick={onSource}>
           From: {task.meetingTitle}
@@ -365,36 +417,6 @@ export default function TaskEditor({
         <p className="success-text" role="status">
           {success}
         </p>
-      )}
-      {task && !readOnly && (
-        <button
-          className="text-button danger mt-4"
-          disabled={busy}
-          onClick={async () => {
-            if (
-              !window.confirm(
-                "Delete this task? You can undo this for five minutes.",
-              )
-            )
-              return;
-            setBusy(true);
-            try {
-              const result = await api("/tasks/" + task.id, {
-                method: "DELETE",
-                body: JSON.stringify({ expectedUpdatedAt: version.current }),
-              });
-              await onDeleted(result);
-              onClose();
-            } catch (error) {
-              setError(error.message);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <Trash size={16} />
-          Delete task
-        </button>
       )}
     </Modal>
   );
