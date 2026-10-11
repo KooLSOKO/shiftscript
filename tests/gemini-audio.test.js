@@ -84,6 +84,46 @@ test("Gemini quota errors are readable and never leak upstream key strings", asy
       !e.message.includes("secret"),
   );
 });
+test("Interactions statusCode errors distinguish quota, model, request and provider failures without exposing content", async () => {
+  const logs = [],
+    previous = console.error;
+  console.error = (...parts) => logs.push(parts.join(" "));
+  try {
+    for (const [statusCode, expected, text] of [
+      [429, /quota/, "quota exhausted"],
+      [404, /ASSISTANT_MODEL/, "unknown model"],
+      [403, /API key/, "permission denied"],
+      [400, /request format/, "response_format schema rejected"],
+      [422, /request format/, "unsupported generation_config"],
+      [503, /temporarily unavailable/, "provider busy"],
+    ]) {
+      const client = {
+        interactions: {
+          create: async () => {
+            throw Object.assign(new Error(text + " PRIVATE INPUT AND KEY"), {
+              statusCode,
+            });
+          },
+        },
+      };
+      await assert.rejects(
+        geminiJson(
+          { input: "private fixture", schema: {}, model: "fixture-model" },
+          client,
+        ),
+        (e) => expected.test(e.message) && !e.message.includes("PRIVATE"),
+      );
+    }
+    assert(logs.every((line) => !line.includes("PRIVATE")));
+    assert(logs.some((line) => line.includes('"category":"response_schema"')));
+    assert(
+      logs.some((line) => line.includes('"category":"quota_or_rate_limit"')),
+    );
+    assert(logs.some((line) => line.includes('"category":"model_access"')));
+  } finally {
+    console.error = previous;
+  }
+});
 test("malformed or refused Gemini output does not become tasks", async () => {
   const client = {
     interactions: {

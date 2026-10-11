@@ -51,26 +51,76 @@ export async function geminiJson(
       );
     return JSON.parse(text);
   } catch (e) {
-    if ([401, 403].includes(e.status))
+    // Interactions SDK errors use statusCode; older generateContent errors use status.
+    const status = Number(e.statusCode ?? e.status);
+    if (Number.isInteger(status) && status >= 400 && status <= 599) {
+      const diagnostic = String(e.error?.message || e.message || "");
+      console.error(
+        "Gemini request failed:",
+        JSON.stringify({
+          status,
+          model: /^gemini-[a-z0-9_.-]{1,80}$/i.test(
+            model || process.env.GEMINI_MODEL || defaultModel,
+          )
+            ? model || process.env.GEMINI_MODEL || defaultModel
+            : "custom-model",
+          category: /schema|response[_ .-]?format/i.test(diagnostic)
+            ? "response_schema"
+            : /model/i.test(diagnostic)
+              ? "model_access"
+              : /generation[_ .-]?config|max[_ .-]?output[_ .-]?tokens/i.test(
+                    diagnostic,
+                  )
+                ? "generation_config"
+                : status === 429
+                  ? "quota_or_rate_limit"
+                  : "provider_request",
+        }),
+      );
+    }
+    if ([401, 403].includes(status))
       throw Object.assign(
         new Error(
           "Gemini rejected the API key or project access. Create a key in Google AI Studio and check its API restrictions.",
         ),
         { status: 503 },
       );
-    if (e.status === 429)
+    if (status === 429)
       throw Object.assign(
         new Error(
           "Gemini free-tier quota or rate limit reached. Wait and retry; check the project limits in Google AI Studio.",
         ),
         { status: 429 },
       );
-    if (e.status === 404)
+    if (status === 404)
       throw Object.assign(
         new Error(
-          "The configured Gemini model is unavailable to this project. Check GEMINI_MODEL and model access in AI Studio.",
+          model
+            ? "The assistant model is unavailable to this project. Check ASSISTANT_MODEL and model access in AI Studio."
+            : "The configured Gemini model is unavailable to this project. Check GEMINI_MODEL and model access in AI Studio.",
         ),
         { status: 503 },
+      );
+    if ([400, 422].includes(status))
+      throw Object.assign(
+        new Error(
+          "Gemini rejected the request format. Check the Gemini request failed entry in Vercel Logs for its status and category.",
+        ),
+        { status: 502 },
+      );
+    if ([500, 503, 504].includes(status))
+      throw Object.assign(
+        new Error(
+          "Gemini is temporarily unavailable. Wait a moment and try again.",
+        ),
+        { status: 503 },
+      );
+    if (e instanceof SyntaxError)
+      throw Object.assign(
+        new Error(
+          "Gemini returned an incomplete or invalid JSON reply. Try again; if this persists, the assistant response format needs checking.",
+        ),
+        { status: 502 },
       );
     if (
       e.name === "TimeoutError" ||
