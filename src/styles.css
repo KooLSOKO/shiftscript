@@ -4449,6 +4449,80 @@ textarea {
     opacity: 1;
   }
 }
+/* Shifty: original clay portraits, with motion tied to actual UI state. */
+.shifty-avatar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+}
+.shifty-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+.shifty-avatar-heading {
+  width: 76px;
+  height: 76px;
+}
+.shifty-avatar-welcome {
+  width: 184px;
+  height: 184px;
+  margin: 0 auto 10px;
+}
+.shifty-avatar-working {
+  width: 96px;
+  height: 96px;
+}
+.shifty-avatar-message {
+  width: 38px;
+  height: 38px;
+}
+.assistant-speaker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.assistant-brand .shifty-status {
+  font-weight: 800;
+  color: #2458e8;
+  font-size: 12px;
+}
+.shifty-avatar-thinking img {
+  animation: shifty-think 2.4s ease-in-out infinite;
+}
+@keyframes shifty-think {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+}
+@media (max-width: 650px) {
+  .shifty-avatar-heading {
+    width: 58px;
+    height: 58px;
+  }
+  .shifty-avatar-welcome {
+    width: 146px;
+    height: 146px;
+  }
+  .assistant-brand > div {
+    min-width: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shifty-avatar-thinking img {
+    animation: none;
+    transform: none;
+  }
+}
 .assistant-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
@@ -4511,9 +4585,9 @@ textarea {
   align-items: center;
   gap: 6px;
 }
-.assistant-empty img {
-  width: 160px;
-  height: 160px;
+.assistant-empty .shifty-avatar img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   margin: 0 auto 8px;
 }
@@ -4886,10 +4960,6 @@ textarea {
   }
   .assistant-proposal .badge {
     margin-left: 0;
-  }
-  .assistant-empty img {
-    width: 130px;
-    height: 130px;
   }
 }
 .task-card-completed > .check-option {

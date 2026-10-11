@@ -58,7 +58,7 @@ const tabs = [
   ["dashboard", "Overview", Icons.LayoutDashboard],
   ["meetings", "Meetings", Icons.NotebookPen],
   ["google", "Google Meet", Icons.Video],
-  ["assistant", "Assistant", Icons.Compass],
+  ["assistant", "Shifty", Icons.Compass],
   ["tasks", "Task tracker", Icons.ListTodo],
   ["board", "Board", Icons.Columns3],
   ["projects", "Projects", Icons.Folder],
@@ -997,7 +997,7 @@ export default function App() {
                               }}
                             >
                               <Icons.Compass size={19} />
-                              Ask assistant
+                              Ask Shifty
                             </button>
                           </div>
                         </div>
@@ -1220,9 +1220,7 @@ export default function App() {
                     />
                   )}
                   {tab === "assistant" && (
-                    <Suspense
-                      fallback={<p role="status">Opening your assistant…</p>}
-                    >
+                    <Suspense fallback={<p role="status">Opening Shifty…</p>}>
                       <Assistant
                         key={workspaceId + ":" + actor.uid}
                         actor={actor}

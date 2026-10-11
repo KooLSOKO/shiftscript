@@ -1,28 +1,25 @@
 {
-  "version": "3.1.0",
-  "root": "ShiftScript-v3.1.0",
+  "version": "3.1.1",
+  "root": "ShiftScript-v3.1.1",
   "verification": {
-    "unitApiTests": 89,
+    "unitApiTests": 90,
     "productionBuild": "passed",
     "browserSuitesRunForThisRevision": [
-      "browser-smoke",
-      "accounts-browser",
-      "collaboration-browser",
-      "integrations-browser",
-      "productivity-browser",
-      "public-pages-browser",
-      "landing-browser",
-      "dashboard-browser",
-      "experience-browser",
       "assistant-browser"
     ],
-    "assistantViewports": [
+    "viewports": [
       320,
       390,
       768,
       1440
     ],
-    "liveIntegrations": "simulated; owner must enable Calendar API/add scopes/connect and confirm live services"
+    "avatarStates": [
+      "ready",
+      "thinking",
+      "replying",
+      "error"
+    ],
+    "liveProviders": "simulated"
   },
   "files": [
     {
@@ -47,7 +44,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "d3d49bc5249f49a2b1eebbc2cba15acdf932467844e28c8d54dede504e5d7d8b"
+      "sha256": "754da2acfb00a0427ab337f65dfd1c8dec71adba220e80c95fbfc01434ad00c3"
     },
     {
       "path": "api/index.js",
@@ -71,7 +68,7 @@
     },
     {
       "path": "docs/ASSETS.md",
-      "sha256": "3fcc8b5e844c1792abc129aa152058f8976e1d9a6320662ae9edf5b6ad136317"
+      "sha256": "1641f5cf0e2e9564c9b45b1aa49f664a0df88946beb535e5f80e9c25527e7388"
     },
     {
       "path": "docs/DEMO.md",
@@ -80,6 +77,14 @@
     {
       "path": "docs/DEVELOPMENT-UPDATE.md",
       "sha256": "3694f67c0847b6db35ed1ab5144f5dc6a6df4d41c884258a10ffa31bc0bd4848"
+    },
+    {
+      "path": "docs/GEMINI-ERROR-FIX.md",
+      "sha256": "59c2c4f854c6dbbc5fa8842b3ea7ecce5e649b113623c8446d3bcc3bc01fb1fb"
+    },
+    {
+      "path": "docs/SHIFTY-ARTWORK.json",
+      "sha256": "e9ba5b659eb903b55fa22c1b2f7e8acc9c1a47b39e31a82c30a3f9822dfe0283"
     },
     {
       "path": "docs/SIGNUP-UPDATE.md",
@@ -166,12 +171,20 @@
       "sha256": "e189bd944f21ec9e770359563ba7a417465a5ab04af53d6da09b7904fc79a77c"
     },
     {
+      "path": "docs/UPDATE-v3.1.1.md",
+      "sha256": "011984420f2559fa4f0badb64db23b6d85074f45e9392a29c1da8cb7656022fc"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "b8da20756a5288fb314f4684f949f98df9381611ad8c65949fa5cb9e0acee82d"
+      "sha256": "2ecbba4a3a9e00edfef44a5c7900c959944cb444e52023bd397be26b3648909c"
+    },
+    {
+      "path": "docs/gemini-error-check-results.txt",
+      "sha256": "b462311c73772d766eee41fd71d79e8eafabf153b7f6b8e7779a31657f65a34c"
     },
     {
       "path": "docs/screenshots/about-public-desktop.png",
@@ -487,11 +500,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "b2d57e2f5433897794da886b8243b7f04f969e08fa160840187ae02fec2b1ef6"
+      "sha256": "fa810487b966d5c7e5c34cab31021ef5a8ac99b2caddfffbfafbacfc9098500e"
     },
     {
       "path": "package.json",
-      "sha256": "3da088ef2854612b4607ad1a265cc4b5570f61a21c00b688b7e6352c8774565c"
+      "sha256": "2793679cbefec719166fbb2689fa737639018aa8371f67b90322578f4900e0a5"
     },
     {
       "path": "public/about/index.html",
@@ -572,6 +585,22 @@
     {
       "path": "public/art/projects.png",
       "sha256": "22cc51fa954ed419e09a0e3f6ed87e48b7961e0b72810dbbebe3098de1cd62e6"
+    },
+    {
+      "path": "public/art/shifty/error.png",
+      "sha256": "a0162eb100dd8ff37cac114bbe0084477919f17996c2958186be2324555321f3"
+    },
+    {
+      "path": "public/art/shifty/ready.png",
+      "sha256": "deb11bf764d82bff1cd26f4b3d46fdfca52fae8c31a93e647c488dd4ff2332ad"
+    },
+    {
+      "path": "public/art/shifty/replying.png",
+      "sha256": "368965c2127ddd8d788d778865ba31200e13695eaf68554803be5eb7fb29cc9a"
+    },
+    {
+      "path": "public/art/shifty/thinking.png",
+      "sha256": "daeec58184d757a10264117eacc4830cf6e05bad437af3f721bb44f8604935c3"
     },
     {
       "path": "public/art/social-sharing.png",
@@ -863,11 +892,11 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "bc5b569020244fb6c00eb471e8567fbb7145f579c9282e7ceeefb1e2683e7027"
+      "sha256": "1b5b8f5ebd7a0bffa5c0dd827d8494617654f29dab5a1cbd3a438a4d1e4ce2c1"
     },
     {
       "path": "server/assistant.js",
-      "sha256": "9b2c91b0132a5f23ed875d844d9beb93c23166ed85c767758149151c9cf83ee7"
+      "sha256": "8b2bd34a7089d6cf3572203163b32b6d7eefa219b67e74cda4289cea51f7d777"
     },
     {
       "path": "server/audio.js",
@@ -887,7 +916,7 @@
     },
     {
       "path": "server/gemini.js",
-      "sha256": "5d6774faf665d3757eb33e9b6cd18b0d187a35e2ccadd66265bba283df759eaa"
+      "sha256": "e78a12d4c226ded674ca1df9814d0bc643fd3980aefcfdc0b70d21dbef80bb37"
     },
     {
       "path": "server/google.js",
@@ -943,7 +972,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "4c96edbdea9abe1f55433f8d5f28eb0a7f077778acaffcbe172f37081e44d306"
+      "sha256": "5f62d7c623dab7a31b8f33fe9a745ec0bd26bce8a886f2bd0204e063d9f41a8f"
     },
     {
       "path": "src/app-entry.jsx",
@@ -959,7 +988,7 @@
     },
     {
       "path": "src/components/Assistant.jsx",
-      "sha256": "7af96d92d851508647be2c0f52d142fdda0750e5426805e1bf8fdcb23ffcc9a6"
+      "sha256": "cb380d01688457945906f30b4e942a9830ddcbbffbb92095e3f7689a886b917f"
     },
     {
       "path": "src/components/AudioInput.jsx",
@@ -1046,6 +1075,10 @@
       "sha256": "2d4b245bdb66f0d7deda724013ce2ddb51cd65e13cb69d8b0f6ca6d51e203dcb"
     },
     {
+      "path": "src/components/ShiftyAvatar.jsx",
+      "sha256": "9f2157055c0e323e0d7ca1add3270a1fde301a5f45b7bf6403c4fcaee698f959"
+    },
+    {
       "path": "src/components/TabArtwork.jsx",
       "sha256": "2bd39b84f8dbc3605654b6ca0fcb2737453cbddea04e5217a48d6e3610b89fb4"
     },
@@ -1095,7 +1128,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "14c707bb85366eebc4560994f0bb13480f53f0fb3e6af2f16d66cbbf0aa63500"
+      "sha256": "bb553d3c936d4282422ce0ae42d8f9846cec0ac7054e48fa1d6590619510e7bc"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -1107,7 +1140,7 @@
     },
     {
       "path": "tests/assistant-browser.js",
-      "sha256": "085ba28855deb7af2fc8c73045ee34f612bb118a052ecf2a583866d156f5f730"
+      "sha256": "e5cdfe441fb0456503c3ba545243851781efceb23e2151312009ea3218525213"
     },
     {
       "path": "tests/assistant.test.js",
@@ -1147,7 +1180,7 @@
     },
     {
       "path": "tests/gemini-audio.test.js",
-      "sha256": "8407dff3493172eb0006ecb8bd1fefaf1ef74ae7625cc640635a5b7ac3b0a1a6"
+      "sha256": "f3b0510355e82bbab4d29a8723b2cecd6fee89ccd49476d29b24e84a0a7318d7"
     },
     {
       "path": "tests/integrations-browser.js",

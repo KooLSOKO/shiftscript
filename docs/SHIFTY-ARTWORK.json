@@ -1,0 +1,31 @@
+{
+  "created": "2026-10-11",
+  "tool": "built-in image generation",
+  "transparentBackground": true,
+  "deployment": "512x512 PNG resize with preserved alpha; no background replacement or artwork drawing in code",
+  "assets": [
+    {
+      "state": "ready",
+      "asset": "public/art/shifty/ready.png",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent PNG character avatar for ShiftScript, named Shifty (female, she/her). Primary request: create one friendly female clay character, portrait bust with a small waving hand, ready expression. Match the current ShiftScript clay art: tactile rounded 3D clay, warm medium-brown skin, dark braided hair in a high rounded bun with two small face-framing twists, expressive dark eyes, understated gold round earrings, corporate cobalt-blue #2458E8 blazer over an ivory top, navy #172c58 accents. She is a practical upbeat meeting and calendar assistant. Composition: square 1:1, front-facing centered bust, entire bun, shoulders and waving hand visible within frame, consistent proportions suitable at 64px and 180px, occupy most of canvas with modest breathing room. Lighting: soft studio light, matte sculpted clay texture, clear silhouette. Expression: warm confident smile, looking at viewer. Genuine transparent background, no floor, no pedestal, no white rectangle, no text, no logos, no watermark, no robot, no neon, no glitter. This portrait establishes character identity for subsequent expression variants."
+    },
+    {
+      "state": "thinking",
+      "asset": "public/art/shifty/thinking.png",
+      "editReference": "ready portrait",
+      "prompt": "Use case: identity-preserve. Asset type: ShiftScript Shifty thinking state transparent PNG avatar. Edit target: the supplied Shifty portrait. Preserve this exact character identity: same face, age, skin tone, braided high bun, two face-framing twists, gold round earrings, cobalt #2458E8 blazer, ivory top, tactile matte clay material, lighting, square front-facing bust, scale and unclipped framing. Change only her expression and hand gesture: thoughtful attentive look, gentle closed-mouth smile, gaze slightly upward, one fingertip rests lightly at her chin instead of waving. A natural thinking pose, never confused or distressed. Keep actual transparent alpha background. No floor, backdrop, panel, objects, text, logos, symbols or watermark. All states must look like the same character photographed in one session."
+    },
+    {
+      "state": "replying",
+      "asset": "public/art/shifty/replying.png",
+      "editReference": "ready portrait",
+      "prompt": "Use case: identity-preserve. Asset type: ShiftScript Shifty replying state transparent PNG avatar. Edit target: the supplied Shifty portrait. Preserve this exact character identity: same face, age, skin tone, braided high bun, two face-framing twists, gold round earrings, cobalt #2458E8 blazer, ivory top, tactile matte clay material, lighting, square front-facing bust, scale and unclipped framing. Change only her expression and hand gesture: a brighter confident smile and one hand open palm-up next to her shoulder, presenting a helpful answer. Eyes look toward the viewer. No objects or text. Keep actual transparent alpha background. No floor, backdrop, panel, objects, text, logos, symbols or watermark. All states must look like the same character photographed in one session."
+    },
+    {
+      "state": "error",
+      "asset": "public/art/shifty/error.png",
+      "editReference": "ready portrait",
+      "prompt": "Use case: identity-preserve. Asset type: ShiftScript Shifty error state transparent PNG avatar. Edit target: the supplied Shifty portrait. Preserve this exact character identity: same face, age, skin tone, braided high bun, two face-framing twists, gold round earrings, cobalt #2458E8 blazer, ivory top, tactile matte clay material, lighting, square front-facing bust, scale and unclipped framing. Change only her expression and hand gesture: reassuring patient expression, slightly raised eyebrows and a small sympathetic smile, one hand relaxed open palm beside her shoulder. She conveys 'we can try again', never crying, angry, panicked or embarrassed. Keep actual transparent alpha background. No floor, backdrop, panel, objects, text, logos, symbols or watermark. All states must look like the same character photographed in one session."
+    }
+  ]
+}

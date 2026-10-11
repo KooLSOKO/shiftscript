@@ -13,6 +13,7 @@ import {
 } from "./Icons.jsx";
 import { calendarDurations } from "../../shared/scheduling.js";
 import ProcessingLoader from "./ProcessingLoader.jsx";
+import ShiftyAvatar from "./ShiftyAvatar.jsx";
 
 function Proposal({
   action,
@@ -276,6 +277,13 @@ export default function Assistant({
     inputRef = useRef(null),
     sendLock = useRef(false);
   useEffect(() => {
+    // Small local assets are warmed up so switching expression never flashes.
+    ["ready", "thinking", "replying", "error"].forEach((state) => {
+      const image = new Image();
+      image.src = "/art/shifty/" + state + ".png";
+    });
+  }, []);
+  useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
@@ -430,6 +438,25 @@ export default function Assistant({
     displayZone = "UTC";
   }
   const disabled = busy || Boolean(operation) || loading;
+  const shiftyState =
+    busy || operation || loading
+      ? "thinking"
+      : error
+        ? "error"
+        : messages.at(-1)?.role === "assistant"
+          ? "replying"
+          : "ready";
+  const shiftyStatus = busy
+    ? "Checking your work…"
+    : loading
+      ? "Opening our conversation…"
+      : operation
+        ? "Working on that…"
+        : error
+          ? "Let’s try that again."
+          : shiftyState === "replying"
+            ? "Your next step is ready."
+            : "Ready when you are.";
   return (
     <div className="assistant-layout">
       <section
@@ -438,10 +465,16 @@ export default function Assistant({
       >
         <div className="assistant-chat-heading">
           <div className="assistant-brand">
-            <Compass size={30} />
+            <ShiftyAvatar
+              state={shiftyState}
+              className="shifty-avatar-heading"
+            />
             <div>
-              <h2>Your next step, together.</h2>
-              <p>Tasks, conversations and time to get things done.</p>
+              <h2>Shifty</h2>
+              <p>Your meeting &amp; planning assistant.</p>
+              <p className="shifty-status" role="status">
+                {shiftyStatus}
+              </p>
             </div>
           </div>
           <button
@@ -499,16 +532,14 @@ export default function Assistant({
             <p className="hint">Opening your conversation…</p>
           ) : !messages.length ? (
             <div className="assistant-empty">
-              <img
-                src="/art/clay/team-handoff.png"
-                alt=""
-                width="240"
-                height="240"
+              <ShiftyAvatar
+                state={error ? "error" : "ready"}
+                className="shifty-avatar-welcome"
               />
-              <h3>What’s on your mind, {actor.name.split(" ")[0]}?</h3>
+              <h3>Hi {actor.name.split(" ")[0]}, I’m Shifty.</h3>
               <p>
-                Find a deadline, revisit a decision or make room for your next
-                task.
+                Let’s get your next step sorted. Ask me about a deadline, a
+                meeting decision or time for your next task.
               </p>
               <div className="assistant-prompts">
                 {[
@@ -539,7 +570,13 @@ export default function Assistant({
                 key={message.id}
               >
                 <p className="assistant-speaker">
-                  {message.role === "user" ? "You" : "ShiftScript"}
+                  {message.role !== "user" && (
+                    <ShiftyAvatar
+                      state="replying"
+                      className="shifty-avatar-message"
+                    />
+                  )}
+                  {message.role === "user" ? "You" : "Shifty"}
                   {message.optimistic ? " · Sending…" : ""}
                 </p>
                 <div className="assistant-message-text">{message.text}</div>
@@ -624,15 +661,22 @@ export default function Assistant({
           )}
           {busy && (
             <div className="assistant-thinking" role="status">
+              <ShiftyAvatar
+                state="thinking"
+                className="shifty-avatar-working"
+              />
               <ProcessingLoader />
-              <p>Checking your work and preparing a reply…</p>
+              <p>
+                Shifty is checking your tasks, notes and available calendar
+                information…
+              </p>
             </div>
           )}
           <div ref={end} />
         </div>
         <form className="assistant-compose" onSubmit={ask}>
           <label className="sr-only" htmlFor="assistant-question">
-            Ask ShiftScript
+            Ask Shifty
           </label>
           <textarea
             ref={inputRef}
@@ -642,7 +686,7 @@ export default function Assistant({
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             disabled={disabled || !config.assistantReady}
-            placeholder="Ask about a task, meeting or your calendar…"
+            placeholder="Ask Shifty about your tasks, meetings or calendar…"
             onKeyDown={(e) => {
               if (
                 e.key === "Enter" &&

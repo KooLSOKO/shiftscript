@@ -237,7 +237,7 @@ await page.addInitScript(() =>
 );
 await mkdir("docs/screenshots", { recursive: true });
 const log = page.getByRole("log", { name: "Assistant conversation" });
-const input = page.getByLabel("Ask ShiftScript", { exact: true });
+const input = page.getByLabel("Ask Shifty", { exact: true });
 async function ask(question, reply) {
   await input.fill(question);
   await input.press("Enter");
@@ -266,16 +266,20 @@ async function screenshot(name) {
 }
 try {
   await page.goto("http://127.0.0.1:5184/app");
+  await page.getByRole("button", { name: "Ask Shifty", exact: true }).click();
+  await page.getByRole("heading", { name: "Shifty" }).waitFor();
+  await page.getByText("Hi Kiya, I’m Shifty.", { exact: true }).waitFor();
   await page
-    .getByRole("button", { name: "Ask assistant", exact: true })
-    .click();
-  await page
-    .getByRole("heading", { name: "Your next step, together." })
+    .locator('.shifty-avatar-heading[data-shifty-state="ready"]')
     .waitFor();
-  await page.getByText("What’s on your mind, Kiya?", { exact: true }).waitFor();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 844 });
     await widthCheck("Assistant empty " + width);
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll(".shifty-avatar img")].every(
+        (img) => img.complete && img.naturalWidth > 0,
+      ),
+    );
     assert(
       (
         await page
@@ -306,9 +310,47 @@ try {
   await input.fill("When is my task due?\nAnd what is my next event?");
   await input.press("Shift+Enter");
   assert((await input.inputValue()).endsWith("\n"));
-  await ask(
+  let releaseReply, intercepted;
+  const held = new Promise((resolve) => {
+    releaseReply = resolve;
+  });
+  const started = new Promise((resolve) => {
+    intercepted = resolve;
+  });
+  const holdChat = async (route) => {
+    intercepted();
+    await held;
+    await route.continue();
+  };
+  await page.route("**/api/assistant/chat", holdChat);
+  const firstAnswer = ask(
     "When is my task due?",
     "Review the portfolio has no deadline set. Your next event is Design check-in.",
+  );
+  await started;
+  await page
+    .locator('.shifty-avatar-heading[data-shifty-state="thinking"]')
+    .waitFor();
+  await log
+    .locator('.shifty-avatar-working[data-shifty-state="thinking"]')
+    .waitFor();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  assert.equal(
+    await page
+      .locator(".shifty-avatar-heading img")
+      .evaluate((img) => getComputedStyle(img).animationName),
+    "none",
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  releaseReply();
+  await firstAnswer;
+  await page.unroute("**/api/assistant/chat", holdChat);
+  await page
+    .locator('.shifty-avatar-heading[data-shifty-state="replying"]')
+    .waitFor();
+  assert.equal(
+    await log.locator(".assistant-speaker").last().innerText(),
+    "Shifty",
   );
   assert.equal(
     await log.getByRole("link", { name: "Design check-in" }).count(),
@@ -356,6 +398,9 @@ try {
   assert.equal(blocks, 0, "Required date/time prevents scheduling");
   await page.getByLabel("Block date", { exact: true }).fill(future);
   await page.getByLabel("Start time", { exact: true }).fill("11:00");
+  await page
+    .locator('.shifty-avatar-heading[data-shifty-state="replying"]')
+    .waitFor();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 844 });
     await widthCheck("Calendar review " + width);
@@ -423,9 +468,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await screenshot("assistant-chat-desktop");
   await page.reload();
-  await page
-    .getByRole("button", { name: "Ask assistant", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Ask Shifty", exact: true }).click();
   await log
     .getByText("Recap accepted by the email server.", { exact: true })
     .waitFor();
@@ -445,6 +488,9 @@ try {
   await input.fill("Try again");
   await page.getByRole("button", { name: "Send assistant question" }).click();
   await page.getByText("Please try again shortly.", { exact: true }).waitFor();
+  await page
+    .locator('.shifty-avatar-heading[data-shifty-state="error"]')
+    .waitFor();
   assert.equal(await input.inputValue(), "Try again");
   await page.unroute("**/api/assistant/chat");
   unavailable = true;
@@ -465,13 +511,16 @@ try {
   await page
     .getByRole("button", { name: "Clear conversation", exact: true })
     .click();
-  await page.getByText("What’s on your mind, Kiya?", { exact: true }).waitFor();
+  await page.getByText("Hi Kiya, I’m Shifty.", { exact: true }).waitFor();
   assert.equal((await store.list()).tasks.length, 1);
   assert.equal((await store.list()).meetings.length, 1);
   assert.equal(blocks, 1);
+  await page
+    .locator('.shifty-avatar-heading[data-shifty-state="ready"]')
+    .waitFor();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: Assistant grounded chat, private history, calendar selection/review, task approval, recap review/send, recovery, keyboard and mobile layouts (320/390/768/1440).",
+    "PASS: Shifty four avatar states, reduced motion and grounded chat, private history, calendar selection/review, task approval, recap review/send, recovery, keyboard and mobile layouts (320/390/768/1440).",
   );
 } catch (e) {
   await page.screenshot({

@@ -97,3 +97,7 @@ The existing Uiverse / GreyD097-inspired selector uses 17px desktop/13px phone t
 ## Assistant (v3.1.0)
 
 Compass and Send are original code-native SVGs using the established soft blue fills, navy outlines and rounded geometry. They are available in the React icon set and public/icons. The assistant empty state reuses the existing transparent team-handoff clay PNG. The processing state reuses the blue nine-bar loader. No new external artwork or animation dependency is needed.
+
+## Shifty (v3.1.1)
+
+Four original portraits were generated with the built-in image-generation tool, with the ready portrait establishing identity and the other three using it as their edit target. The design matches Earny’s matte clay characters, cobalt #2458E8, navy #172c58, braided hair and transparent cutout treatment. Public deployment PNGs preserve the generated alpha and are resized to 512×512 for mobile performance. Source prompts are recorded in SHIFTY-ARTWORK.json. No external images, icon fonts or animation dependencies are required. State selection follows actual React request activity; reduced motion disables the thinking movement.
