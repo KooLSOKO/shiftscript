@@ -176,3 +176,8 @@ The topmost Modal handles Escape and prevents background handlers from receiving
 ## v3.1.10: shared member profiles
 
 `GET /api/members/:uid/profile` requires current shared membership for requester and target. It checks again after asynchronous Firebase identity lookup, returns only name/bio/avatar, workspace role/email/join date and current-workspace task counts, and suppresses the verification badge unless Firebase confirms the matching email. Pending invitations are excluded. Personal profile PATCH accepts a bounded bio; verification is read-only and derived from identity. Member modal requests pin their workspace and ignore replies after unmount. Own profile verification refresh reloads Auth and forces token refresh. The desktop dial uses mouse-specific dead-zone and direction hysteresis while keeping touch gestures. No new storage collections or rules are needed.
+
+
+## v3.1.11: navigation fit and assistant presentation
+
+Desktop navigation is a height-constrained grid, with decorative content removed on shorter screens and an accessible scrolling fallback below 641px. Mobile touch targets retain their original sizing. `message-format.js` parses a bounded subset into text-only blocks/tokens; `AssistantMessage.jsx` renders escaped React children rather than HTML. This affects only presentation of assistant replies, including stored history. User text, source navigation and proposal confirmation stay unchanged. Shifty gradient animations are CSS-only and stop for reduced-motion preferences. No new provider requests or dependencies are introduced.

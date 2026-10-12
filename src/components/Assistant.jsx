@@ -14,6 +14,28 @@ import {
 import { calendarDurations } from "../../shared/scheduling.js";
 import ProcessingLoader from "./ProcessingLoader.jsx";
 import ShiftyAvatar from "./ShiftyAvatar.jsx";
+import AssistantMessage from "./AssistantMessage.jsx";
+
+const prompts = [
+  {
+    label: "Your tasks",
+    detail: "Owners, deadlines and your next step.",
+    text: "What tasks are assigned to me and when are they due?",
+    Icon: ListTodo,
+  },
+  {
+    label: "Plan your day",
+    detail: "Find room around your calendar.",
+    text: "Help me plan my next working day.",
+    Icon: CalendarDays,
+  },
+  {
+    label: "Meeting catch-up",
+    detail: "Decisions, follow-ups and context.",
+    text: "What decisions and follow-ups came from our latest meeting?",
+    Icon: FileText,
+  },
+];
 
 function Proposal({
   action,
@@ -459,7 +481,7 @@ export default function Assistant({
             ? "Your next step is ready."
             : "Ready when you are.";
   return (
-    <div className="assistant-layout">
+    <div className="assistant-layout shifty-dashboard">
       <section
         className="panel assistant-chat"
         aria-label="ShiftScript assistant"
@@ -543,21 +565,20 @@ export default function Assistant({
                 meeting decision or time for your next task.
               </p>
               <div className="assistant-prompts">
-                {[
-                  "What tasks are assigned to me and when are they due?",
-                  "Help me plan my next working day.",
-                  "What decisions and follow-ups came from our latest meeting?",
-                ].map((text) => (
+                {prompts.map(({ text, label, detail, Icon }) => (
                   <button
                     key={text}
                     className="button"
+                    aria-label={text}
                     disabled={disabled}
                     onClick={() => {
                       setQuestion(text);
-                      inputRef.current?.focus();
+                      inputRef.current?.focus({ preventScroll: true });
                     }}
                   >
-                    {text}
+                    <Icon size={25} />
+                    <strong>{label}</strong>
+                    <small>{detail}</small>
                   </button>
                 ))}
               </div>
@@ -580,7 +601,11 @@ export default function Assistant({
                   {message.role === "user" ? "You" : "Shifty"}
                   {message.optimistic ? " · Sending…" : ""}
                 </p>
-                <div className="assistant-message-text">{message.text}</div>
+                {message.role === "user" ? (
+                  <div className="assistant-message-text">{message.text}</div>
+                ) : (
+                  <AssistantMessage text={message.text} />
+                )}
                 {!!message.sources?.length && (
                   <div
                     className="assistant-sources"

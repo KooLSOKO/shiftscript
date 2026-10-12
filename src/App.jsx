@@ -1007,6 +1007,8 @@ export default function App() {
             {tabs.map(([id, label, Icon]) => (
               <button
                 key={id}
+                data-tab={id}
+                aria-current={tab === id ? "page" : undefined}
                 aria-label={label}
                 className={"nav-item " + (tab === id ? "selected" : "")}
                 onClick={() => {

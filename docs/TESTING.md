@@ -1,3 +1,5 @@
+Latest release: v3.1.11. Run `npm run check`. `tests/shifty-design-browser.js` covers fitted navigation, gradients, safe formatted replies, saved history, mobile targets and reduced motion. The assistant/profile/UX browser suites check preserved flows. See [UPDATE-v3.1.11](UPDATE-v3.1.11.md).
+
 Latest release: v3.1.10. Run `npm run check`. Profile/verification/access and desktop dial tests are in `tests/member-profiles.test.js` and `tests/profiles-browser.js`; the existing UX controls and transcript smoke suites cover the preserved flows. See [UPDATE-v3.1.10](UPDATE-v3.1.10.md).
 
 # Latest verification: ShiftScript v3.1.9

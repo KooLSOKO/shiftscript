@@ -1,3 +1,5 @@
+See **[Desktop navigation and Shifty dashboard](docs/UPDATE-v3.1.11.md)** for the fitted sidebar, formatted replies, gradient dashboard and installation commands.
+
 See **[Desktop dial and workspace profiles](docs/UPDATE-v3.1.10.md)** for the restored directional selector, profile cards, email verification badges and installation commands.
 
 See **[Mobile controls, Escape and immediate board moves](docs/UPDATE-v3.1.9.md)** for the new interactions and installation commands.
@@ -42,7 +44,7 @@ See **[UPDATE-v3.0.1](docs/UPDATE-v3.0.1.md)** for public policies, About/contac
 
 See **[UPDATE-v3](docs/UPDATE-v3.md)** for all seven productivity features, QoL updates, Mac installation and optional daily Earny reminders. The new reminder function requires Fluid compute on Vercel. See [UPDATE-v2.4](docs/UPDATE-v2.4.md) for Google Calendar task scheduling and deployment instructions. [UPDATE-v2.3.1](docs/UPDATE-v2.3.1.md) covers name-aware My tasks. [UPDATE-v2.3](docs/UPDATE-v2.3.md) covers the artwork, SEO, mobile navigation and profiles.
 
-# ShiftScript v3.1.10
+# ShiftScript v3.1.11
 
 A corporate blue meeting workspace: turn a transcript or voice recording into structured notes and proposed tasks, review the commitments, then track the work with your team.
 
@@ -54,7 +56,7 @@ Read **[docs/UPDATE-v3.md](docs/UPDATE-v3.md)** for the complete v3 update, Mac 
 
 ## New project in VS Code
 
-Open the extracted **ShiftScript-v3.1.10** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
+Open the extracted **ShiftScript-v3.1.11** folder, the one containing `package.json`. Use Node.js **22.12+** (Node 22 or 24).
 
 ```bash
 npm ci
