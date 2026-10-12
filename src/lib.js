@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { googleAuthDomain } from "./auth-flow.js";
 import {
   getAuth,
+  reload as reloadAuthUser,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
@@ -30,6 +31,7 @@ const config = {
 export const auth =
   config.apiKey && config.appId ? getAuth(initializeApp(config)) : null;
 export {
+  reloadAuthUser,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,

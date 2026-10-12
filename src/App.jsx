@@ -48,6 +48,7 @@ import TaskFilters from "./components/TaskFilters.jsx";
 import Projects from "./components/Projects.jsx";
 import { WorkspaceSwitcher, Team } from "./components/Workspaces.jsx";
 import Priority from "./components/Priority.jsx";
+import MemberProfile from "./components/MemberProfile.jsx";
 import Profile from "./components/Profile.jsx";
 import TabArtwork from "./components/TabArtwork.jsx";
 import TaskCalendar from "./components/TaskCalendar.jsx";
@@ -127,6 +128,7 @@ export default function App() {
     [noteToOpen, setNoteToOpen] = useState(null),
     [emailMeetingId, setEmailMeetingId] = useState(null),
     [taskId, setTaskId] = useState(null),
+    [memberProfileId, setMemberProfileId] = useState(null),
     [calendarTaskId, setCalendarTaskId] = useState(null),
     [filters, setFilters] = useState({ ...defaultFilters }),
     [meetingSearch, setMeetingSearch] = useState(""),
@@ -317,6 +319,7 @@ export default function App() {
     setNoteToOpen(null);
     setEmailMeetingId(null);
     setTaskId(null);
+    setMemberProfileId(null);
     setCalendarTaskId(null);
     setSelectedIds([]);
     setCalendarBatchIds([]);
@@ -516,6 +519,7 @@ export default function App() {
       setSwitcher(false);
       setNewMeeting(false);
       setTaskId(null);
+      setMemberProfileId(null);
       setCalendarTaskId(null);
       setMeetingId(null);
       setEmailMeetingId(null);
@@ -1033,21 +1037,28 @@ export default function App() {
             )}
           </div>
           <div className="sidebar-foot">
-            <span className="avatar dark">
-              {personal?.avatar ? (
-                <img src={personal.avatar} alt="" />
-              ) : (
-                name?.slice(0, 2).toUpperCase() || "SS"
-              )}
-            </span>
-            <div>
-              <strong>{name}</strong>
-              <span>
-                {config?.provider === "gemini"
-                  ? "Gemini connected"
-                  : "Sample mode · no API calls"}
+            <button
+              type="button"
+              className="sidebar-profile-link"
+              aria-label="Open your profile"
+              onClick={() => {
+                setTab("profile");
+                setMeetingId(null);
+                setMenu(false);
+              }}
+            >
+              <span className="avatar dark">
+                {personal?.avatar || user?.photoURL ? (
+                  <img src={personal?.avatar || user.photoURL} alt="" />
+                ) : (
+                  name?.slice(0, 2).toUpperCase() || "SS"
+                )}
               </span>
-            </div>
+              <span className="sidebar-profile-copy">
+                <strong>{name}</strong>
+                <small>View your profile</small>
+              </span>
+            </button>
             {user && (
               <button
                 className="icon-button"
@@ -2014,6 +2025,10 @@ export default function App() {
                   )}
                   {tab === "team" && (
                     <Team
+                      onProfile={(uid) => {
+                        if (uid === actor.uid) setTab("profile");
+                        else setMemberProfileId(uid);
+                      }}
                       workspace={data.workspace}
                       role={data.role}
                       user={user}
@@ -2094,6 +2109,14 @@ export default function App() {
               <Icons.Plus size={28} />
             </span>
           </button>
+        )}
+        {memberProfileId && (
+          <MemberProfile
+            key={workspaceId + ":" + memberProfileId}
+            uid={memberProfileId}
+            workspaceId={workspaceId}
+            onClose={() => setMemberProfileId(null)}
+          />
         )}
         {newMeeting && (
           <NewMeeting

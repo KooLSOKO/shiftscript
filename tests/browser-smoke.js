@@ -114,15 +114,6 @@ try {
       [-38, 0, "Previous meeting"],
       [0, -38, "Text"],
     ]) {
-      if (width > 850) {
-        assert.equal(await page.locator(".source-stick").isVisible(), false);
-        await sourceChoice(mode).click();
-        assert.equal(
-          await sourceChoice(mode).getAttribute("aria-checked"),
-          "true",
-        );
-        continue;
-      }
       await page.locator(".source-stick").scrollIntoViewIfNeeded();
       const box = await page.locator(".source-stick").boundingBox();
       const x = box.x + box.width / 2,
@@ -157,9 +148,9 @@ try {
       });
     }
   }
-  // Desktop source selection uses large direct buttons rather than a drag dial.
+  // Desktop retains the dial and direct directional buttons.
   await page.setViewportSize({ width: 1440, height: 1050 });
-  assert.equal(await page.locator(".source-stick").isVisible(), false);
+  assert.equal(await page.locator(".source-stick").isVisible(), true);
   for (const name of [
     "Voice",
     "Recent Google Meet",
@@ -169,7 +160,7 @@ try {
     await sourceChoice(name).click();
     assert.equal(await sourceChoice(name).getAttribute("aria-checked"), "true");
     const bounds = await sourceChoice(name).boundingBox();
-    assert(bounds.height >= 100);
+    assert(bounds.height >= 64);
   }
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 1050 });
@@ -521,7 +512,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, desktop direct source buttons, touch/keyboard modes, no overflow, mocked voice transcription, duplicate reuse toast and retained task progress, no page errors.",
+    "PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, desktop directional dial and mode buttons, touch/keyboard modes, no overflow, mocked voice transcription, duplicate reuse toast and retained task progress, no page errors.",
   );
 } catch (error) {
   await page.screenshot({

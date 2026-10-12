@@ -133,6 +133,7 @@ export async function signInWithEmailAndPassword(_a,email,password) {
 export async function signOut() { auth.currentUser=null; notify(); }
 export async function sendPasswordResetEmail() {}
 export async function sendEmailVerification() {}
+export const reload = async (user) => user.reload?.();
 `;
 await page.route(
   /\/node_modules\/\.vite\/deps\/firebase_auth\.js(?:\?|$)/,
@@ -330,7 +331,7 @@ try {
     fullPage: true,
   });
   assert.deepEqual(
-    await profile.locator(".profile-work strong").allTextContents(),
+    await profile.locator(".profile-card-stats strong").allTextContents(),
     ["3", "1"],
   );
   await profile
@@ -925,6 +926,12 @@ try {
   await changed.page
     .getByRole("heading", { name: "Less follow-up. More follow-through." })
     .waitFor();
+  // Native dialog detachment can precede React's passive scroll-lock cleanup.
+  await changed.page.waitForFunction(
+    () => document.body.style.overflow === "",
+    undefined,
+    { timeout: 2000 },
+  );
   assert.equal(
     await changed.page.evaluate(() => document.body.style.overflow),
     "",

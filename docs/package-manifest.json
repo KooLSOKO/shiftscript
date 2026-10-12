@@ -1,14 +1,15 @@
 {
-  "version": "3.1.9",
-  "root": "ShiftScript-v3.1.9",
+  "version": "3.1.10",
+  "root": "ShiftScript-v3.1.10",
   "verification": {
-    "unitApiTests": 122,
+    "unitApiTests": 126,
     "productionBuild": "passed",
     "browserSuitesPassed": [
+      "profiles-browser",
       "ux-controls-browser",
-      "board-shortcuts-browser",
       "browser-smoke",
-      "deletion-browser"
+      "collaboration-browser",
+      "accounts-browser"
     ],
     "viewports": [
       320,
@@ -42,7 +43,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "334462f100378a386d147824e7d0a103bae6c9885b909582d703671322e4f979"
+      "sha256": "26ce2ced077a56995039e53e6a1a2b1e47a717dba3e7716ebebf349f81ded9b9"
     },
     {
       "path": "api/index.js",
@@ -54,7 +55,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "e027373d313057d50ad7db0e9dfa00d76be4a3a76114812be52d0733965f1287"
+      "sha256": "7484df7304bf344a3400a8d49fcc97be7040c6ccd8659d457c1d7c8021cc789e"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -90,7 +91,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "6512c32fb06ef56178d023c62958ee4c75ecbf75f812c773542fa4f4ce435944"
+      "sha256": "daacc7300852d80560410b13782bc975b51c1c7b350db70c9338f6d3187e3943"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -173,6 +174,10 @@
       "sha256": "011984420f2559fa4f0badb64db23b6d85074f45e9392a29c1da8cb7656022fc"
     },
     {
+      "path": "docs/UPDATE-v3.1.10.md",
+      "sha256": "493f1aa585accdc4bef2f43d7df84b61894471cc4a7d629f959b3f499426e15b"
+    },
+    {
       "path": "docs/UPDATE-v3.1.2.md",
       "sha256": "f594ae532a952ce9d6b445566a35a0c8f5d22fc0113e81226cdc1651fc34a38d"
     },
@@ -210,7 +215,7 @@
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "9d59c96394800dff7fd1022beb9dd08b6eb3a192312478d32162cf9a4c1b2c39"
+      "sha256": "de700c489c639274aa2cbaf16c61019e0ad8cbf884240512c30415f43960db84"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -594,11 +599,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "e72bfa191ddcc384d3b3a3d5aaccf51874c62a6cc4a331a8bbc226d6043123a1"
+      "sha256": "0da29171c88e55548e31afdb873744afea8e8122e5a38646c23fe7085a5db6d0"
     },
     {
       "path": "package.json",
-      "sha256": "1cdb093c1c3ca7379a0effb95e51de0762d78c9e300f4337330f9933b732892b"
+      "sha256": "ed17e01e72cf662777f8786598a1110c1e7689e65ce71817012134ee1a1aa7f0"
     },
     {
       "path": "public/about/index.html",
@@ -1034,7 +1039,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "3c9994ffd0ec2dd627eeaa69870a89d5f8aa56accb019df9f66cf4167fd2458a"
+      "sha256": "c979581837985c9c7c6309434b812b3801b2a6d9bf507d64f6a227ca56008c1d"
     },
     {
       "path": "server/assistant.js",
@@ -1085,12 +1090,16 @@
       "sha256": "98d4fdb2497093488fa8697de81b33e0f43ee4443004c709b79a415ddbfa285a"
     },
     {
+      "path": "server/member-profiles.js",
+      "sha256": "bd4d528ee99ece257edae1e881eaa2edc9fcd3d86184c0f8eb8e7ac853b20b33"
+    },
+    {
       "path": "server/notes.js",
       "sha256": "dcde5e7bbec989468dd12fa4108779bdd12e79d93daa08914f714642bfb8c1d0"
     },
     {
       "path": "server/productivity.js",
-      "sha256": "e3b5d9b66ccc4cf9d39f05efbee78aceb5149d4d77e6a6ccfbcb6eab0796735e"
+      "sha256": "79dabb543731e0df34d07352fb12e6ad528b2278823979afeece3f4ff8e71374"
     },
     {
       "path": "server/recap-email.js",
@@ -1130,7 +1139,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "064c2be2b73bdf285c7c376cddf688746a2fab82a6d05b4dbe73b60c2fff5cf1"
+      "sha256": "0f46c6271144b65da713c2a1c14b02abb8044df7989e16a199fdf6122a7e7368"
     },
     {
       "path": "src/app-entry.jsx",
@@ -1194,7 +1203,11 @@
     },
     {
       "path": "src/components/MeetingSourcePicker.jsx",
-      "sha256": "9e0c59c893a1ac9168575f64c4a65aa8b098e383ff2d5742a2e4dca3f6c874d6"
+      "sha256": "12b0fd92477740bcc7d7f8ae21c0a8f01019da719c67d5b3c70f8fa06a136a96"
+    },
+    {
+      "path": "src/components/MemberProfile.jsx",
+      "sha256": "be73886b12c45c0bb19bc5023c07b8cb9dcd872b6135abc39b02a252c8b21242"
     },
     {
       "path": "src/components/Modal.jsx",
@@ -1226,11 +1239,15 @@
     },
     {
       "path": "src/components/Profile.jsx",
-      "sha256": "dcfae9a538b17a76970c703f1d4340b5c045883998cbb52271259419f47f3079"
+      "sha256": "e9d974de4ff700f250de24d9702f91366100f2cb2d2cf73a7b150fc263d87cae"
+    },
+    {
+      "path": "src/components/ProfileCard.jsx",
+      "sha256": "1d6722c4e30f8c740c77ce475dd48700f54a1bc015eb51d36256f834f4a7557b"
     },
     {
       "path": "src/components/ProfileSettings.jsx",
-      "sha256": "a6f7862bb70ff64c5b33072c857ca8312c006ed088f8ce0eec68a1effe6e7a48"
+      "sha256": "6c9a9b8c002a76bb8d258420d101b476790df8f5f71ffbeccf50f47e649c9340"
     },
     {
       "path": "src/components/Projects.jsx",
@@ -1278,7 +1295,7 @@
     },
     {
       "path": "src/components/Workspaces.jsx",
-      "sha256": "93c90f0511a0047feba037ea786d37394d82a3ce8101e182dcd8a5a68d754455"
+      "sha256": "b514762c6b8d16da32a2a50cd9147bb5d844ceaf5fb80b08bbc0dd1487223500"
     },
     {
       "path": "src/features/board-updates.js",
@@ -1301,6 +1318,10 @@
       "sha256": "2124bd36925ccb86697c8401ed43e2c66818d319b8aec0f6b5d0e7e174487c95"
     },
     {
+      "path": "src/features/source-direction.js",
+      "sha256": "5418e47f16c8977c2cd7a0f7f335f00670c72511e549d2d8bd712625cfd0ada2"
+    },
+    {
       "path": "src/features/task-filters.js",
       "sha256": "d99cf9a8148addc8e887d27fdfd66022a2cdc437390ef840df54ca9c72a24e1b"
     },
@@ -1314,7 +1335,7 @@
     },
     {
       "path": "src/lib.js",
-      "sha256": "9f3c1b102c76a00f685570a189c5d6fa7e4feebc09cf8368043af8d59b73e6a1"
+      "sha256": "8bef3eb40be1d7a4fcce0c8ec238e41b735c98027818d7cc387a12dda549c8af"
     },
     {
       "path": "src/main.jsx",
@@ -1322,11 +1343,11 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "8f5d6846989b6ef7689a6fddbda93b21ea4bd12aaca87212d5381d579cd8b4aa"
+      "sha256": "d0a3acfc1cab6681bccf202abc071d360eec3d79739e76c017591b6882d6b7a0"
     },
     {
       "path": "tests/accounts-browser.js",
-      "sha256": "1ca3afc3ea42a4b4a1957f9270ee643762c28b19e816828411db1fd5bf5de11c"
+      "sha256": "5702b5b6a85993625cfd86e30f7451e7827c7753e18f5298e2c7d7a83502af3d"
     },
     {
       "path": "tests/accounts.test.js",
@@ -1358,7 +1379,7 @@
     },
     {
       "path": "tests/browser-smoke.js",
-      "sha256": "bcf077150efc019507c0f995834b301c474bd53cd2a350ab30b4cc04effbf9d8"
+      "sha256": "70fc31a8a951e4344d1728f1cd97cb71029ff78497cbc0192714320f01293d6a"
     },
     {
       "path": "tests/calendar.test.js",
@@ -1366,7 +1387,7 @@
     },
     {
       "path": "tests/collaboration-browser.js",
-      "sha256": "91bf577cf72435fe0777864931a9e17f25c828630fc55ea849ef274040924e88"
+      "sha256": "ad91273de4d9d195e0aae2d75195398492dddaefe870a31ef9062c89e174f69a"
     },
     {
       "path": "tests/collaboration.test.js",
@@ -1394,7 +1415,7 @@
     },
     {
       "path": "tests/fixtures/auth-shim.js",
-      "sha256": "0fdca94be9b85d3e135ffefa89180831dc4ddbe4480e881b81a8048b08d46fd0"
+      "sha256": "beb676b8335a56b0d890114608fe633a4ba60949ec173e5a26c1adf92f357231"
     },
     {
       "path": "tests/gemini-audio.test.js",
@@ -1429,6 +1450,10 @@
       "sha256": "b20209beda5f02b62b3422436dec71d9734fa66f9d8deb8e98a497776a071c74"
     },
     {
+      "path": "tests/member-profiles.test.js",
+      "sha256": "34c6c36dbfb44c07f3223133a6b2b20d3d1bd50ef0fd2eb7085a2a5e4eecc3a8"
+    },
+    {
       "path": "tests/notes-browser.js",
       "sha256": "a5f9e68e60bb911c698849f8b1e2fc470e422e4714cfa85861ea226d5fc7ec73"
     },
@@ -1449,12 +1474,16 @@
       "sha256": "2653bb7bd105cdc665ff18474b939b35e0665eecd9f14f3dc1e699b974eb49c3"
     },
     {
+      "path": "tests/profiles-browser.js",
+      "sha256": "31ae571cbe015e09e0df01dfdc50a7810fffcdc5786b63500d58ed981c65c719"
+    },
+    {
       "path": "tests/public-pages-browser.js",
       "sha256": "f36b26f91f85f8e96028b08097cd2984d5197b50159bf0e8ecc0c6b7e6f60468"
     },
     {
       "path": "tests/ux-controls-browser.js",
-      "sha256": "baaf492a8eb5ff4371160a129a894528fe02ff5726c39c46b5522a2a49f29d8b"
+      "sha256": "60e1e402306602805286e1abbcbf94f0c053fe21ea725fdfbbfdabaad20eceac"
     },
     {
       "path": "tests/workflow.test.js",

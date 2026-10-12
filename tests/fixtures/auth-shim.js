@@ -58,4 +58,5 @@ export async function signInWithEmailAndPassword(_a,email,password) {
 export async function signOut() { auth.currentUser=null; notify(); }
 export async function sendPasswordResetEmail() {}
 export async function sendEmailVerification() {}
+export async function reload(user) { Object.assign(user, JSON.parse(localStorage.getItem("test-session") || "{}")); }
 `;

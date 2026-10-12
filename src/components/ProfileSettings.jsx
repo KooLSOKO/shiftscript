@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, auth, sendEmailVerification } from "../lib.js";
+import { api, auth, sendEmailVerification, reloadAuthUser } from "../lib.js";
 import { Save, Upload } from "./Icons.jsx";
 async function photoData(file) {
   if (
@@ -9,7 +9,7 @@ async function photoData(file) {
     throw new Error("Choose a PNG, JPG or WebP photo smaller than 5 MB.");
   const image = await createImageBitmap(file),
     canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 160;
+  canvas.width = canvas.height = 480;
   const context = canvas.getContext("2d"),
     size = Math.min(image.width, image.height);
   context.drawImage(
@@ -20,11 +20,15 @@ async function photoData(file) {
     size,
     0,
     0,
-    160,
-    160,
+    480,
+    480,
   );
   image.close();
-  const data = canvas.toDataURL("image/webp", 0.82);
+  let data = canvas.toDataURL("image/webp", 0.82);
+  for (const quality of [0.7, 0.55, 0.4]) {
+    if (data.length <= 100000) break;
+    data = canvas.toDataURL("image/webp", quality);
+  }
   if (data.length > 100000)
     throw new Error("Choose a simpler photo to keep your profile fast.");
   return data;
@@ -37,6 +41,7 @@ export default function ProfileSettings({
   onSaved,
 }) {
   const [name, setName] = useState(actor.name),
+    [bio, setBio] = useState(personal?.bio || ""),
     [aliases, setAliases] = useState((personal?.aliases || []).join(", ")),
     [avatar, setAvatar] = useState(personal?.avatar || ""),
     [preferences, setPreferences] = useState(
@@ -61,6 +66,7 @@ export default function ProfileSettings({
         method: "PATCH",
         body: JSON.stringify({
           name: name.trim(),
+          bio: bio.trim(),
           aliases: [
             ...new Set(
               aliases
@@ -96,6 +102,21 @@ export default function ProfileSettings({
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
+          </label>
+          <label className="block mb-4">
+            About you
+            <textarea
+              aria-label="About you"
+              maxLength={240}
+              rows={3}
+              value={bio}
+              onChange={(event) => setBio(event.target.value)}
+              placeholder="Your role, interests or how you help the team."
+            />
+            <span className="hint">
+              Shown to people in workspaces you have joined. Up to 240
+              characters.
+            </span>
           </label>
           <label className="block mb-4">
             Names people call you
@@ -186,14 +207,46 @@ export default function ProfileSettings({
                 try {
                   await sendEmailVerification(auth.currentUser);
                   setNotice(
-                    "Verification email requested. Verify your address, then sign in again.",
+                    "Verification email sent. Open the link, then choose Check verification below.",
                   );
                 } catch (error) {
                   setError(error.message);
                 }
               }}
             >
-              Verify your email for reminders
+              Verify your email
+            </button>
+          )}
+          {user && !personal?.emailVerified && (
+            <button
+              type="button"
+              className="button mt-3"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError("");
+                setNotice("");
+                try {
+                  const uid = user.uid;
+                  await reloadAuthUser(auth.currentUser);
+                  if (auth.currentUser?.uid !== uid) return;
+                  await auth.currentUser.getIdToken(true);
+                  const result = await api("/profile", { workspace: false });
+                  if (auth.currentUser?.uid !== uid) return;
+                  await onSaved(result.profile);
+                  setNotice(
+                    result.profile.emailVerified
+                      ? "Your email is verified."
+                      : "Your email is not verified yet. Open the link in your verification email first.",
+                  );
+                } catch (error) {
+                  setError(error.message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Check verification
             </button>
           )}
           <div className="field-grid mt-4">

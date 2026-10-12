@@ -16,6 +16,11 @@ const names = {
 const directory = await mkdtemp(join(tmpdir(), "shift-collaboration-ui-")),
   store = new LocalStore(join(directory, "db.json"));
 const invitationEmails = [];
+// These fixture accounts have already completed onboarding; the dedicated tour suite tests signup.
+for (const uid of Object.keys(names))
+  await store.mutateProfile(uid, (p) => {
+    p.tutorialVersion = 1;
+  });
 await store.mutate("soko", (s) => {
   s.workspace = newWorkspace(
     "soko",
@@ -70,7 +75,7 @@ if (process.env.SHIFTSCRIPT_TEST_CHROMIUM) {
 }
 const browser = await chromium.launch(options),
   errors = [];
-const shim = `export const signInWithRedirect=async()=>{};export const getRedirectResult=async()=>null;export class GoogleAuthProvider { setCustomParameters() {} };export const signInWithPopup=async()=>{throw Object.assign(new Error(),{code:"auth/popup-closed-by-user"});};const callbacks=new Set();const value=JSON.parse(localStorage.getItem('test-session'));const auth={currentUser:value&&{...value,getIdToken:async()=>auth.currentUser.uid+'|'+auth.currentUser.emailVerified,reload:async()=>{auth.currentUser.emailVerified=true;localStorage.setItem('test-session',JSON.stringify(auth.currentUser));}}};export const getAuth=()=>auth;export const onAuthStateChanged=(_a,fn)=>{callbacks.add(fn);queueMicrotask(()=>fn(auth.currentUser));return()=>callbacks.delete(fn);};export const signOut=async()=>{auth.currentUser=null;localStorage.removeItem('test-session');callbacks.forEach(fn=>fn(null));};export const updateProfile=async(u,p)=>Object.assign(u,p);export const sendEmailVerification=async()=>{};export const sendPasswordResetEmail=async()=>{};export const signInWithEmailAndPassword=async()=>{};export const createUserWithEmailAndPassword=async()=>{};`;
+const shim = `export const signInWithRedirect=async()=>{};export const getRedirectResult=async()=>null;export class GoogleAuthProvider { setCustomParameters() {} };export const signInWithPopup=async()=>{throw Object.assign(new Error(),{code:"auth/popup-closed-by-user"});};const callbacks=new Set();const value=JSON.parse(localStorage.getItem('test-session'));const auth={currentUser:value&&{...value,getIdToken:async()=>auth.currentUser.uid+'|'+auth.currentUser.emailVerified,reload:async()=>{auth.currentUser.emailVerified=true;localStorage.setItem('test-session',JSON.stringify(auth.currentUser));}}};export const getAuth=()=>auth;export const onAuthStateChanged=(_a,fn)=>{callbacks.add(fn);queueMicrotask(()=>fn(auth.currentUser));return()=>callbacks.delete(fn);};export const signOut=async()=>{auth.currentUser=null;localStorage.removeItem('test-session');callbacks.forEach(fn=>fn(null));};export const updateProfile=async(u,p)=>Object.assign(u,p);export const sendEmailVerification=async()=>{};export const reload=async(user)=>user.reload?.();export const sendPasswordResetEmail=async()=>{};export const signInWithEmailAndPassword=async()=>{};export const createUserWithEmailAndPassword=async()=>{};`;
 async function pageFor(uid, verified = true) {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },

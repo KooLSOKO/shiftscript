@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FileText, Mic, Video, NotebookPen } from "./Icons.jsx";
+import { mouseDirection } from "../features/source-direction.js";
 
 const modes = [
   {
@@ -70,6 +71,11 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
     if (!start || e.pointerId !== start.pointerId) return null;
     const dx = e.clientX - start.x,
       dy = e.clientY - start.y;
+    if (start.mouse) {
+      const next = mouseDirection(dx, dy, start.candidate);
+      start.candidate = next;
+      return next;
+    }
     if (Math.hypot(dx, dy) < start.threshold) return null;
     const next = directionFrom(dx, dy);
     // Keep a near-diagonal movement from repeatedly flipping between modes.
@@ -93,7 +99,9 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
       <div className="source-picker-heading">
         <h3>Start with your conversation</h3>
         <p id="source-picker-help">
-          <span className="desktop-source-help">Choose a source below.</span>
+          <span className="desktop-source-help">
+            Click a mode, or drag the dial and release. Arrow keys work too.
+          </span>
           <span className="mobile-source-help">
             Tap a mode, or drag the dial and release.
           </span>
@@ -158,14 +166,24 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
               (e.pointerType === "mouse" && e.button !== 0)
             )
               return;
+            const travel =
+              parseFloat(
+                getComputedStyle(e.currentTarget).getPropertyValue(
+                  "--stick-travel",
+                ),
+              ) || 17;
             gesture.current = {
               x: e.clientX,
               y: e.clientY,
               pointerId: e.pointerId,
+              mouse: e.pointerType === "mouse",
               threshold: e.pointerType === "mouse" ? 10 : 18,
               candidate: null,
-              baseX: value === "voice" ? 17 : value === "previous" ? -17 : 0,
-              baseY: value === "google" ? 17 : value === "text" ? -17 : 0,
+              travel,
+              baseX:
+                value === "voice" ? travel : value === "previous" ? -travel : 0,
+              baseY:
+                value === "google" ? travel : value === "text" ? -travel : 0,
             };
             setDrag({ x: gesture.current.baseX, y: gesture.current.baseY });
             e.currentTarget.setPointerCapture(e.pointerId);
@@ -173,11 +191,33 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
           onPointerMove={(e) => {
             if (!disabled && gesture.current?.pointerId === e.pointerId) {
               const start = gesture.current;
+              const next = offset(e);
+              if (start.mouse) {
+                // Snap preview to a single axis; the choice commits only on release.
+                if (next)
+                  setDrag({
+                    x:
+                      next === "voice"
+                        ? start.travel
+                        : next === "previous"
+                          ? -start.travel
+                          : 0,
+                    y:
+                      next === "google"
+                        ? start.travel
+                        : next === "text"
+                          ? -start.travel
+                          : 0,
+                  });
+                else setDrag({ x: start.baseX, y: start.baseY });
+                setPreview(next);
+                return;
+              }
               const x = start.baseX + e.clientX - start.x;
               const y = start.baseY + e.clientY - start.y;
               const scale = Math.min(1, 26 / Math.max(1, Math.hypot(x, y)));
               setDrag({ x: x * scale, y: y * scale });
-              setPreview(offset(e));
+              setPreview(next);
             }
           }}
           onPointerUp={(e) => {

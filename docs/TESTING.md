@@ -1,3 +1,5 @@
+Latest release: v3.1.10. Run `npm run check`. Profile/verification/access and desktop dial tests are in `tests/member-profiles.test.js` and `tests/profiles-browser.js`; the existing UX controls and transcript smoke suites cover the preserved flows. See [UPDATE-v3.1.10](UPDATE-v3.1.10.md).
+
 # Latest verification: ShiftScript v3.1.9
 
 122 unit/API tests and the final production build pass. Four isolated browser suites pass: ux-controls-browser, board-shortcuts-browser, browser-smoke and deletion-browser. They cover immediate movement before server persistence, no full-workspace reload after a successful move, pending feedback, failure rollback/reconciliation/retry, Undo, saved reordering, nested Escape, immediate draft closure and reopening, desktop source cards, mobile directional touch gestures, touch-only tutorial/help, hidden mobile keyboard tools and 320/390/768/1440px layout bounds. Transcript/voice processing, review, duplicate reuse and deletion regressions also pass. The build retains its existing large-bundle warning.

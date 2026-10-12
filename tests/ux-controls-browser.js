@@ -210,7 +210,7 @@ try {
     name: "Meeting source",
     exact: true,
   });
-  await expect(meeting().locator(".source-stick")).toBeHidden();
+  await expect(meeting().locator(".source-stick")).toBeVisible();
   for (const name of [
     "Voice",
     "Recent Google Meet",
@@ -224,7 +224,7 @@ try {
     const bounds = await choices
       .getByRole("radio", { name, exact: true })
       .boundingBox();
-    assert(bounds.height >= 100);
+    assert(bounds.height >= 64);
   }
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog[open]")).toHaveCount(0, { timeout: 1500 });
@@ -243,7 +243,7 @@ try {
     .toBe("Revised private draft");
   await page.unroute("**/api/drafts/current");
   console.log(
-    "Escape closes only the top nested dialog; draft editor closes immediately and reopening before cloud save preserves the latest draft without version conflicts. Desktop source buttons passed.",
+    "Escape closes only the top nested dialog; draft editor closes immediately and reopening before cloud save preserves the latest draft without version conflicts. Desktop directional selector and direct mode buttons passed.",
   );
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 950 });

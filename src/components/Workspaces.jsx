@@ -220,6 +220,7 @@ export function WorkspaceSwitcher({
   );
 }
 export function Team({
+  onProfile,
   workspace,
   role,
   user,
@@ -343,14 +344,22 @@ export function Team({
         </div>
         {(workspace?.members || []).map((m) => (
           <div className="member-row" key={m.uid}>
-            <span className="avatar">{m.name.slice(0, 2).toUpperCase()}</span>
-            <span>
-              <strong>
-                {m.name}
-                {m.uid === user?.uid ? " (you)" : ""}
-              </strong>
-              <small>{m.email || "Workspace owner"}</small>
-            </span>
+            <button
+              className="member-profile-link"
+              aria-label={"View " + m.name + "'s profile"}
+              onClick={() => onProfile(m.uid)}
+            >
+              <span className="avatar" aria-hidden="true">
+                {m.name.slice(0, 2).toUpperCase()}
+              </span>
+              <span>
+                <strong>
+                  {m.name}
+                  {m.uid === user?.uid ? " (you)" : ""}
+                </strong>
+                <small>{m.email || "Workspace owner"}</small>
+              </span>
+            </button>
             {owner && m.role !== "owner" ? (
               <>
                 <select

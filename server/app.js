@@ -20,6 +20,7 @@ import { installNotesRoutes, assertNoteSource } from "./notes.js";
 import { defaultModel } from "./gemini.js";
 import { installDeletionRoutes, meetingDeletionVersion } from "./deletion.js";
 import { installBoardRoutes } from "./board.js";
+import { installMemberProfileRoutes } from "./member-profiles.js";
 import {
   MemoryProfiles,
   installPersonalRoutes,
@@ -77,6 +78,7 @@ export function createApp({
   profileStore,
   cronSecret = process.env.CRON_SECRET,
   reminderIdentity = (uid) => firebase().auth.getUser(uid),
+  memberIdentity = reminderIdentity,
 } = {}) {
   const app = express(),
     production =
@@ -113,7 +115,7 @@ export function createApp({
       assistantModel: assistantModel(),
       assistantReady:
         provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
-      version: "3.1.9",
+      version: "3.1.10",
     }),
   );
   installReminderRoute(app, {
@@ -391,6 +393,11 @@ export function createApp({
     });
   });
   installWorkspaceRoutes(app, { read, mutate, profiles });
+  installMemberProfileRoutes(app, {
+    read,
+    profiles,
+    lookupIdentity: memberIdentity,
+  });
   installDeletionRoutes(app, { mutate });
   installBoardRoutes(app, { mutate });
   app.patch("/api/workspace", async (req, res) => {

@@ -1,4 +1,5 @@
-import { CheckCircle2, Building, ListTodo, LogOut } from "./Icons.jsx";
+import { CheckCircle2, Building, LogOut } from "./Icons.jsx";
+import ProfileCard from "./ProfileCard.jsx";
 import ProfileSettings from "./ProfileSettings.jsx";
 import { isAssignedTo } from "../features/task-filters.js";
 
@@ -21,61 +22,53 @@ export default function Profile({
   const email = user?.email || actor.email;
   const assigned = tasks.filter((task) => isAssignedTo(task, actor));
   const active = assigned.filter((task) => task.status !== "Completed");
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
   return (
     <section className="profile-layout" aria-label="Personal profile">
-      <article className="panel profile-card">
-        <div className="profile-cover">
-          <img src="/art/profile.png" alt="" width="800" height="400" />
-        </div>
-        <div className="profile-content">
-          <span className="avatar profile-avatar" aria-hidden="true">
-            {personal?.avatar ? <img src={personal.avatar} alt="" /> : initials}
-          </span>
-          <p className="eyebrow">YOUR ACCOUNT</p>
-          <h2>{name}</h2>
-          <dl className="profile-details">
-            <div>
-              <dt>Email address</dt>
-              <dd>{user ? email || "Not available" : "Local demo account"}</dd>
-            </div>
-            <div>
-              <dt>Email verification</dt>
-              <dd>
-                {!user ? (
-                  "Demo mode"
-                ) : user.emailVerified ? (
-                  <>
-                    <CheckCircle2 size={16} /> Verified
-                  </>
-                ) : (
-                  "Not verified"
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Current workspace</dt>
-              <dd>{workspace?.name || "Your workspace"}</dd>
-            </div>
-            <div>
-              <dt>Your role here</dt>
-              <dd className="profile-role">{role}</dd>
-            </div>
-          </dl>
-          {user && (
-            <button className="button" onClick={onSignOut}>
-              <LogOut size={17} />
-              Sign out
-            </button>
-          )}
-        </div>
-      </article>
+      <ProfileCard
+        name={name}
+        avatar={personal?.avatar || user?.photoURL || ""}
+        bio={personal?.bio}
+        verified={Boolean(user && personal?.emailVerified)}
+        active={active.length}
+        completed={assigned.length - active.length}
+        label="YOUR ACCOUNT"
+        onTasks={onMyWork}
+      >
+        <dl className="profile-details">
+          <div>
+            <dt>Email address</dt>
+            <dd>{user ? email || "Not available" : "Local demo account"}</dd>
+          </div>
+          <div>
+            <dt>Email verification</dt>
+            <dd>
+              {!user ? (
+                "Demo mode"
+              ) : personal?.emailVerified ? (
+                <>
+                  <CheckCircle2 size={16} /> Verified
+                </>
+              ) : (
+                "Not verified"
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Current workspace</dt>
+            <dd>{workspace?.name || "Your workspace"}</dd>
+          </div>
+          <div>
+            <dt>Your role here</dt>
+            <dd className="profile-role">{role}</dd>
+          </div>
+        </dl>
+        {user && (
+          <button className="button" onClick={onSignOut}>
+            <LogOut size={17} />
+            Sign out
+          </button>
+        )}
+      </ProfileCard>
       <div className="profile-side">
         <ProfileSettings
           key={actor.uid}
@@ -85,28 +78,6 @@ export default function Profile({
           remindersReady={remindersReady}
           onSaved={onProfileSaved}
         />
-        <section className="panel profile-section">
-          <h2>
-            <ListTodo size={20} /> Your work
-          </h2>
-          <p className="muted">
-            Tasks linked to your account or matching your name in this
-            workspace.
-          </p>
-          <div className="profile-work">
-            <div>
-              <strong>{active.length}</strong>
-              <span>Active tasks</span>
-            </div>
-            <div>
-              <strong>{assigned.length - active.length}</strong>
-              <span>Completed</span>
-            </div>
-          </div>
-          <button className="button primary" onClick={onMyWork}>
-            View my tasks
-          </button>
-        </section>
         <section className="panel profile-section">
           <h2>Make yourself at home</h2>
           <p className="muted">
