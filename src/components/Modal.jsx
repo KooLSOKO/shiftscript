@@ -2,6 +2,7 @@ import { useEffect, useRef, useId } from "react";
 import { X } from "./Icons.jsx";
 let openDialogs = 0;
 let restoreScroll;
+const stack = [];
 export default function Modal({ title, children, onClose }) {
   const ref = useRef(null);
   const titleId = useId();
@@ -19,7 +20,10 @@ export default function Modal({ title, children, onClose }) {
       };
     }
     d.showModal();
+    stack.push(d);
     return () => {
+      const index = stack.indexOf(d);
+      if (index >= 0) stack.splice(index, 1);
       d.close();
       if (--openDialogs === 0) restoreScroll?.();
     };
@@ -29,9 +33,21 @@ export default function Modal({ title, children, onClose }) {
       ref={ref}
       className="modal"
       aria-labelledby={titleId}
+      onKeyDown={(e) => {
+        if (
+          e.key !== "Escape" ||
+          e.defaultPrevented ||
+          stack.at(-1) !== ref.current
+        )
+          return;
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        e.stopPropagation();
+        if (stack.at(-1) === ref.current) onClose();
       }}
       onClick={(e) => {
         if (e.target === ref.current) onClose();

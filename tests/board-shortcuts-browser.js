@@ -329,6 +329,9 @@ try {
     });
     await page.mouse.up();
     await expect(dest).toContainText("Draft portfolio");
+    await expect(page.locator(".board-feedback")).toContainText(
+      "moved to In Progress",
+    );
     assert.equal(
       (await store.list("soko")).tasks.find((t) => t.id === cards[0].id).status,
       "In Progress",
@@ -607,14 +610,23 @@ try {
     });
     await setup(mobile);
     await mobile.goto("http://127.0.0.1:5187/app");
+    await expect(
+      mobile.getByRole("button", {
+        name: "Shortcuts and tutorial",
+        exact: true,
+      }),
+    ).toBeHidden();
     await mobile
-      .getByRole("button", { name: "Shortcuts and tutorial", exact: true })
+      .getByRole("button", { name: "View your profile", exact: true })
       .click();
-    let help = mobile.getByRole("dialog", {
-      name: "Shortcuts and controls",
+    await mobile
+      .getByRole("button", { name: "Replay workspace tutorial", exact: true })
+      .click();
+    tour = mobile.getByRole("dialog", {
+      name: "Welcome to your workspace",
       exact: true,
     });
-    await fit(help, mobile, "Shortcut help " + width);
+    await fit(tour, mobile, "Touch tutorial " + width);
     await mobile.emulateMedia({ reducedMotion: "no-preference" });
     await mobile.evaluate(() =>
       window.dispatchEvent(
@@ -626,27 +638,13 @@ try {
       exact: true,
     });
     await opening.waitFor();
-    await fit(opening, mobile, "Opening over help " + width);
+    await fit(opening, mobile, "Opening over tutorial " + width);
     await opening
       .getByRole("button", { name: "Skip animation", exact: true })
       .click();
     await opening.waitFor({ state: "hidden" });
-    await expect(help).toBeVisible();
+    await expect(tour).toBeVisible();
     await mobile.emulateMedia({ reducedMotion: "reduce" });
-    if (width === 320 && process.env.SHIFTSCRIPT_QA_OUTPUT)
-      await help.screenshot({
-        path: join(
-          process.env.SHIFTSCRIPT_QA_OUTPUT,
-          "shortcuts-help-mobile.png",
-        ),
-      });
-    await help
-      .getByRole("button", { name: "Replay workspace tutorial", exact: true })
-      .click();
-    tour = mobile.getByRole("dialog", {
-      name: "Welcome to your workspace",
-      exact: true,
-    });
     await fit(tour, mobile, "Tutorial " + width);
     await tour.getByRole("button", { name: "Next", exact: true }).click();
     tour = mobile.getByRole("dialog", {
@@ -711,9 +709,10 @@ try {
     await cdp.detach();
     await tour.getByRole("button", { name: "Next", exact: true }).click();
     tour = mobile.getByRole("dialog", {
-      name: "A few keys. A faster day.",
+      name: "Ready for your next meeting",
       exact: true,
     });
+    await expect(tour.locator("table,kbd")).toHaveCount(0);
     await fit(tour, mobile, "Controls table " + width);
     await tour
       .getByRole("button", { name: "Let's get started", exact: true })
@@ -745,8 +744,14 @@ try {
     await mobile.emulateMedia({ reducedMotion: "reduce" });
     await mobile.reload();
     await mobile
-      .getByRole("button", { name: "Shortcuts and tutorial", exact: true })
+      .getByRole("button", { name: "View your profile", exact: true })
       .waitFor();
+    await expect(
+      mobile.getByRole("button", {
+        name: "Shortcuts and tutorial",
+        exact: true,
+      }),
+    ).toBeHidden();
     assert.equal(await mobile.locator(".auth-transition").count(), 0);
     await mobile.close();
     console.log(

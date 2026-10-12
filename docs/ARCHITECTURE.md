@@ -164,3 +164,10 @@ Workspace responses include a SHA-256 `deletionVersion` derived from canonical m
 Private profiles expose `singleKeyShortcuts` (boolean, default true). PATCH /api/profile validates it strictly and stores it under the authenticated UID. The client offers an optimistic toggle with rollback and an account guard; tutorial and shortcut responses merge only their own profile field. `shortcutAction` respects both the preference and `defaultPrevented`, while modifier and board keyboard controls remain independent.
 
 AuthTransition uses a fullscreen native modal dialog so the paint animation can appear above existing modal editors. Persisted pageshow replays the transition without clearing UI state. Existing editor/tutorial components remain mounted, and focus returns to the previous connected control. Ready-state changes promote the overlay above dialogs that become available during loading. Escape/Tab remain within the transition, and reduced motion skips it.
+
+
+## v3.1.9 optimistic board and responsive controls
+
+`shared/board.js` computes the same placement patches for the server and the local preview. A board move overlays only status/rank and retains real versions. POST /api/tasks/:id/move returns `task`, all changed `tasks`, activity and the Undo token. The client merges those records directly, guards scope/version changes, and rolls back only matching preview fields on failure. Reconciliation is guarded by a board revision so it cannot replace a later move. Background workspace refresh overlays a matching pending preview. Undo is disabled during confirmation.
+
+The topmost Modal handles Escape and prevents background handlers from receiving it. NewMeeting stores local draft text before closing and serializes cloud saves by account/workspace with own-save version tracking and an auth-account guard. Mobile/tablet help uses touch guidance; desktop source selection uses a direct two-column button grid while the dial remains on touch layouts.

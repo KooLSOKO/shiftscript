@@ -3,6 +3,7 @@ import Modal from "./Modal.jsx";
 import TaskBoard from "./TaskBoard.jsx";
 import { shortcuts } from "../features/shortcuts.js";
 import { placeOnBoard } from "../../shared/board.js";
+import { useMobileView } from "../features/use-mobile-view.js";
 export function KeyboardIcon() {
   return (
     <svg
@@ -61,11 +62,30 @@ function ShortcutPreference({ enabled, busy, error, onChange }) {
   return (
     <div className="shortcut-preference">
       <label className="shortcut-preference-label">
-        <input type="checkbox" checked={enabled} disabled={busy} onChange={(event) => onChange(event.target.checked)} />
-        <span><strong>Enable single-key shortcuts</strong><span>N, T, B, M, D, A, R and ?. Saved to your account.</span></span>
+        <input
+          type="checkbox"
+          checked={enabled}
+          disabled={busy}
+          onChange={(event) => onChange(event.target.checked)}
+        />
+        <span>
+          <strong>Enable single-key shortcuts</strong>
+          <span>N, T, B, M, D, A, R and ?. Saved to your account.</span>
+        </span>
       </label>
-      <p className="hint">{busy ? "Saving preference…" : enabled ? "Single-key shortcuts are on." : "Single-key shortcuts are off."} Command/Ctrl K, Z and /, plus board keyboard controls, remain available.</p>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      <p className="hint">
+        {busy
+          ? "Saving preference…"
+          : enabled
+            ? "Single-key shortcuts are on."
+            : "Single-key shortcuts are off."}{" "}
+        Command/Ctrl K, Z and /, plus board keyboard controls, remain available.
+      </p>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -96,6 +116,27 @@ const titles = [
   "Make the board your own",
   "A few keys. A faster day.",
 ];
+function TouchGuide({ readOnly }) {
+  return (
+    <div className="tour-touch-guide">
+      <h3>Your workspace, wherever you are.</h3>
+      <p>
+        Use the menu to move between meetings, tasks and Shifty. On phones, the
+        bottom bar gives quick access to key pages. Search finds work in your
+        workspace.
+      </p>
+      <p>
+        {readOnly
+          ? "Open a meeting or task to view its details."
+          : "Add a meeting from Overview using New meeting or the centre +. On the board, drag the blue grab handle to move a task, or choose its Status menu."}
+      </p>
+      <p>
+        Your profile keeps your details and your tasks together. Tap the X to
+        close any window.
+      </p>
+    </div>
+  );
+}
 export default function ShortcutsTour({
   mode = "tour",
   readOnly = false,
@@ -112,9 +153,18 @@ export default function ShortcutsTour({
 }) {
   const [step, setStep] = useState(0),
     [tasks, setTasks] = useState(() => structuredClone(demo));
+  const mobile = useMobileView();
   return (
     <Modal
-      title={mode === "help" ? "Shortcuts and controls" : titles[step]}
+      title={
+        mode === "help"
+          ? mobile
+            ? "Workspace help"
+            : "Shortcuts and controls"
+          : mobile && step === 3
+            ? "Ready for your next meeting"
+            : titles[step]
+      }
       onClose={() => {
         if (!busy) onClose();
       }}
@@ -122,14 +172,25 @@ export default function ShortcutsTour({
       <div className="workspace-tour">
         {mode === "help" ? (
           <>
-            <ShortcutPreference enabled={singleKeys} busy={shortcutBusy} error={shortcutError} onChange={onShortcutChange} />
-            <ShortcutTable readOnly={readOnly} />
-            <p className="tour-board-help">
-              Board controls: drag the grab handle, or focus it and press Space.
-              Left / Right selects a column; Up / Down selects a position; Space
-              / Enter drops; Escape cancels. On touch screens, drag the handle
-              or choose the Status menu.
-            </p>
+            {mobile ? (
+              <TouchGuide readOnly={readOnly} />
+            ) : (
+              <>
+                <ShortcutPreference
+                  enabled={singleKeys}
+                  busy={shortcutBusy}
+                  error={shortcutError}
+                  onChange={onShortcutChange}
+                />
+                <ShortcutTable readOnly={readOnly} />
+                <p className="tour-board-help">
+                  Board controls: drag the grab handle, or focus it and press
+                  Space. Left / Right selects a column; Up / Down selects a
+                  position; Space / Enter drops; Escape cancels. On touch
+                  screens, drag the handle or choose the Status menu.
+                </p>
+              </>
+            )}
             <button className="button primary" onClick={onRestart}>
               Replay workspace tutorial
             </button>
@@ -161,7 +222,11 @@ export default function ShortcutsTour({
                   </p>
                   <p>
                     Your tutorial progress is saved to your account. You can
-                    replay it from the keyboard button or your profile.
+                    replay it from{" "}
+                    {mobile
+                      ? "your profile"
+                      : "the keyboard button or your profile"}
+                    .
                   </p>
                 </div>
               </div>
@@ -226,14 +291,30 @@ export default function ShortcutsTour({
                   />
                 </div>
                 <p className="hint">
-                  Mouse or touch: drag the grab handle. Keyboard: Space to pick
-                  up, arrows to move, Space to drop. The Status menu is another
-                  way to change columns. Your real board saves positions for
-                  your team.
+                  Drag the grab handle.
+                  <span className="desktop-keyboard-controls">
+                    {" "}
+                    Keyboard: Space to pick up, arrows to move, Space to drop.
+                  </span>{" "}
+                  The Status menu is another way to change columns. Your real
+                  board saves positions for your team.
                 </p>
               </>
             )}
-            {step === 3 && <><ShortcutPreference enabled={singleKeys} busy={shortcutBusy} error={shortcutError} onChange={onShortcutChange} /><ShortcutTable readOnly={readOnly} /></>}
+            {step === 3 &&
+              (mobile ? (
+                <TouchGuide readOnly={readOnly} />
+              ) : (
+                <>
+                  <ShortcutPreference
+                    enabled={singleKeys}
+                    busy={shortcutBusy}
+                    error={shortcutError}
+                    onChange={onShortcutChange}
+                  />
+                  <ShortcutTable readOnly={readOnly} />
+                </>
+              ))}
             {error && (
               <div>
                 <p className="form-error" role="alert">

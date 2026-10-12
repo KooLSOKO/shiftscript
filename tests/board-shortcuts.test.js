@@ -91,6 +91,17 @@ test("board moves save status/order, preserve content/source links and support t
   const moved = (await move(changed, { status: "In Progress" }).expect(200))
     .body;
   assert.equal(moved.task.status, "In Progress");
+  assert.deepEqual(
+    moved.tasks.map((task) => task.id),
+    [first.id],
+  );
+  assert(
+    moved.activity.some(
+      (item) =>
+        item.targetId === first.id &&
+        item.action === "changed status to In Progress",
+    ),
+  );
   assert(moved.undoToken);
   await call(app, "post", "/undo/" + moved.undoToken)
     .send({})

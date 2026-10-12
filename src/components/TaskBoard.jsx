@@ -33,6 +33,7 @@ export default function TaskBoard({
 }) {
   const [preview, setPreview] = useState(null),
     [moving, setMoving] = useState(false),
+    [savingId, setSavingId] = useState(null),
     [message, setMessage] = useState("");
   const drag = useRef(null),
     board = useRef(null),
@@ -84,7 +85,8 @@ export default function TaskBoard({
   async function commit(task, target) {
     if (!target) return;
     setMoving(true);
-    setMessage("");
+    setSavingId(task.id);
+    setMessage(`Saving ${task.title}…`);
     try {
       await onMove(task, target);
       setMessage(`${task.title} moved to ${target.status}.`);
@@ -92,6 +94,7 @@ export default function TaskBoard({
       setMessage(error.message);
     } finally {
       setMoving(false);
+      setSavingId(null);
       requestAnimationFrame(() =>
         board.current
           ?.querySelector(
@@ -277,9 +280,18 @@ export default function TaskBoard({
   return (
     <>
       <p id={hint} className="board-instructions">
-        {readOnly
-          ? "Viewer access: open a card to read its details."
-          : "Drag the grab handle to move or reorder a card. Keyboard: focus the handle, press Space, use arrow keys, then Space to drop. Escape cancels."}
+        {readOnly ? (
+          "Viewer access: open a card to read its details."
+        ) : (
+          <>
+            Drag the grab handle to move or reorder a card.
+            <span className="desktop-keyboard-controls">
+              {" "}
+              Keyboard: focus the handle, press Space, use arrow keys, then
+              Space to drop. Escape cancels.
+            </span>
+          </>
+        )}
       </p>
       <div
         ref={board}
@@ -312,6 +324,7 @@ export default function TaskBoard({
               <article
                 key={task.id}
                 data-board-task={task.id}
+                data-saving={savingId === task.id || undefined}
                 className={
                   "task-card" +
                   (task.status === "Completed" ? " task-card-completed" : "") +
@@ -322,6 +335,9 @@ export default function TaskBoard({
                 }
               >
                 <div className="board-card-controls">
+                  {savingId === task.id && (
+                    <span className="board-saving-badge">Saving…</span>
+                  )}
                   {!readOnly && onSelect && (
                     <label className="check-option">
                       <input

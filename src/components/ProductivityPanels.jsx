@@ -183,8 +183,10 @@ export function GlobalSearch({
         ))}
       </div>
       <p className="hint mt-4">
-        ⌘/Ctrl + K: search · N: new meeting · Escape: close. Search covers this
-        workspace.
+        <span className="desktop-keyboard-controls">
+          ⌘/Ctrl + K: search · N: new meeting · Escape: close.{" "}
+        </span>
+        Search covers this workspace.
       </p>
     </Modal>
   );

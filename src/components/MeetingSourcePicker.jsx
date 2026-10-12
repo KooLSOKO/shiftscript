@@ -93,8 +93,10 @@ export default function MeetingSourcePicker({ value, onChange, disabled }) {
       <div className="source-picker-heading">
         <h3>Start with your conversation</h3>
         <p id="source-picker-help">
-          Click or tap a mode, or drag the dial and release. Arrow keys work
-          too.
+          <span className="desktop-source-help">Choose a source below.</span>
+          <span className="mobile-source-help">
+            Tap a mode, or drag the dial and release.
+          </span>
         </p>
       </div>
       <div

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, today, types } from "../lib.js";
+import { api, auth, today, types } from "../lib.js";
 import { Save, Upload, FileText } from "./Icons.jsx";
 import GoogleMeet from "./GoogleMeet.jsx";
 import Modal from "./Modal.jsx";
@@ -17,6 +17,8 @@ const blank = () => ({
   transcript: "",
   projectId: null,
 });
+const draftQueues = new Map();
+const draftVersions = new Map();
 export default function NewMeeting({
   config,
   workspaceId,
@@ -120,10 +122,11 @@ export default function NewMeeting({
     }
     const snapshot = JSON.stringify(latest.current);
     if (processed.current) return queue.current;
-    queue.current = queue.current
+    queue.current = (draftQueues.get(key) || queue.current)
       .catch(() => {})
       .then(async () => {
         if (processed.current || saved.current === snapshot) return;
+        if (config.authRequired && auth?.currentUser?.uid !== actorId) return;
         message("Saving draft…");
         try {
           const result = await api("/drafts/current", {
@@ -131,10 +134,14 @@ export default function NewMeeting({
             method: "PUT",
             body: JSON.stringify({
               ...JSON.parse(snapshot),
-              expectedVersion: version.current,
+              expectedVersion: Math.max(
+                version.current,
+                draftVersions.get(key) || 0,
+              ),
             }),
           });
           version.current = result.draft.version;
+          draftVersions.set(key, result.draft.version);
           saved.current = snapshot;
           message(localFailure.current ? "Saved to workspace" : "Draft saved");
         } catch (e) {
@@ -145,6 +152,13 @@ export default function NewMeeting({
           throw e;
         }
       });
+    const queued = queue.current;
+    draftQueues.set(key, queued);
+    queued
+      .finally(() => {
+        if (draftQueues.get(key) === queued) draftQueues.delete(key);
+      })
+      .catch(() => {});
     return queue.current;
   }
   useEffect(() => {
@@ -174,9 +188,22 @@ export default function NewMeeting({
   async function close() {
     if (busy || audioBusy || importBusy) return;
     try {
-      await save();
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          form: latest.current,
+          modifiedAt: new Date().toISOString(),
+        }),
+      );
+      save().catch(() => {});
     } catch {
-      /* Local copy remains available. */
+      // If browser storage is unavailable, keep the editor until the server
+      // has safely stored the draft instead of silently losing its contents.
+      try {
+        await save();
+      } catch {
+        return;
+      }
     }
     onClose();
   }

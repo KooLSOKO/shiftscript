@@ -5852,3 +5852,68 @@ textarea {
 .shortcut-preference .hint {
   margin-top: 10px;
 }
+/* Touch guidance on mobile; direct source choices on desktop. */
+.mobile-source-help {
+  display: none;
+}
+.board-saving-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #173e8d;
+  background: #e7efff;
+  padding: 6px 9px;
+  border-radius: 8px;
+}
+.task-card[data-saving] {
+  border-color: #8ba9e8;
+}
+.tour-touch-guide {
+  display: grid;
+  gap: 14px;
+  line-height: 1.65;
+}
+.tour-touch-guide h3 {
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--ss-navy);
+}
+@media (max-width: 850px) {
+  .desktop-keyboard-controls,
+  .desktop-source-help {
+    display: none !important;
+  }
+  .mobile-source-help {
+    display: inline;
+  }
+}
+@media (min-width: 851px) {
+  .source-direction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    max-width: none;
+    gap: 12px;
+  }
+  .source-direction-grid .source-direction {
+    grid-area: auto;
+    min-height: 108px;
+    padding: 18px 12px;
+    border-color: #cbd8f0;
+    background: white;
+    cursor: pointer;
+  }
+  .source-direction-grid .source-direction[aria-checked="true"] {
+    background: #e1ebff;
+    border: 2px solid var(--ss-blue);
+    padding: 17px 11px;
+  }
+  .source-direction-grid .source-direction strong {
+    font-size: 15px;
+  }
+  .source-direction-grid .source-direction svg {
+    width: 28px;
+    height: 28px;
+  }
+  .source-direction-grid .source-stick {
+    display: none;
+  }
+}

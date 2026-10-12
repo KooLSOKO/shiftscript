@@ -113,7 +113,7 @@ export function createApp({
       assistantModel: assistantModel(),
       assistantReady:
         provider === "sample" || Boolean(process.env.GEMINI_API_KEY),
-      version: "3.1.8",
+      version: "3.1.9",
     }),
   );
   installReminderRoute(app, {

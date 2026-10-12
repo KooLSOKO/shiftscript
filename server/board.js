@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { boardStatuses, boardRank, placeOnBoard } from "../shared/board.js";
+import { boardStatuses, boardPlacement } from "../shared/board.js";
 import { fail } from "./collaboration.js";
 import { stamp, assertCompletion } from "./productivity.js";
 const moveInput = z
@@ -25,7 +25,7 @@ const moveInput = z
 export function installBoardRoutes(app, { mutate }) {
   app.post("/api/tasks/:id/move", async (req, res) => {
     const input = moveInput.parse(req.body);
-    const task = await mutate(req, (s) => {
+    const result = await mutate(req, (s) => {
       const task = s.tasks.find((t) => t.id === req.params.id);
       if (!task)
         fail(404, "This task is no longer available. Refresh the board.");
@@ -48,38 +48,24 @@ export function installBoardRoutes(app, { mutate }) {
           );
       }
       const previous = structuredClone(task);
-      const { column, index } = placeOnBoard(s.tasks, task, input);
-      task.status = input.status;
-      assertCompletion(task, s.tasks, previous);
-      const before = column[index - 1],
-        after = column[index + 1];
-      const rank =
-        before && after
-          ? (boardRank(before) + boardRank(after)) / 2
-          : before
-            ? boardRank(before) + 1024
-            : after
-              ? boardRank(after) - 1024
-              : 0;
-      if (
-        Number.isFinite(rank) &&
-        (!before || rank > boardRank(before)) &&
-        (!after || rank < boardRank(after))
-      )
-        task.boardRank = rank;
-      else
-        for (let i = 0; i < column.length; i++) {
-          const item = column[i];
-          if (item.boardRank !== i * 1024) {
-            item.boardRank = i * 1024;
-            item.updatedAt = stamp(item.updatedAt);
-            item.updatedBy = req.uid;
-          }
-        }
-      task.updatedAt = stamp(task.updatedAt);
-      task.updatedBy = req.uid;
-      return task;
+      assertCompletion({ ...task, status: input.status }, s.tasks, previous);
+      const changed = [];
+      for (const patch of boardPlacement(s.tasks, task.id, input)) {
+        const item = s.tasks.find((item) => item.id === patch.id);
+        if (item.id !== task.id && item.boardRank === patch.boardRank) continue;
+        Object.assign(item, patch, {
+          updatedAt: stamp(item.updatedAt),
+          updatedBy: req.uid,
+        });
+        changed.push(item);
+      }
+      s.activity ||= [];
+      return { task, tasks: changed, activity: s.activity };
     });
-    res.json({ task, undoToken: req.undoToken });
+    res.json({
+      ...result,
+      activity: result.activity.slice(-200),
+      undoToken: req.undoToken,
+    });
   });
 }

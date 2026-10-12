@@ -114,6 +114,15 @@ try {
       [-38, 0, "Previous meeting"],
       [0, -38, "Text"],
     ]) {
+      if (width > 850) {
+        assert.equal(await page.locator(".source-stick").isVisible(), false);
+        await sourceChoice(mode).click();
+        assert.equal(
+          await sourceChoice(mode).getAttribute("aria-checked"),
+          "true",
+        );
+        continue;
+      }
       await page.locator(".source-stick").scrollIntoViewIfNeeded();
       const box = await page.locator(".source-stick").boundingBox();
       const x = box.x + box.width / 2,
@@ -148,58 +157,20 @@ try {
       });
     }
   }
-  // Desktop: direct movement, small dead zone and stable diagonal intent.
+  // Desktop source selection uses large direct buttons rather than a drag dial.
   await page.setViewportSize({ width: 1440, height: 1050 });
-  await sourceChoice("Text").click();
-  await page.locator(".source-stick").scrollIntoViewIfNeeded();
-  const dialBox = await page.locator(".source-stick").boundingBox();
-  const cx = dialBox.x + dialBox.width / 2;
-  const cy = dialBox.y + dialBox.height / 2;
-  await page.mouse.move(cx, cy);
-  await page.mouse.down();
-  await page.mouse.move(cx + 12, cy);
-  assert.equal(
-    await sourceChoice("Voice").getAttribute("data-preview"),
-    "true",
-  );
-  assert.equal(await sourceChoice("Text").getAttribute("aria-checked"), "true");
-  assert.equal(
-    await page
-      .locator(".source-stick-knob")
-      .evaluate((el) => getComputedStyle(el).transitionDuration),
-    "0s",
-  );
-  await page.mouse.move(cx + 21, cy + 24);
-  assert.equal(
-    await sourceChoice("Voice").getAttribute("data-preview"),
-    "true",
-  );
-  await page.mouse.move(cx + 10, cy + 36);
-  assert.equal(
-    await sourceChoice("Recent Google Meet").getAttribute("data-preview"),
-    "true",
-  );
-  await page.mouse.up();
-  assert.equal(
-    await sourceChoice("Recent Google Meet").getAttribute("aria-checked"),
-    "true",
-  );
-  assert.equal(
-    await page
-      .locator(".source-stick-knob")
-      .evaluate(
-        (el) => getComputedStyle(el).transitionTimingFunction.split(",")[0],
-      ),
-    "ease-out",
-  );
-  await page.mouse.move(cx, cy);
-  await page.mouse.down();
-  await page.mouse.move(cx + 4, cy - 4);
-  await page.mouse.up();
-  assert.equal(
-    await sourceChoice("Recent Google Meet").getAttribute("aria-checked"),
-    "true",
-  );
+  assert.equal(await page.locator(".source-stick").isVisible(), false);
+  for (const name of [
+    "Voice",
+    "Recent Google Meet",
+    "Previous meeting",
+    "Text",
+  ]) {
+    await sourceChoice(name).click();
+    assert.equal(await sourceChoice(name).getAttribute("aria-checked"), "true");
+    const bounds = await sourceChoice(name).boundingBox();
+    assert(bounds.height >= 100);
+  }
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 1050 });
   await page.locator(".source-stick").scrollIntoViewIfNeeded();
@@ -550,7 +521,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, desktop pointer tracking/diagonal stability, touch/keyboard modes, no overflow, mocked voice transcription, duplicate reuse toast and retained task progress, no page errors.",
+    "PASS: sample workflow, edits, approval/rejection, persistence, board, mobile navigation, desktop direct source buttons, touch/keyboard modes, no overflow, mocked voice transcription, duplicate reuse toast and retained task progress, no page errors.",
   );
 } catch (error) {
   await page.screenshot({

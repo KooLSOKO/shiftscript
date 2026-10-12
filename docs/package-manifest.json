@@ -1,12 +1,14 @@
 {
-  "version": "3.1.8",
-  "root": "ShiftScript-v3.1.8",
+  "version": "3.1.9",
+  "root": "ShiftScript-v3.1.9",
   "verification": {
-    "unitApiTests": 118,
+    "unitApiTests": 122,
     "productionBuild": "passed",
     "browserSuitesPassed": [
+      "ux-controls-browser",
       "board-shortcuts-browser",
-      "accounts-browser"
+      "browser-smoke",
+      "deletion-browser"
     ],
     "viewports": [
       320,
@@ -14,12 +16,8 @@
       768,
       1440
     ],
-    "landscape": [
-      844,
-      390
-    ],
     "externalServices": "isolated local / simulated",
-    "deviceAcceptance": "Physical-device Safari, deployed Firebase and browser-managed cache behavior remain owner acceptance checks"
+    "deviceAcceptance": "Physical-device Safari and deployed Firebase/network round trip remain owner acceptance checks"
   },
   "files": [
     {
@@ -44,7 +42,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "ee283cfd138c0f1cefbc34edbc99e7e0964b6ff14fbcda83dc74f1e58d6183e9"
+      "sha256": "334462f100378a386d147824e7d0a103bae6c9885b909582d703671322e4f979"
     },
     {
       "path": "api/index.js",
@@ -56,7 +54,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "80b736a49dea42ca9d49f857ed7e8d1bcbe2485420acb6f33345fa3b29e26708"
+      "sha256": "e027373d313057d50ad7db0e9dfa00d76be4a3a76114812be52d0733965f1287"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -92,7 +90,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "55e18bd94093ea29b2625afd81d7d8c032685c59e4c231954694630c2b6e7f99"
+      "sha256": "6512c32fb06ef56178d023c62958ee4c75ecbf75f812c773542fa4f4ce435944"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -203,12 +201,16 @@
       "sha256": "91383907d1a73d81ba51475a81b6e92cfc121f9f932a3d5161789f8fd3f47811"
     },
     {
+      "path": "docs/UPDATE-v3.1.9.md",
+      "sha256": "d026e7c85de8c7896f4b4cda64d0405c13c058e5a87af9a7bc3416a13004fa37"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "3ba763217f99c60cba707cd71e452f88500c1e595778884b25a1d55bb156406c"
+      "sha256": "9d59c96394800dff7fd1022beb9dd08b6eb3a192312478d32162cf9a4c1b2c39"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -592,11 +594,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "8e4573f3e92b1ad0958b21cc21692d7577eb531076d62d80f682447f318a47b1"
+      "sha256": "e72bfa191ddcc384d3b3a3d5aaccf51874c62a6cc4a331a8bbc226d6043123a1"
     },
     {
       "path": "package.json",
-      "sha256": "59ec9bc1d768464fb030b4bdf49889e4d216c1f5dbedab693a64abcc82907a35"
+      "sha256": "1cdb093c1c3ca7379a0effb95e51de0762d78c9e300f4337330f9933b732892b"
     },
     {
       "path": "public/about/index.html",
@@ -1032,7 +1034,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "e62125cc213a386fed79c1ec262bf8fb03c76793cb0cf5ac0b2d8ed86a31ec21"
+      "sha256": "3c9994ffd0ec2dd627eeaa69870a89d5f8aa56accb019df9f66cf4167fd2458a"
     },
     {
       "path": "server/assistant.js",
@@ -1044,7 +1046,7 @@
     },
     {
       "path": "server/board.js",
-      "sha256": "4e9f46ca88b30f739965ce92cbea2bacb75f5aeda7167bcfb3a3fb2e52649e0b"
+      "sha256": "1fd122906dd29a39e81418a71dc5f18fb6e0bc94715dd6584e8d38184517df27"
     },
     {
       "path": "server/calendar.js",
@@ -1104,7 +1106,7 @@
     },
     {
       "path": "shared/board.js",
-      "sha256": "1690969bdea0799af230f2e5f4fac35782f82972e2cce5520a2f48b405c6c372"
+      "sha256": "239c3e6cf543ca7db51427da75cefeb118fe22da9d17854cee7d18542292ebdc"
     },
     {
       "path": "shared/identity.js",
@@ -1128,7 +1130,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "20152135a2b4d385f0e6781921d9b829405a0404b3615a618604489acce428ea"
+      "sha256": "064c2be2b73bdf285c7c376cddf688746a2fab82a6d05b4dbe73b60c2fff5cf1"
     },
     {
       "path": "src/app-entry.jsx",
@@ -1192,15 +1194,15 @@
     },
     {
       "path": "src/components/MeetingSourcePicker.jsx",
-      "sha256": "933377cb43feb6f7360be998d2757d35d23276f402a04b7a7f353c82102f2de2"
+      "sha256": "9e0c59c893a1ac9168575f64c4a65aa8b098e383ff2d5742a2e4dca3f6c874d6"
     },
     {
       "path": "src/components/Modal.jsx",
-      "sha256": "935fcb0c77054d737f64576648b7eadce9c861d64a157b082b2c3a1666cf4f0f"
+      "sha256": "774a48b0633545724fb0922a2ea0a2718ab6453c3c168e27abd03047239bf34b"
     },
     {
       "path": "src/components/NewMeeting.jsx",
-      "sha256": "b058a4cf194fbda645141a8bf05188b48480be4833487f0418e57ab8792c61a5"
+      "sha256": "ff8c95d520b63473dba1b083fd175ac273605a096b6d0778a79b3be4393160d1"
     },
     {
       "path": "src/components/Notes.jsx",
@@ -1220,11 +1222,11 @@
     },
     {
       "path": "src/components/ProductivityPanels.jsx",
-      "sha256": "f53c2329ff7a5be1d656f596551052a1c4926655ec52e8b80e367f0450bc1637"
+      "sha256": "32b0c2e7ac0848c0b88941e1702fd66453203c9bb585601155c4e23eac7f2cf3"
     },
     {
       "path": "src/components/Profile.jsx",
-      "sha256": "3121012e50c4916c0cf92b27669241b6c70e68aff67e4524d49bec937234e159"
+      "sha256": "dcfae9a538b17a76970c703f1d4340b5c045883998cbb52271259419f47f3079"
     },
     {
       "path": "src/components/ProfileSettings.jsx",
@@ -1248,7 +1250,7 @@
     },
     {
       "path": "src/components/ShortcutsTour.jsx",
-      "sha256": "7dc866e6dd99b2670b2ff57be08d64c48872f81269c284dd51f1d9a235420a56"
+      "sha256": "768a4d20a04cf8657613469ac605eed1e7d9276e0f91e3a6c8892ea1f0a89485"
     },
     {
       "path": "src/components/TabArtwork.jsx",
@@ -1256,7 +1258,7 @@
     },
     {
       "path": "src/components/TaskBoard.jsx",
-      "sha256": "5fa9b0e09b34eb4fd72517d1c23deb76d5cd015c3c84bed6b4fc07522ed205c7"
+      "sha256": "230383c6caf17520134bb0eb40b07ad323e1e18b7e42bcb356204753190e3eee"
     },
     {
       "path": "src/components/TaskBulkActions.jsx",
@@ -1279,6 +1281,10 @@
       "sha256": "93c90f0511a0047feba037ea786d37394d82a3ce8101e182dcd8a5a68d754455"
     },
     {
+      "path": "src/features/board-updates.js",
+      "sha256": "1eb72c0c2a011e6da914a4e2c2ac4530f1f3dbaa1a7c6cf45de1dca13495e043"
+    },
+    {
       "path": "src/features/calendar.js",
       "sha256": "3b3c7122d41f1dc46dee98d29e754f8fa06be4fb28c3f98a27b2ef73983ed228"
     },
@@ -1299,6 +1305,10 @@
       "sha256": "d99cf9a8148addc8e887d27fdfd66022a2cdc437390ef840df54ca9c72a24e1b"
     },
     {
+      "path": "src/features/use-mobile-view.js",
+      "sha256": "02fa3542dc9cb22d0123e8762afced6e094d98a0d3c2b0d622d15bb24e38fdf3"
+    },
+    {
       "path": "src/firebase-config.js",
       "sha256": "45641e9a2ec163016f4ac08b8446ae04b103f4b8fb41d9bef1cedca5ace0bed9"
     },
@@ -1312,7 +1322,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "69157e6e1cb666e25690e8fb3527ebafdbc483e2945e371f775d54e1bc3e435a"
+      "sha256": "8f5d6846989b6ef7689a6fddbda93b21ea4bd12aaca87212d5381d579cd8b4aa"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -1336,15 +1346,19 @@
     },
     {
       "path": "tests/board-shortcuts-browser.js",
-      "sha256": "db59f3a126efc71df0c359426ee2e304cfc5376bb353d3b7ae1f40c67946d7e8"
+      "sha256": "61cab213a4a58ca429c54fe390334f91aca6032d5acac95f677d184040e5b419"
     },
     {
       "path": "tests/board-shortcuts.test.js",
-      "sha256": "4b8b27c95b4d72784e22dd7d5a35f705131bd87afcdd9ddabe40b584d1460420"
+      "sha256": "cfdc08216add6bc749ed22861a6a3446f4da1963139af4b91370601ab6472fdf"
+    },
+    {
+      "path": "tests/board-updates.test.js",
+      "sha256": "8d667f85541f2c387b392abe85608b220f4530302c7f12a1fa55f67236cb50a4"
     },
     {
       "path": "tests/browser-smoke.js",
-      "sha256": "99220a4f396e8247246f5b058f64b16917c0a694209a51f16aeb6542c0259c4a"
+      "sha256": "bcf077150efc019507c0f995834b301c474bd53cd2a350ab30b4cc04effbf9d8"
     },
     {
       "path": "tests/calendar.test.js",
@@ -1437,6 +1451,10 @@
     {
       "path": "tests/public-pages-browser.js",
       "sha256": "f36b26f91f85f8e96028b08097cd2984d5197b50159bf0e8ecc0c6b7e6f60468"
+    },
+    {
+      "path": "tests/ux-controls-browser.js",
+      "sha256": "baaf492a8eb5ff4371160a129a894528fe02ff5726c39c46b5522a2a49f29d8b"
     },
     {
       "path": "tests/workflow.test.js",

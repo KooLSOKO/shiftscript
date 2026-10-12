@@ -110,8 +110,11 @@ export default function Profile({
         <section className="panel profile-section">
           <h2>Make yourself at home</h2>
           <p className="muted">
-            Replay the walkthrough, practice board controls and learn the Mac
-            and Windows shortcuts.
+            Replay the walkthrough and practice board controls.
+            <span className="desktop-keyboard-controls">
+              {" "}
+              Learn the Mac and Windows shortcuts.
+            </span>
           </p>
           <button className="button" onClick={onTutorial}>
             Replay workspace tutorial

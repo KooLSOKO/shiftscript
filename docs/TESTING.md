@@ -1,3 +1,11 @@
+# Latest verification: ShiftScript v3.1.9
+
+122 unit/API tests and the final production build pass. Four isolated browser suites pass: ux-controls-browser, board-shortcuts-browser, browser-smoke and deletion-browser. They cover immediate movement before server persistence, no full-workspace reload after a successful move, pending feedback, failure rollback/reconciliation/retry, Undo, saved reordering, nested Escape, immediate draft closure and reopening, desktop source cards, mobile directional touch gestures, touch-only tutorial/help, hidden mobile keyboard tools and 320/390/768/1440px layout bounds. Transcript/voice processing, review, duplicate reuse and deletion regressions also pass. The build retains its existing large-bundle warning.
+
+All providers/accounts are isolated or simulated. See [UPDATE-v3.1.9.md](UPDATE-v3.1.9.md) for acceptance steps and remaining deployed checks.
+
+---
+
 # Latest verification: ShiftScript v3.1.8
 
 118 unit/API tests pass. The final production build passes (with the existing large-bundle warning). The complete board/shortcut browser suite passes at 320, 390, 768 and 1440 pixels, including signup/practice onboarding, mouse and native touch movement, saved order, keyboard controls, shortcut opt-out persistence, modifier controls, save failure/retry, editor values/focus, preserved tutorial steps and mobile menu restoration. The account browser suite also passes email/Google sign-in, simulated same-tab iPhone/Android Google returns, cancellation/timeout recovery, signup/name/workspace preservation, overflow, focus/inert/scroll cleanup, Escape, slow/error recovery and reduced motion, including landscape.

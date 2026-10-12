@@ -1,4 +1,10 @@
 import TaskBoard from "./components/TaskBoard.jsx";
+import {
+  previewBoardMove,
+  overlayBoardMove,
+  rollbackBoardMove,
+  mergeSavedBoardTasks,
+} from "./features/board-updates.js";
 import ShortcutsTour, { KeyboardIcon } from "./components/ShortcutsTour.jsx";
 import { shortcutAction, isTypingTarget } from "./features/shortcuts.js";
 import AuthTransition from "./components/AuthTransition.jsx";
@@ -142,6 +148,9 @@ export default function App() {
   const [tutorialError, setTutorialError] = useState("");
   const [shortcutBusy, setShortcutBusy] = useState(false);
   const [shortcutError, setShortcutError] = useState("");
+  const [boardBusy, setBoardBusy] = useState(false);
+  const boardPending = useRef(null);
+  const boardRevision = useRef(0);
   const tutorialSeen = useRef(new Set());
   const [googleReturning, setGoogleReturning] = useState(hasGoogleReturn);
   const [assistantRecap, setAssistantRecap] = useState(null);
@@ -249,6 +258,11 @@ export default function App() {
       "ShiftScript demo",
     aliases: personal?.aliases || [],
   };
+  useEffect(() => {
+    boardPending.current = null;
+    boardRevision.current++;
+    setBoardBusy(false);
+  }, [workspaceId, actor.uid]);
   function patchPersonal(patch) {
     if (current.current.uid === actor.uid)
       setPersonal((previous) => ({ ...previous, ...patch }));
@@ -267,11 +281,27 @@ export default function App() {
     }
     return result;
   }
-  async function reload(id = current.current.workspaceId) {
+  async function reload(
+    id = current.current.workspaceId,
+    expectedBoardRevision,
+  ) {
     const uid = current.current.uid;
     const result = await api("/workspace", { workspace: id });
-    if (current.current.uid === uid && current.current.workspaceId === id) {
-      setData(result);
+    if (
+      current.current.uid === uid &&
+      current.current.workspaceId === id &&
+      (expectedBoardRevision === undefined ||
+        expectedBoardRevision === boardRevision.current)
+    ) {
+      const pending = boardPending.current;
+      setData(
+        pending?.uid === uid && pending.workspaceId === id
+          ? {
+              ...result,
+              tasks: overlayBoardMove(result.tasks, pending.changes),
+            }
+          : result,
+      );
       setLoadedFor(uid);
       setError("");
     }
@@ -541,7 +571,7 @@ export default function App() {
           menu ||
           !!document.querySelector('dialog[open], [role="dialog"]'),
         readOnly: data.role === "viewer",
-        hasUndo: !!undo && undo.expires > Date.now() && !undoBusy,
+        hasUndo: !!undo && undo.expires > Date.now() && !undoBusy && !boardBusy,
         singleKeys: personal?.singleKeyShortcuts !== false,
       });
       if (!action) return;
@@ -573,6 +603,7 @@ export default function App() {
     menu,
     undo,
     undoBusy,
+    boardBusy,
     personal?.singleKeyShortcuts,
   ]);
   async function changeShortcutPreference(enabled) {
@@ -627,7 +658,7 @@ export default function App() {
     }
   }
   async function undoLastChange() {
-    if (!undo || undoBusy || undo.expires <= Date.now()) return;
+    if (!undo || undoBusy || boardBusy || undo.expires <= Date.now()) return;
     setUndoBusy(true);
     try {
       await api("/undo/" + undo.token, {
@@ -676,6 +707,89 @@ export default function App() {
         workspaceId: id,
         expires: Date.now() + 300000,
       });
+  }
+  async function moveBoardTask(task, destination) {
+    const workspace = workspaceId,
+      uid = actor.uid;
+    if (boardPending.current)
+      throw new Error("A move is still saving. Please wait a moment.");
+    const operation = {
+      uid,
+      workspaceId: workspace,
+      changes: previewBoardMove(data.tasks, task.id, destination),
+      revision: ++boardRevision.current,
+    };
+    boardPending.current = operation;
+    setBoardBusy(true);
+    setData((previous) => ({
+      ...previous,
+      tasks: overlayBoardMove(previous.tasks, operation.changes),
+    }));
+    try {
+      const result = await api("/tasks/" + task.id + "/move", {
+        workspace,
+        method: "POST",
+        body: JSON.stringify({
+          ...destination,
+          expectedUpdatedAt: task.updatedAt,
+        }),
+      });
+      if (
+        current.current.uid !== uid ||
+        current.current.workspaceId !== workspace
+      )
+        return;
+      setData((previous) => {
+        const activity = new Map(
+          [...previous.activity, ...(result.activity || [])].map((item) => [
+            item.id,
+            item,
+          ]),
+        );
+        return {
+          ...previous,
+          tasks: mergeSavedBoardTasks(
+            previous.tasks,
+            result.tasks || [result.task],
+          ),
+          activity: [...activity.values()]
+            .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+            .slice(-200),
+        };
+      });
+      if (result.undoToken)
+        setUndo({
+          token: result.undoToken,
+          workspaceId: workspace,
+          expires: Date.now() + 300000,
+        });
+      else setUndo(null);
+    } catch (error) {
+      if (
+        current.current.uid === uid &&
+        current.current.workspaceId === workspace
+      ) {
+        setData((previous) => ({
+          ...previous,
+          tasks: rollbackBoardMove(previous.tasks, operation.changes),
+        }));
+        if (boardPending.current === operation) boardPending.current = null;
+        if (error.status === 409 || !error.status || error.status >= 500)
+          reload(workspace, operation.revision).catch(() => {});
+      }
+      throw new Error(
+        (error.status && error.status < 500
+          ? "Move was not saved. "
+          : "Could not confirm this move. ") + error.message,
+      );
+    } finally {
+      if (boardPending.current === operation) boardPending.current = null;
+      if (
+        current.current.uid === uid &&
+        current.current.workspaceId === workspace
+      )
+        setBoardBusy(false);
+    }
   }
   async function meetingDeleted(result) {
     const id = workspaceId,
@@ -971,7 +1085,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                className="icon-button"
+                className="icon-button desktop-keyboard-controls"
                 aria-label="Shortcuts and tutorial"
                 title="Shortcuts and tutorial"
                 onClick={() => {
@@ -1872,6 +1986,7 @@ export default function App() {
                         </section>
                       ) : (
                         <TaskBoard
+                          key={workspaceId}
                           tasks={filtered}
                           allTasks={data.tasks}
                           projects={data.projects}
@@ -1879,25 +1994,7 @@ export default function App() {
                           selectedIds={selectedIds}
                           onSelect={toggleSelected}
                           onOpen={setTaskId}
-                          onMove={async (task, destination) => {
-                            const result = await api(
-                              "/tasks/" + task.id + "/move",
-                              {
-                                method: "POST",
-                                body: JSON.stringify({
-                                  ...destination,
-                                  expectedUpdatedAt: task.updatedAt,
-                                }),
-                              },
-                            );
-                            try {
-                              await taskSaved(result);
-                            } catch (error) {
-                              setError(
-                                "Task moved, but the board could not refresh. Refresh the workspace to load its saved position.",
-                              );
-                            }
-                          }}
+                          onMove={moveBoardTask}
                         />
                       )}
                     </>
@@ -2190,7 +2287,7 @@ export default function App() {
             <span>Task changes saved. Undo available for 5 minutes.</span>
             <button
               className="button small"
-              disabled={undoBusy}
+              disabled={undoBusy || boardBusy}
               onClick={undoLastChange}
             >
               Undo
