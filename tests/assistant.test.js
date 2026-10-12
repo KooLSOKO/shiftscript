@@ -747,7 +747,7 @@ test("Daily assistant caps reject before model use and invalid time zones never 
   await f.store.mutateProfile("soko", (p) => {
     p.assistantQuota = {
       day: new Date().toISOString().slice(0, 10),
-      count: 40,
+      count: Number(process.env.MAX_ASSISTANT_CHATS_PER_DAY || 50),
       minute: Math.floor(Date.now() / 60000),
       minuteCount: 0,
     };
@@ -1041,4 +1041,30 @@ test("Migration waits for an older client's pending turn and later appends legac
   const second = (await call(f.app, "get", "/assistant/chats")).body.chats[0];
   assert.equal(first.id, second.id);
   assert.equal(second.messageCount, 6);
+});
+
+test("The default daily assistant allowance accepts question 50 and rejects 51 before model use", async (t) => {
+  const previousLimit = process.env.MAX_ASSISTANT_CHATS_PER_DAY;
+  delete process.env.MAX_ASSISTANT_CHATS_PER_DAY;
+  t.after(() => {
+    if (previousLimit === undefined)
+      delete process.env.MAX_ASSISTANT_CHATS_PER_DAY;
+    else process.env.MAX_ASSISTANT_CHATS_PER_DAY = previousLimit;
+  });
+  const f = await fixture(t);
+  await f.store.mutateProfile("soko", (p) => {
+    p.assistantQuota = {
+      day: new Date().toISOString().slice(0, 10),
+      count: 49,
+      minute: Math.floor(Date.now() / 60000),
+      minuteCount: 0,
+    };
+  });
+  await call(f.app, "post", "/assistant/chat")
+    .send(question("Question fifty"))
+    .expect(200);
+  await call(f.app, "post", "/assistant/chat")
+    .send(question("Question fifty-one"))
+    .expect(429);
+  assert.equal(f.captured.length, 1);
 });

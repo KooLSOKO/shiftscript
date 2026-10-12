@@ -1,32 +1,32 @@
 {
-  "version": "3.1.13",
-  "root": "ShiftScript-v3.1.13",
+  "version": "3.1.14",
+  "root": "ShiftScript-v3.1.14",
   "verification": {
-    "unitApiTests": 138,
+    "unitApiTests": 146,
     "productionBuild": "passed",
     "browserSuitesPassed": [
-      "shifty-chats-browser",
-      "assistant-browser",
-      "shifty-design-browser",
-      "shifty-send-browser",
-      "ux-controls-browser"
+      "meet-batch-browser",
+      "integrations-browser",
+      "meet-layout-browser",
+      "shifty-chats-browser"
     ],
     "viewports": [
       320,
       390,
+      430,
       768,
+      844,
       1024,
       1200,
-      1440,
-      1920
+      1440
     ],
     "externalServices": "fictional / simulated",
-    "deviceAcceptance": "Physical-device Safari and deployed Firebase/network round trip remain owner acceptance checks"
+    "deviceAcceptance": "Physical-device Safari and deployed-provider quota remain owner acceptance checks"
   },
   "files": [
     {
       "path": ".env.example",
-      "sha256": "040f3715fa081ce7e421cdfb92b5406a9538ddd742a852d7f2ac48a4f19e93b9"
+      "sha256": "b53fc81a3ba427901efeff0ec2963ef0d2a1446fce0b3c80ac4f528feacd40e5"
     },
     {
       "path": ".firebaserc",
@@ -46,7 +46,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "247d5abf717bac71a79e24877014c2ab43460d111f83efe4ee09c50ad6d64eb7"
+      "sha256": "355b17dfc593888a9f36120c92d1ae321144887adf5f24a19fdd2f176d7dc745"
     },
     {
       "path": "api/index.js",
@@ -58,7 +58,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "0894bac0537cb0bffdcb0e9501626a3cea2124a4bfbcbc2b2b5cf717a677de54"
+      "sha256": "2f4573ff86f40a48863bce84da6e5609cc7f4f0e49d80f39ace672b260c3d415"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -94,7 +94,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "ec4d67bd077b61523914958c9c46b467c58adb44e206d6cd8712aaf07388f2a2"
+      "sha256": "3fa633f139c59e88d0c47142fa9de66c23563de2e29c86e52b75f2a19509a5cf"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -193,6 +193,10 @@
       "sha256": "4950c905b773895c0f80df980f26303945894e0773f0ca4acdb328e75b966733"
     },
     {
+      "path": "docs/UPDATE-v3.1.14.md",
+      "sha256": "3dea089b45789279323690e425e4197938991c0673e7e81e82103d9b35aa3195"
+    },
+    {
       "path": "docs/UPDATE-v3.1.2.md",
       "sha256": "f594ae532a952ce9d6b445566a35a0c8f5d22fc0113e81226cdc1651fc34a38d"
     },
@@ -230,7 +234,7 @@
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "a2ce41452d5c3b1312154a47f7fedac611f66d92e91c378728d3124ec1d99114"
+      "sha256": "79c70542a7360c172940424ea0d7e53d0839594ff7ca8d62d12183397fd1ac5f"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -614,11 +618,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "44fb237ceef3466a126836aa89ee2122088a91290cdc8fdda47f64ec98dc1285"
+      "sha256": "4754f23afa71051b23381175c0ae50832ffb5404b56b3465083335a83b8e6acf"
     },
     {
       "path": "package.json",
-      "sha256": "a65c5553a178d55708d19b658ac29ea1227caa4d95482727052f089ed88fc7a1"
+      "sha256": "af9810be7f5d74318076fcfb83f8700e86c9534929d8fbd08924ba3b63bb8ace"
     },
     {
       "path": "public/about/index.html",
@@ -1054,11 +1058,11 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "a1115951f080be11f6ecd0f740a204859ba22a17725f846779f1d5d32087984e"
+      "sha256": "b362a05696d590bf3403bdb30e013b29921f829ffce45b82e677ccb330fc8fd2"
     },
     {
       "path": "server/assistant.js",
-      "sha256": "32179fd73db5c284ea3f6fa37a0a039855dce3594fd242e07e8f3333ec05c5c5"
+      "sha256": "cdcd3203591a297f0d58c4edbaef5fc633fa2cb82cd39457eb7b23e4005c3e44"
     },
     {
       "path": "server/audio.js",
@@ -1141,6 +1145,10 @@
       "sha256": "6d4702341cc6a8c399eb8eef86359039211deec10fb973010abd302ac6a98c4a"
     },
     {
+      "path": "shared/meet-batch.js",
+      "sha256": "48b26d8c71ce08699167aae43eb25e44162c40faaf864180935f7974b54e34ce"
+    },
+    {
       "path": "shared/productivity.js",
       "sha256": "f047b57cd215e0e227916803f7ec50c431b76e4817c86ac6687b8d60dedf6025"
     },
@@ -1154,7 +1162,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "055bbbdd74d0793876efb6f2ce9934cdc6649d4892896a39b25d8aa4d0915c20"
+      "sha256": "2fe12bf18a64b4eb7c9327de6af024100d3fade93e2355443d1c13e9798aac89"
     },
     {
       "path": "src/app-entry.jsx",
@@ -1202,15 +1210,19 @@
     },
     {
       "path": "src/components/GoogleMeet.jsx",
-      "sha256": "7dcc1132839bce90a4f924602d8e6b483a7641f4e883369a64b9d4338d00d80f"
+      "sha256": "9a2181007afc2b696934498bfc43fc06b58c9b3699064978d93fc92b2817a02d"
     },
     {
       "path": "src/components/Icons.jsx",
       "sha256": "ba52f0ad7d8685c7a9bfbe4357bd0e853f8134a22959d451a4f9b5749bb68b3d"
     },
     {
+      "path": "src/components/MeetBatch.jsx",
+      "sha256": "7da337268f6dcb033ac72bc547bd6c93e360796da590b7e6ef40484132e5699b"
+    },
+    {
       "path": "src/components/MeetSources.jsx",
-      "sha256": "5e4e834c9ab0e4ba9ee8addced6c1e387a7535ad1240df05ddce3a17a077b3e7"
+      "sha256": "1e31f8d14130589e09f5607fe17800748237e871c6f602c5bcda0f22bfe86c5b"
     },
     {
       "path": "src/components/MeetingDetail.jsx",
@@ -1374,7 +1386,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "8c66cdf2c006eae32d8ac2b741ce58877821c53b753fd9d2aa90eac137a825df"
+      "sha256": "e8e00b80461b5dffbc99ba01ef7defdae16aaae48531e54bdcced48008c289ba"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -1394,7 +1406,7 @@
     },
     {
       "path": "tests/assistant.test.js",
-      "sha256": "ba7bf41ec130c5030199d85c34d7fd32e76966603f2bb9ea03a308bf0315c025"
+      "sha256": "38afd16a72d2135f2444451784e269eb5ca1eb864a717bd19b7819ce716cd723"
     },
     {
       "path": "tests/auth-flow.test.js",
@@ -1462,7 +1474,7 @@
     },
     {
       "path": "tests/integrations.test.js",
-      "sha256": "50d7732e4d92daffcc80028596d206406299045cba0d2d01d264faf8800651f5"
+      "sha256": "be6c8f696b1ecac4ee608525d185dbd1c69e67b86eaaf6a298ac01766a29d9d7"
     },
     {
       "path": "tests/invitation-email.test.js",
@@ -1475,6 +1487,14 @@
     {
       "path": "tests/long-transcripts.test.js",
       "sha256": "817912be3227dd9623c9aa69c7692240bc010ee2b6c3004892f7d3d724df6dde"
+    },
+    {
+      "path": "tests/meet-batch-browser.js",
+      "sha256": "9468d8d248e4ef564a69419e2362c8fe67fc315167c08d8e1e7b55373d39165d"
+    },
+    {
+      "path": "tests/meet-batch.test.js",
+      "sha256": "a0edd8eaad08d113d41e0c8dea6dd9a05510c6c479df6414b0f7b4630b9e3bbf"
     },
     {
       "path": "tests/meet-layout-browser.js",
@@ -1498,7 +1518,7 @@
     },
     {
       "path": "tests/notes.test.js",
-      "sha256": "1451c4187482f076d9fc53afa5300609352eae272071ce624afdb9543cb66230"
+      "sha256": "4193b67bea69a3ab42d812b641ab8413ee4f5052239b46c73071f16a761ba6d0"
     },
     {
       "path": "tests/presentation-notes-capture.js",

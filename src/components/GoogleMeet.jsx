@@ -1,4 +1,6 @@
 import DisconnectButton from "./DisconnectButton.jsx";
+import MeetBatch from "./MeetBatch.jsx";
+import { sameMeetSource, MAX_MEET_BATCH } from "../../shared/meet-batch.js";
 import MeetSources from "./MeetSources.jsx";
 import ProcessingLoader from "./ProcessingLoader.jsx";
 import { useEffect, useState, useId, useRef } from "react";
@@ -10,6 +12,7 @@ export default function GoogleMeet({
   readOnly,
   config,
   onCreated,
+  onBatchComplete,
   embedded = false,
   autoLoad = false,
   initialForm,
@@ -18,6 +21,34 @@ export default function GoogleMeet({
   onBeforeConnect,
   onBusyChange,
 }) {
+  const [batchMode, setBatchMode] = useState(false),
+    [batchItems, setBatchItems] = useState([]),
+    [batchActive, setBatchActive] = useState(null),
+    [batchNotice, setBatchNotice] = useState("");
+  const queueRef = useRef(null),
+    discoveryRef = useRef(null),
+    docsRef = useRef(null),
+    requestLock = useRef(false),
+    mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  function chooseAnother() {
+    const section = listed ? discoveryRef.current : docsRef.current;
+    section?.scrollIntoView({
+      block: "start",
+      inline: "nearest",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+    section
+      ?.querySelector("h2, summary, input")
+      ?.focus({ preventScroll: true });
+  }
   const sourcesId = useId();
   const reviewRef = useRef(null);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -86,6 +117,8 @@ export default function GoogleMeet({
     return () => cancelAnimationFrame(frame);
   }, [preview, embedded]);
   async function run(action, kind = "working") {
+    if (requestLock.current || busy) return;
+    requestLock.current = true;
     setOperation(kind);
     setBusy(true);
     setError("");
@@ -94,7 +127,8 @@ export default function GoogleMeet({
     } catch (e) {
       setError(e.message);
     } finally {
-      setBusy(false);
+      requestLock.current = false;
+      if (mounted.current) setBusy(false);
     }
   }
   async function load(next = false) {
@@ -128,7 +162,7 @@ export default function GoogleMeet({
     setSelectedMeeting(meeting);
     setArtifacts(null);
     setSourcesError("");
-    setPreview(null);
+    if (!batchMode) setPreview(null);
     await run(async () => {
       try {
         const result = await api(
@@ -150,6 +184,15 @@ export default function GoogleMeet({
         error={sourcesError}
         busy={busy}
         readOnly={readOnly}
+        selectionLabel={batchMode ? "Add to batch" : "Preview"}
+        selectedNames={
+          batchMode
+            ? batchItems
+                .map((item) => item.preview.source.artifact)
+                .filter(Boolean)
+            : []
+        }
+        selectionFull={batchMode && batchItems.length >= MAX_MEET_BATCH}
         onClose={() => {
           setSelectedMeeting(null);
           setArtifacts(null);
@@ -170,10 +213,67 @@ export default function GoogleMeet({
     );
   }
   async function select(selection, date) {
+    setBatchNotice("");
+    if (batchMode) {
+      const queued = batchItems.find(
+        (item) =>
+          selection.kind === "artifact" &&
+          item.selection.name === selection.name,
+      );
+      if (queued) {
+        setBatchActive(queued.id);
+        queueRef.current?.scrollIntoView({ block: "start", inline: "nearest" });
+        setBatchNotice("That source is already in your batch.");
+        return;
+      }
+      if (batchItems.length >= MAX_MEET_BATCH)
+        throw Error(
+          "Your batch has three sources. Remove one before adding another.",
+        );
+    }
     const v = await api("/google/preview", {
       method: "POST",
       body: JSON.stringify(selection),
     });
+    if (!mounted.current) return;
+    if (batchMode) {
+      const queued = batchItems.find((item) =>
+        sameMeetSource(item.preview.source, v.source),
+      );
+      if (queued) {
+        setBatchActive(queued.id);
+        setBatchNotice("That source is already in your batch.");
+      } else {
+        const item = {
+          id: v.previewId,
+          preview: v,
+          selection,
+          status: "ready",
+          form: {
+            title: v.title,
+            date: date || today(),
+            type: initialForm?.type || "Project review",
+            projectId: initialForm?.projectId || "",
+          },
+        };
+        setBatchItems((old) => [...old, item]);
+        setBatchActive(item.id);
+      }
+      setPreview(null);
+      requestAnimationFrame(() => {
+        const section = queueRef.current;
+        section?.querySelector("h2")?.focus({ preventScroll: true });
+        section?.scrollIntoView({
+          block: "start",
+          inline: "nearest",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "instant"
+            : "smooth",
+        });
+      });
+      return;
+    }
     setPreview(v);
     setForm((f) => ({ ...f, title: v.title, date: date || today() }));
   }
@@ -285,6 +385,8 @@ export default function GoogleMeet({
                     setArtifacts(null);
                     setSelectedMeeting(null);
                     setListed(false);
+                    setBatchItems([]);
+                    setBatchNotice("");
                   })
                 }
               />
@@ -315,7 +417,53 @@ export default function GoogleMeet({
       </section>
       {connection?.connected && (
         <>
-          <section className="panel docs-panel">
+          {!embedded && (
+            <div
+              className="meet-import-mode"
+              role="group"
+              aria-label="Google import mode"
+            >
+              <button
+                type="button"
+                className={!batchMode ? "selected" : ""}
+                aria-pressed={!batchMode}
+                disabled={busy}
+                onClick={() => {
+                  if (
+                    batchItems.length &&
+                    !window.confirm(
+                      "Clear this batch selection? Completed meetings remain saved.",
+                    )
+                  )
+                    return;
+                  setBatchMode(false);
+                  setBatchItems([]);
+                  setBatchNotice("");
+                }}
+              >
+                One meeting
+              </button>
+              <button
+                type="button"
+                className={batchMode ? "selected" : ""}
+                aria-pressed={batchMode}
+                disabled={busy}
+                onClick={() => {
+                  setBatchMode(true);
+                  setPreview(null);
+                  setBatchNotice("");
+                }}
+              >
+                Batch · up to 3
+              </button>
+              <p>
+                {batchMode
+                  ? "Choose sources, review each, then process the queue."
+                  : "Preview and process one meeting at a time."}
+              </p>
+            </div>
+          )}
+          <section ref={docsRef} className="panel docs-panel">
             <details open={!embedded}>
               <summary>Have the notes link?</summary>
               <p className="summary">
@@ -340,11 +488,23 @@ export default function GoogleMeet({
                     placeholder="https://docs.google.com/document/d/…"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    disabled={busy || readOnly}
+                    disabled={
+                      busy ||
+                      readOnly ||
+                      (batchMode && batchItems.length >= MAX_MEET_BATCH)
+                    }
                   />
                 </label>
-                <button className="button primary" disabled={busy || readOnly}>
-                  <FileText size={17} /> Preview notes
+                <button
+                  className="button primary"
+                  disabled={
+                    busy ||
+                    readOnly ||
+                    (batchMode && batchItems.length >= MAX_MEET_BATCH)
+                  }
+                >
+                  <FileText size={17} />{" "}
+                  {batchMode ? "Add notes to batch" : "Preview notes"}
                 </button>
               </form>
               <p className="hint mt-3">
@@ -354,11 +514,11 @@ export default function GoogleMeet({
             </details>
           </section>
           {listed && (
-            <section className="panel recent-meeting-panel">
+            <section ref={discoveryRef} className="panel recent-meeting-panel">
               <div className="meet-source-layout">
                 <div className="meet-list-column">
                   <div className="section-heading">
-                    <h2>Recent meetings</h2>
+                    <h2 tabIndex={-1}>Recent meetings</h2>
                     <span className="badge">{meetings.length}</span>
                   </div>
                   {meetings.length > 0 && (
@@ -462,7 +622,40 @@ export default function GoogleMeet({
               </div>
             </section>
           )}
-          {preview && (
+          {batchMode && (
+            <>
+              <div className="meet-batch-notice" role="status">
+                {batchNotice ||
+                  (batchItems.length &&
+                  batchItems.every((item) => item.status === "done")
+                    ? "Your meetings are ready. Open each result to review its summary and tasks."
+                    : batchItems.length >= MAX_MEET_BATCH
+                      ? "Batch full. Review your three sources below."
+                      : `${batchItems.length} of 3 sources selected. Select notes or a transcript to add another.`)}
+              </div>
+              <MeetBatch
+                items={batchItems}
+                setItems={setBatchItems}
+                activeId={batchActive}
+                setActiveId={setBatchActive}
+                projects={projects}
+                workspace={workspace}
+                config={config}
+                readOnly={readOnly}
+                reviewRef={queueRef}
+                onChooseAnother={chooseAnother}
+                onOpen={onOpenExisting}
+                onComplete={onBatchComplete}
+                busy={busy}
+                onBusyChange={(value) => {
+                  if (value) setBatchNotice("");
+                  setOperation("batch");
+                  setBusy(value);
+                }}
+              />
+            </>
+          )}
+          {preview && !batchMode && (
             <section ref={reviewRef} className="panel import-preview">
               <div className="section-heading">
                 <h2 tabIndex={-1}>Review your import</h2>
@@ -612,11 +805,14 @@ export default function GoogleMeet({
           )}
         </>
       )}
-      {busy && operation !== "processing" && operation !== "sources" && (
-        <p className="integration-busy" role="status">
-          <RefreshCw className="spin" size={17} /> Working on it…
-        </p>
-      )}
+      {busy &&
+        operation !== "processing" &&
+        operation !== "sources" &&
+        operation !== "batch" && (
+          <p className="integration-busy" role="status">
+            <RefreshCw className="spin" size={17} /> Working on it…
+          </p>
+        )}
     </div>
   );
 }

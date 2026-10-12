@@ -558,10 +558,10 @@ export function installAssistantRoutes(
         p.assistantQuota.minute = minute;
         p.assistantQuota.minuteCount = 0;
       }
-      const limit = Number(process.env.MAX_ASSISTANT_CHATS_PER_DAY || 40);
+      const limit = Number(process.env.MAX_ASSISTANT_CHATS_PER_DAY || 50);
       if (
         p.assistantQuota.count >=
-          Math.max(1, Math.min(200, Number.isFinite(limit) ? limit : 40)) ||
+          Math.max(1, Math.min(200, Number.isFinite(limit) ? limit : 50)) ||
         p.assistantQuota.minuteCount >= 6
       )
         fail(

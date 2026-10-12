@@ -694,7 +694,7 @@ export function createApp({
     await mutate(req, (s) => {
       const date = now().slice(0, 10),
         count = s.quota.date === date ? s.quota.count : 0;
-      if (count >= Number(process.env.MAX_ANALYSES_PER_DAY || 20))
+      if (count >= Number(process.env.MAX_ANALYSES_PER_DAY || 50))
         fail(
           429,
           "Daily workspace AI-request limit reached. Try again tomorrow (UTC).",

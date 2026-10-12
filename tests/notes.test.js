@@ -345,7 +345,7 @@ test("scan does not return content after membership revocation; limits include f
   await f.repo.mutate("owner", (s) => {
     s.quota = {
       date: new Date().toISOString().slice(0, 10),
-      count: Number(process.env.MAX_ANALYSES_PER_DAY || 20),
+      count: Number(process.env.MAX_ANALYSES_PER_DAY || 50),
     };
   });
   await f.call("post", "/notes/scan").send(image()).expect(429);

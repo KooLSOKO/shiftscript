@@ -186,3 +186,13 @@ Successful replies atomically append the pair, update the index and clear the re
 History reads/lists and deletion use explicit chat IDs. Action review APIs carry `X-Assistant-Chat-Id`; email recap confirmation retains the originating chat ID across its preview dialog. Deletion clears content and removes the catalog entry, retaining a metadata tombstone to prevent an in-flight retry from recreating the chat. Active replies/actions block deletion. Existing task version/dependency checks, review permissions and uncertain Calendar result safeguards remain.
 
 The history rail uses a drawer at 1150px and below; the smaller desktop two-column arrangement places calendar settings below the chat. The native modal keeps focus, Escape, scroll locking and focus restoration. Workspace context remains mandatory; the plus button creates a new conversation rather than pretending to attach files.
+
+## v3.1.14: bounded Google Meet batch queue and daily defaults
+
+The top-level Meet tab holds a maximum-three-source queue in component memory; the embedded New meeting picker retains single-source imports. Queue entries contain their own selection, trusted preview response, editable meeting metadata, state and result. No Google source content is written to browser storage. A document/artifact identity match prevents duplicate selection, including direct Docs links to already selected notes.
+
+`processMeetBatch` serializes existing `/google/preview` and `/google/import` requests, scoped explicitly to the originating workspace. Each refreshed preview is compared against the selected content before import; changed sources require explicit review. This avoids relying on three large preview tokens remaining in the single encrypted vault document, or on a long-running combined serverless request. The server still retrieves trusted source text from its vault, validates permissions, applies quota and deduplicates processing. Results remain distinct meetings with pending task proposals and canonical source links.
+
+Failed items can be retried without replaying successful rows. Authentication/rate-limit errors pause remaining work. A stop flag applies between sources; unmount guards prevent starting another request after leaving or switching workspaces. Existing source discovery and batch processing share a busy gate so selection, disconnection, editing and mode changes cannot race the processing snapshot.
+
+The Shifty per-account default and workspace analysis/transcription default are now 50 requests per UTC day. Existing configured environment values still take precedence; Shifty's per-minute safeguard is unchanged. The stored workspace meeting count cap remains unchanged.

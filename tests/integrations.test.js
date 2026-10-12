@@ -693,3 +693,156 @@ test("unknown speaker labels cannot become named task owners", async () => {
   );
   assert.equal(result.actions[0].owner, null);
 });
+
+test("Three individually imported Google sources retain separate summaries and pending tasks, including evicted Unicode previews", async (t) => {
+  const f = await fixture(t, {
+    analyzer: async (input) => ({
+      summary: "Summary for " + input.title,
+      discussionPoints: [input.transcript],
+      decisions: [],
+      followUps: [],
+      actions: [
+        {
+          title: "Review " + input.title,
+          description: "Review separately.",
+          owner: "Kiya",
+          deadline: null,
+          priority: "Med",
+          evidence: input.transcript.slice(0, 80),
+        },
+      ],
+    }),
+  });
+  await connect(f.app);
+  const docs = [
+    "batch-source-document-one",
+    "batch-source-document-two",
+    "batch-source-document-three",
+  ];
+  f.google.fetcher = async (url) => {
+    const id = new URL(url).pathname.split("/").at(-1);
+    return new Response(
+      JSON.stringify({
+        title: id,
+        body: {
+          content: [
+            {
+              paragraph: {
+                elements: [
+                  { textRun: { content: id + " " + "界".repeat(99900) } },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    );
+  };
+  const previews = [];
+  for (const id of docs)
+    previews.push(
+      await f.google.preview("kiya", "kiya", {
+        kind: "document",
+        url: "https://docs.google.com/document/d/" + id,
+      }),
+    );
+  await assert.rejects(
+    f.google.imported("kiya", "kiya", previews[0].previewId),
+    /expired/,
+  );
+  const imported = [];
+  for (let i = 0; i < docs.length; i++) {
+    const p = await f.google.preview("kiya", "kiya", {
+      kind: "document",
+      url: "https://docs.google.com/document/d/" + docs[i],
+    });
+    const r = await call(f.app, "post", "/google/import")
+      .send({
+        previewId: p.previewId,
+        title: "Batch meeting " + i,
+        date: "2026-10-12",
+        type: "Planning",
+        projectId: null,
+      })
+      .expect(201);
+    imported.push(r.body.meeting);
+    assert.equal(r.body.meeting.summary, "Summary for Batch meeting " + i);
+    assert.equal(r.body.meeting.source.documentId, docs[i]);
+    assert.equal(r.body.meeting.proposals[0].reviewStatus, "pending");
+    await call(f.app, "post", "/google/import")
+      .send({
+        previewId: p.previewId,
+        title: "Batch meeting " + i,
+        date: "2026-10-12",
+        type: "Planning",
+        projectId: null,
+      })
+      .expect(200)
+      .then((r) => assert.equal(r.body.cached, true));
+  }
+  assert.equal(new Set(imported.map((m) => m.id)).size, 3);
+  assert.equal((await f.store.list("kiya")).meetings.length, 3);
+  assert.equal((await f.store.list("kiya")).tasks.length, 0);
+});
+
+test("Workspace processing default accepts analysis 50 and rejects 51 before model use", async (t) => {
+  const previousLimit = process.env.MAX_ANALYSES_PER_DAY;
+  delete process.env.MAX_ANALYSES_PER_DAY;
+  t.after(() => {
+    if (previousLimit === undefined) delete process.env.MAX_ANALYSES_PER_DAY;
+    else process.env.MAX_ANALYSES_PER_DAY = previousLimit;
+  });
+  let analyses = 0;
+  const f = await fixture(t, {
+    analyzer: async () => {
+      analyses++;
+      return {
+        summary: "Reviewed",
+        discussionPoints: [],
+        decisions: [],
+        followUps: [],
+        actions: [],
+      };
+    },
+  });
+  await connect(f.app);
+  f.google.fetcher = async (url) =>
+    new Response(
+      JSON.stringify({
+        title: "Quota notes",
+        body: {
+          content: [
+            {
+              paragraph: {
+                elements: [
+                  { textRun: { content: text + " " + new URL(url).pathname } },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    );
+  await f.store.mutate("kiya", (s) => {
+    s.quota = { date: new Date().toISOString().slice(0, 10), count: 49 };
+  });
+  for (const [suffix, expected] of [
+    ["one", 201],
+    ["two", 429],
+  ]) {
+    const p = await f.google.preview("kiya", "kiya", {
+      kind: "document",
+      url: "https://docs.google.com/document/d/quota-document-" + suffix,
+    });
+    await call(f.app, "post", "/google/import")
+      .send({
+        previewId: p.previewId,
+        title: "Quota " + suffix,
+        date: "2026-10-12",
+        type: "Planning",
+        projectId: null,
+      })
+      .expect(expected);
+  }
+  assert.equal(analyses, 1);
+});

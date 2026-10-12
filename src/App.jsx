@@ -1636,6 +1636,15 @@ export default function App() {
                       readOnly={readOnly}
                       config={config}
                       existingMeetings={data.meetings}
+                      onBatchComplete={async (results) => {
+                        await reload();
+                        setToast(
+                          results.length +
+                            " meeting" +
+                            (results.length === 1 ? "" : "s") +
+                            " ready. Open each result to review its proposed tasks.",
+                        );
+                      }}
                       onOpenExisting={(m) => openMeeting(m.id)}
                       onCreated={async (m, result) => {
                         await reload();

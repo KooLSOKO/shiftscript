@@ -9,6 +9,9 @@ export default function MeetSources({
   busy,
   readOnly,
   onPreview,
+  selectionLabel = "Preview",
+  selectedNames = [],
+  selectionFull = false,
   onClose,
 }) {
   return (
@@ -61,13 +64,22 @@ export default function MeetSources({
                 type="button"
                 className="button"
                 key={a.name}
-                disabled={busy || readOnly || !a.ready}
+                disabled={
+                  busy ||
+                  readOnly ||
+                  !a.ready ||
+                  (selectionFull && !selectedNames.includes(a.name))
+                }
                 onClick={() => onPreview(a, meeting)}
               >
                 <FileText size={19} />{" "}
                 <span>
                   {a.kind === "notes" ? "Gemini notes" : "Transcript"} {i + 1} ·{" "}
-                  {a.ready ? "Preview" : "Still preparing"}
+                  {a.ready
+                    ? selectedNames.includes(a.name)
+                      ? "In batch"
+                      : selectionLabel
+                    : "Still preparing"}
                 </span>
               </button>
             ))
