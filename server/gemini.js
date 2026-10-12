@@ -30,11 +30,13 @@ export async function geminiJson(
       },
       { timeout, maxRetries: 0 },
     );
-    if (response.status && response.status !== "completed")
-      throw Object.assign(
-        new Error("Gemini did not complete the request. Try a shorter input."),
-        { status: 502 },
-      );
+    if (response.status !== "completed") {
+  console.warn("Gemini response diagnostic:", {
+    model: process.env.GEMINI_MODEL,
+    status: response.status,
+    usage: response.usage,
+  });
+}
     // Support SDK output_text and the raw text output representation.
     const text =
       response.output_text ||
