@@ -2,7 +2,15 @@ import { GoogleGenAI } from "@google/genai";
 // Both transcription and analysis use the current free-tier-capable Flash-Lite.
 export const defaultModel = "gemini-3.5-flash-lite";
 export async function geminiJson(
-  { input, schema, instruction, maxTokens = 6000, model, timeout = 45000 },
+  {
+  input,
+  schema,
+  instruction,
+  maxTokens = 6000,
+  model,
+  timeout = 45000,
+  thinkingLevel,
+},
   clientOverride,
 ) {
   if (!clientOverride && !process.env.GEMINI_API_KEY)
@@ -21,7 +29,10 @@ export async function geminiJson(
         store: false,
         input,
         system_instruction: instruction,
-        generation_config: { max_output_tokens: maxTokens, temperature: 0.2 },
+        generation_config: {
+  max_output_tokens: maxTokens,
+  ...(thinkingLevel ? { thinking_level: thinkingLevel } : {}),
+},
         response_format: {
           type: "text",
           mime_type: "application/json",
