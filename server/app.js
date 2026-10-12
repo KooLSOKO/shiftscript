@@ -1167,8 +1167,13 @@ export function createApp({
         : status === 500
           ? "The server could not complete this request. Check the server setup and try again."
           : e.message;
-    console.error("API error:", status, e.name);
-    res.status(status).json({ error: message });
+console.error("API error:", {
+  status,
+  route: _req.path,
+  name: e.name,
+  code: e.code ?? null,
+  message: String(e.message || "").slice(0, 500),
+});    res.status(status).json({ error: message });
   });
   return app;
 }
