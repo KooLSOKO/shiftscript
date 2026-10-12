@@ -9,11 +9,16 @@ import {
   FileText,
   ListTodo,
   Mail,
+  Plus,
+  Menu,
+  Building,
 } from "./Icons.jsx";
 import { calendarDurations } from "../../shared/scheduling.js";
 import ProcessingLoader from "./ProcessingLoader.jsx";
 import ShiftyAvatar from "./ShiftyAvatar.jsx";
 import AssistantMessage from "./AssistantMessage.jsx";
+import Modal from "./Modal.jsx";
+import ShiftyHistory from "./ShiftyHistory.jsx";
 import ShiftySendButton from "./ShiftySendButton.jsx";
 
 const prompts = [
@@ -272,6 +277,7 @@ function Proposal({
 export default function Assistant({
   actor,
   workspaceId,
+  workspaceName = "Your workspace",
   config,
   readOnly,
   onTask,
@@ -282,7 +288,15 @@ export default function Assistant({
   revision = 0,
   timeZone = "Africa/Johannesburg",
 }) {
-  const [messages, setMessages] = useState([]),
+  const [chatId, setChatId] = useState(() => crypto.randomUUID()),
+    [chats, setChats] = useState([]),
+    [chatTitle, setChatTitle] = useState("New chat"),
+    [historyOpen, setHistoryOpen] = useState(false),
+    [historyError, setHistoryError] = useState(""),
+    [compact, setCompact] = useState(
+      () => window.matchMedia("(max-width: 1150px)").matches,
+    ),
+    [messages, setMessages] = useState([]),
     [question, setQuestion] = useState(""),
     [busy, setBusy] = useState(false),
     [operation, setOperation] = useState(""),
@@ -299,6 +313,71 @@ export default function Assistant({
     end = useRef(null),
     inputRef = useRef(null),
     sendLock = useRef(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1150px)");
+    const update = () => setCompact(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const historyPath = "/assistant/history?chatId=" + chatId;
+  const chatHeaders = { "X-Assistant-Chat-Id": chatId };
+  function openChat(chat = null) {
+    if (busy || operation || loading || sendLock.current) return;
+    if (
+      question.trim() &&
+      !window.confirm("Discard your unsent message and switch chats?")
+    )
+      return;
+    if (chat?.id === chatId) {
+      if (compact) setHistoryOpen(false);
+      return;
+    }
+    generation.current++;
+    setMessages([]);
+    setQuestion("");
+    setClearConfirm(false);
+    setError("");
+    setChatTitle(chat?.title || "New chat");
+    setLoading(true);
+    setChatId(chat?.id || crypto.randomUUID());
+    if (compact) setHistoryOpen(false);
+  }
+  function deleteChat(chat) {
+    if (
+      !window.confirm(
+        "Delete this chat? Tasks, meetings and calendar blocks will stay.",
+      )
+    )
+      return;
+    run("delete:" + chat.id, async (ticket) => {
+      await api("/assistant/chats/" + chat.id, { method: "DELETE" });
+      if (!current(ticket)) return;
+      setChats((old) => old.filter((c) => c.id !== chat.id));
+      if (chat.id === chatId) {
+        setMessages([]);
+        setQuestion("");
+        setChatTitle("New chat");
+        setClearConfirm(false);
+        setChatId(crypto.randomUUID());
+      }
+    });
+  }
+  useEffect(() => {
+    if (!historyOpen || busy || operation) return;
+    let active = true;
+    const ticket = generation.current;
+    setHistoryError("");
+    api("/assistant/chats")
+      .then((result) => {
+        if (active && ticket === generation.current) setChats(result.chats);
+      })
+      .catch((e) => {
+        if (active) setHistoryError(e.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [historyOpen, workspaceId, actor.uid, busy, operation]);
   useEffect(() => {
     // Small local assets are warmed up so switching expression never flashes.
     ["ready", "thinking", "replying", "error"].forEach((state) => {
@@ -318,12 +397,17 @@ export default function Assistant({
     setLoading(true);
     setError("");
     Promise.allSettled([
-      api("/assistant/history"),
+      api(historyPath),
       api("/calendar/status"),
-    ]).then(async ([history, status]) => {
+      api("/assistant/chats"),
+    ]).then(async ([history, status, catalog]) => {
       if (!active) return;
-      if (history.status === "fulfilled") setMessages(history.value.messages);
-      else setError(history.reason.message);
+      if (history.status === "fulfilled") {
+        setMessages(history.value.messages);
+        setChatTitle(history.value.chat?.title || "New chat");
+      } else setError(history.reason.message);
+      if (catalog.status === "fulfilled") setChats(catalog.value.chats);
+      else setError(catalog.reason.message);
       if (status.status === "fulfilled") {
         setConnection(status.value);
         setSelected(status.value.selectedIds || ["primary"]);
@@ -350,7 +434,7 @@ export default function Assistant({
     return () => {
       active = false;
     };
-  }, [workspaceId, actor.uid, revision]);
+  }, [workspaceId, actor.uid, revision, chatId]);
   useEffect(() => {
     if (messages.length || busy)
       end.current?.scrollIntoView({ block: "nearest", behavior: "instant" });
@@ -371,7 +455,13 @@ export default function Assistant({
   const current = (ticket) => mounted.current && ticket === generation.current;
   async function ask(e) {
     e?.preventDefault();
-    if (busy || operation || sendLock.current || question.trim().length < 2)
+    if (
+      busy ||
+      operation ||
+      loading ||
+      sendLock.current ||
+      question.trim().length < 2
+    )
       return;
     const text = question.trim(),
       ticket = ++generation.current,
@@ -393,13 +483,26 @@ export default function Assistant({
     try {
       const result = await api("/assistant/chat", {
         method: "POST",
-        body: JSON.stringify({ question: text, requestId: id, timeZone: zone }),
+        body: JSON.stringify({
+          question: text,
+          requestId: id,
+          timeZone: zone,
+          chatId,
+        }),
       });
-      if (current(ticket))
+      if (current(ticket)) {
+        if (result.chat) {
+          setChatTitle(result.chat.title);
+          setChats((old) => [
+            result.chat,
+            ...old.filter((c) => c.id !== chatId),
+          ]);
+        }
         setMessages((old) => [
           ...old.map((m) => (m.id === id ? { ...m, optimistic: false } : m)),
           result.message,
         ]);
+      }
     } catch (e) {
       if (current(ticket)) {
         setMessages((old) => old.filter((m) => m.id !== id));
@@ -429,6 +532,7 @@ export default function Assistant({
           {
             method: "POST",
             body: JSON.stringify(edits),
+            headers: chatHeaders,
           },
         );
         if (current(ticket)) {
@@ -437,7 +541,7 @@ export default function Assistant({
         }
       } catch (e) {
         try {
-          const result = await api("/assistant/history");
+          const result = await api(historyPath);
           if (current(ticket)) setMessages(result.messages);
         } catch {
           /* Retain the original action error. */
@@ -450,6 +554,7 @@ export default function Assistant({
     run("action:" + action.id, async (ticket) => {
       await api("/assistant/actions/" + action.id + "/dismiss", {
         method: "POST",
+        headers: chatHeaders,
       });
       if (current(ticket)) updateAction({ ...action, state: "dismissed" });
     });
@@ -480,12 +585,71 @@ export default function Assistant({
           : shiftyState === "replying"
             ? "Your next step is ready."
             : "Ready when you are.";
+  const historyPanel = (
+    <>
+      {(historyError || error) && (
+        <p className="form-error" role="alert">
+          {historyError || error}
+        </p>
+      )}
+      <ShiftyHistory
+        chats={chats}
+        chatId={chatId}
+        disabled={disabled}
+        onSelect={openChat}
+        onNew={() => openChat()}
+        onDelete={deleteChat}
+      />
+    </>
+  );
   return (
-    <div className="assistant-layout shifty-dashboard">
+    <div
+      className={
+        "assistant-layout shifty-dashboard" +
+        (historyOpen && !compact ? " shifty-history-open" : "")
+      }
+    >
+      {historyOpen &&
+        (compact ? (
+          <Modal
+            title="Your Shifty chats"
+            className="shifty-history-drawer"
+            onClose={() => setHistoryOpen(false)}
+          >
+            {historyPanel}
+          </Modal>
+        ) : (
+          <aside
+            className="panel shifty-history"
+            aria-label="Your Shifty chats"
+          >
+            <h2>Your chats</h2>
+            {historyPanel}
+          </aside>
+        ))}
       <section
         className="panel assistant-chat"
         aria-label="ShiftScript assistant"
       >
+        <div className="shifty-chat-toolbar">
+          <button
+            className="icon-button"
+            aria-label="Toggle chat history"
+            aria-expanded={historyOpen}
+            onClick={() => setHistoryOpen((v) => !v)}
+          >
+            <Menu size={22} />
+          </button>
+          <strong title={chatTitle}>{chatTitle}</strong>
+          <button
+            className="icon-button"
+            aria-label="Start new Shifty chat"
+            disabled={disabled}
+            onClick={() => openChat()}
+          >
+            <Plus size={22} />
+          </button>
+        </div>
         <div className="assistant-chat-heading">
           <div className="assistant-brand">
             <ShiftyAvatar
@@ -512,17 +676,21 @@ export default function Assistant({
         {clearConfirm && (
           <div className="assistant-clear">
             <p>
-              Clear your conversation in this workspace? Tasks, meetings and
-              calendar blocks will stay.
+              Delete this saved chat? Tasks, meetings and calendar blocks will
+              stay.
             </p>
             <button
               className="button"
               disabled={disabled}
               onClick={() =>
                 run("clear", async (ticket) => {
-                  await api("/assistant/history", { method: "DELETE" });
+                  await api(historyPath, { method: "DELETE" });
                   if (current(ticket)) {
                     setMessages([]);
+                    setChats((old) => old.filter((c) => c.id !== chatId));
+                    setChatTitle("New chat");
+                    setQuestion("");
+                    setChatId(crypto.randomUUID());
                     setClearConfirm(false);
                   }
                 })
@@ -706,26 +874,42 @@ export default function Assistant({
           <label className="sr-only" htmlFor="assistant-question">
             Ask Shifty
           </label>
-          <textarea
-            ref={inputRef}
-            id="assistant-question"
-            rows="2"
-            maxLength="2000"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            disabled={disabled || !config.assistantReady}
-            placeholder="Ask Shifty about your tasks, meetings or calendar…"
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter" &&
-                !e.shiftKey &&
-                !e.nativeEvent.isComposing
-              ) {
-                e.preventDefault();
-                e.currentTarget.form.requestSubmit();
-              }
-            }}
-          />
+          <div className="shifty-workspace-chip">
+            <Building size={17} />
+            <span>{workspaceName}</span>
+          </div>
+          <div className="shifty-input-shell">
+            <button
+              type="button"
+              className="icon-button shifty-compose-new"
+              aria-label="Start another Shifty chat"
+              disabled={disabled}
+              onClick={() => openChat()}
+              title="New chat"
+            >
+              <Plus size={24} />
+            </button>
+            <textarea
+              ref={inputRef}
+              id="assistant-question"
+              rows="2"
+              maxLength="2000"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              disabled={disabled || !config.assistantReady}
+              placeholder="Ask Shifty about your tasks, meetings or calendar…"
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.nativeEvent.isComposing
+                ) {
+                  e.preventDefault();
+                  e.currentTarget.form.requestSubmit();
+                }
+              }}
+            />
+          </div>
           <ShiftySendButton
             busy={busy}
             disabled={

@@ -95,6 +95,7 @@ export function profileView(profile, actor) {
 export class MemoryProfiles {
   constructor() {
     this.items = new Map();
+    this.chats = new Map();
     this.queue = Promise.resolve();
   }
   async getProfile(uid) {
@@ -115,6 +116,22 @@ export class MemoryProfiles {
     return [...this.items]
       .filter(([, p]) => p.preferences?.emailReminders)
       .map(([uid, p]) => ({ ...p, uid }));
+  }
+  async getAssistantChat(uid, chatId) {
+    await this.queue;
+    return structuredClone(this.chats.get(uid + "/" + chatId) || null);
+  }
+  async mutateAssistantChat(uid, chatId, operation) {
+    const work = this.queue.then(() => {
+      const profile = structuredClone(this.items.get(uid) || {});
+      const chat = structuredClone(this.chats.get(uid + "/" + chatId) || {});
+      const result = operation(profile, chat);
+      this.items.set(uid, profile);
+      if (Object.keys(chat).length) this.chats.set(uid + "/" + chatId, chat);
+      return structuredClone(result);
+    });
+    this.queue = work.catch(() => {});
+    return work;
   }
 }
 export function validateDependencies(tasks) {

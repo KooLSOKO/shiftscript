@@ -1605,6 +1605,7 @@ export default function App() {
                         key={workspaceId + ":" + actor.uid}
                         actor={actor}
                         workspaceId={workspaceId}
+                        workspaceName={data.workspace?.name || "Your workspace"}
                         config={config}
                         readOnly={readOnly}
                         revision={assistantRevision}
@@ -2182,6 +2183,9 @@ export default function App() {
                     {
                       method: "POST",
                       body: JSON.stringify({ requestId: send.id }),
+                      headers: assistantRecap.chatId
+                        ? { "X-Assistant-Chat-Id": assistantRecap.chatId }
+                        : {},
                     },
                   );
                   setAssistantRevision((v) => v + 1);

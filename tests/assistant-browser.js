@@ -469,6 +469,14 @@ try {
   await screenshot("assistant-chat-desktop");
   await page.reload();
   await page.getByRole("button", { name: "Ask Shifty", exact: true }).click();
+  await page.getByRole("button", { name: "Toggle chat history" }).click();
+  await page.locator(".shifty-history-select").first().click();
+  if (
+    (await page
+      .getByRole("button", { name: "Toggle chat history" })
+      .getAttribute("aria-expanded")) === "true"
+  )
+    await page.getByRole("button", { name: "Toggle chat history" }).click();
   await log
     .getByText("Recap accepted by the email server.", { exact: true })
     .waitFor();

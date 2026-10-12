@@ -756,3 +756,289 @@ test("Daily assistant caps reject before model use and invalid time zones never 
   assert.equal(f.captured.length, 0);
   assert.equal((await f.store.getProfile("soko")).assistantThreads, undefined);
 });
+
+test("Saved Shifty sessions separate history and model context, persist, and retry without duplicate turns", async (t) => {
+  const f = await fixture(t),
+    a = randomUUID(),
+    b = randomUUID();
+  assert.deepEqual(
+    (await call(f.app, "get", "/assistant/chats")).body.chats,
+    [],
+  );
+  const first = { ...question("Tell me about my portfolio"), chatId: a };
+  const result = await call(f.app, "post", "/assistant/chat")
+    .send(first)
+    .expect(200);
+  assert.equal(result.body.chat.id, a);
+  assert.equal(result.body.chat.title, first.question);
+  await call(f.app, "post", "/assistant/chat")
+    .send({ ...question("Plan my next day"), chatId: b })
+    .expect(200);
+  assert.equal(f.captured[1].history.length, 0);
+  await call(f.app, "post", "/assistant/chat")
+    .send(first)
+    .expect(200)
+    .then((r) => assert.equal(r.body.cached, true));
+  await call(f.app, "post", "/assistant/chat")
+    .send({ ...question("And the deadline?"), chatId: a })
+    .expect(200);
+  assert.equal(f.captured[2].history.length, 2);
+  assert.equal(f.captured[2].history[0].text, first.question);
+  const list = (await call(f.app, "get", "/assistant/chats")).body.chats;
+  assert.equal(list.length, 2);
+  assert.equal(list[0].id, a);
+  assert.equal(
+    (await call(f.app, "get", "/assistant/history?chatId=" + a)).body.messages
+      .length,
+    4,
+  );
+  const reopened = new LocalStore(f.store.path);
+  assert.equal((await reopened.getAssistantChat("soko", a)).messages.length, 4);
+  assert.equal(
+    (await call(f.app, "get", "/assistant/history?chatId=" + randomUUID())).body
+      .messages.length,
+    0,
+  );
+  assert.equal(
+    (await call(f.app, "get", "/assistant/chats")).body.chats.length,
+    2,
+  );
+});
+
+test("Saved chat access and actions are private to both account and workspace", async (t) => {
+  const f = await fixture(t, {
+    brain: async () => ({
+      answer: "Review this update.",
+      sourceIds: [],
+      actions: [proposal("update_task", { status: "In Progress" })],
+    }),
+  });
+  const id = randomUUID(),
+    other = randomUUID();
+  const r = await call(f.app, "post", "/assistant/chat")
+    .send({ ...question("Set my task to In Progress"), chatId: id })
+    .expect(200);
+  const action = r.body.message.actions[0];
+  assert.equal(action.chatId, id);
+  assert.equal(
+    (await call(f.app, "get", "/assistant/chats", "kopano")).body.chats.length,
+    0,
+  );
+  assert.equal(
+    (await call(f.app, "get", "/assistant/history?chatId=" + id, "kopano")).body
+      .messages.length,
+    0,
+  );
+  await f.store.mutate("second", (s) => {
+    s.workspace = newWorkspace(
+      "second",
+      { name: "Other", ownerName: "Soko" },
+      people.soko,
+    );
+  });
+  await call(
+    f.app,
+    "get",
+    "/assistant/history?chatId=" + id,
+    "soko",
+    "second",
+  ).expect(404);
+  await call(f.app, "post", "/assistant/chat", "soko", "second")
+    .send({ ...question(), chatId: id })
+    .expect(404);
+  await call(
+    f.app,
+    "delete",
+    "/assistant/chats/" + id,
+    "soko",
+    "second",
+  ).expect(404);
+  await call(f.app, "post", "/assistant/actions/" + action.id + "/dismiss")
+    .set("X-Assistant-Chat-Id", other)
+    .expect(404);
+  await call(
+    f.app,
+    "post",
+    "/assistant/actions/" + action.id + "/approve",
+    "kopano",
+  )
+    .set("X-Assistant-Chat-Id", id)
+    .send({ status: "In Progress", dueDate: null })
+    .expect(404);
+  await call(f.app, "post", "/assistant/actions/" + action.id + "/approve")
+    .set("X-Assistant-Chat-Id", id)
+    .send({ status: "In Progress", dueDate: null })
+    .expect(200);
+  assert.equal((await f.store.list("soko")).tasks[0].status, "In Progress");
+});
+
+test("Legacy history migrates once with review proposals and deletion never revives a chat", async (t) => {
+  const f = await fixture(t, {
+    brain: async () => ({
+      answer: "Review the task.",
+      sourceIds: [],
+      actions: [proposal("update_task", { status: "In Progress" })],
+    }),
+  });
+  const r = await call(f.app, "post", "/assistant/chat")
+    .send(question("Set my task to In Progress"))
+    .expect(200);
+  const actionId = r.body.message.actions[0].id;
+  const list = (await call(f.app, "get", "/assistant/chats").expect(200)).body
+    .chats;
+  assert.equal(list.length, 1);
+  const id = list[0].id;
+  assert.equal(
+    (await call(f.app, "get", "/assistant/chats")).body.chats.length,
+    1,
+  );
+  const history = (await call(f.app, "get", "/assistant/history?chatId=" + id))
+    .body.messages;
+  assert.equal(history.length, 2);
+  assert.equal(history[1].actions[0].chatId, id);
+  await call(f.app, "post", "/assistant/actions/" + actionId + "/dismiss")
+    .set("X-Assistant-Chat-Id", id)
+    .expect(200);
+  await call(f.app, "delete", "/assistant/chats/" + id).expect(200);
+  await call(f.app, "get", "/assistant/history?chatId=" + id).expect(410);
+  await call(f.app, "post", "/assistant/chat")
+    .send({ ...question(), chatId: id })
+    .expect(410);
+  assert.equal(
+    (await call(f.app, "get", "/assistant/chats")).body.chats.length,
+    0,
+  );
+  assert.equal((await f.store.list("soko")).tasks.length, 1);
+  assert.equal((await f.store.getAssistantChat("soko", id)).messages.length, 0);
+});
+
+test("Pending replies cannot be deleted or attached to another chat, and failures leave no empty history", async (t) => {
+  let release, entered;
+  const gate = new Promise((r) => (release = r)),
+    started = new Promise((r) => (entered = r));
+  const f = await fixture(t, {
+    brain: async () => {
+      entered();
+      await gate;
+      return { answer: "Ready.", sourceIds: [], actions: [] };
+    },
+  });
+  const id = randomUUID();
+  const pending = call(f.app, "post", "/assistant/chat")
+    .send({ ...question(), chatId: id })
+    .then((r) => r);
+  await started;
+  await call(f.app, "delete", "/assistant/chats/" + id).expect(409);
+  await call(f.app, "post", "/assistant/chat")
+    .send({ ...question(), chatId: randomUUID() })
+    .expect(409);
+  release();
+  assert.equal((await pending).status, 200);
+  assert.equal(
+    (await call(f.app, "get", "/assistant/chats")).body.chats.length,
+    1,
+  );
+  const broken = await fixture(t, {
+    brain: async () => {
+      throw Error("Model failure");
+    },
+  });
+  await call(broken.app, "post", "/assistant/chat")
+    .send({ ...question(), chatId: randomUUID() })
+    .expect(500);
+  assert.equal(
+    (await call(broken.app, "get", "/assistant/chats")).body.chats.length,
+    0,
+  );
+  assert.equal(
+    (await broken.store.getProfile("soko")).assistantPending,
+    undefined,
+  );
+});
+
+test("Chat limits retain all saved messages and reject before calling the model", async (t) => {
+  const f = await fixture(t),
+    id = randomUUID();
+  await f.store.mutateAssistantChat("soko", id, (p, c) => {
+    Object.assign(c, {
+      id,
+      workspaceId: "soko",
+      title: "Long conversation",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: Array.from({ length: 100 }, (_, i) => ({
+        id: randomUUID(),
+        role: i % 2 ? "assistant" : "user",
+        text: "Turn " + i,
+        at: new Date().toISOString(),
+      })),
+    });
+    p.assistantChatIndex = [
+      {
+        id,
+        workspaceId: "soko",
+        title: c.title,
+        updatedAt: c.updatedAt,
+        messageCount: 100,
+      },
+    ];
+  });
+  await call(f.app, "post", "/assistant/chat")
+    .send({ ...question(), chatId: id })
+    .expect(409);
+  assert.equal(f.captured.length, 0);
+  assert.equal(
+    (await f.store.getAssistantChat("soko", id)).messages.length,
+    100,
+  );
+  await f.store.mutateProfile("soko", (p) => {
+    p.assistantChatIndex = Array.from({ length: 200 }, () => ({
+      id: randomUUID(),
+      workspaceId: "soko",
+      title: "Saved",
+      updatedAt: new Date().toISOString(),
+      messageCount: 2,
+    }));
+  });
+  await call(f.app, "post", "/assistant/chat")
+    .send({ ...question(), chatId: randomUUID() })
+    .expect(409);
+  assert.equal(f.captured.length, 0);
+});
+
+test("Migration waits for an older client's pending turn and later appends legacy turns without losing earlier history", async (t) => {
+  let release, entered;
+  const gate = new Promise((r) => (release = r)),
+    started = new Promise((r) => (entered = r));
+  let count = 0;
+  const f = await fixture(t, {
+    brain: async () => {
+      if (++count === 2) {
+        entered();
+        await gate;
+      }
+      return { answer: "Saved reply.", sourceIds: [], actions: [] };
+    },
+  });
+  await call(f.app, "post", "/assistant/chat")
+    .send(question("First legacy turn"))
+    .expect(200);
+  const pending = call(f.app, "post", "/assistant/chat")
+    .send(question("Second legacy turn"))
+    .then((r) => r);
+  await started;
+  assert.equal(
+    (await call(f.app, "get", "/assistant/chats")).body.chats.length,
+    0,
+  );
+  release();
+  assert.equal((await pending).status, 200);
+  const first = (await call(f.app, "get", "/assistant/chats")).body.chats[0];
+  assert.equal(first.messageCount, 4);
+  await call(f.app, "post", "/assistant/chat")
+    .send(question("Third legacy turn"))
+    .expect(200);
+  const second = (await call(f.app, "get", "/assistant/chats")).body.chats[0];
+  assert.equal(first.id, second.id);
+  assert.equal(second.messageCount, 6);
+});

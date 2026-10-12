@@ -46,6 +46,7 @@ const chatInput = z
     question: z.string().trim().min(2).max(2000),
     requestId: z.string().uuid(),
     timeZone: zoneSchema,
+    chatId: z.string().uuid().optional(),
   })
   .strict();
 const approvalInput = z
@@ -57,10 +58,57 @@ const approvalInput = z
   .strict();
 const threadFor = (p, workspaceId) =>
   p.assistantThreads?.find((t) => t.workspaceId === workspaceId);
-const getAction = (p, workspaceId, id) =>
-  threadFor(p, workspaceId)
-    ?.messages.flatMap((m) => m.actions || [])
-    .find((a) => a.id === id);
+const getThreadAction = (thread, id) =>
+  thread?.messages?.flatMap((m) => m.actions || []).find((a) => a.id === id);
+const chatMeta = (t) => ({
+  id: t.id,
+  workspaceId: t.workspaceId,
+  title: t.title,
+  createdAt: t.createdAt,
+  updatedAt: t.updatedAt,
+  messageCount: t.messages?.length || 0,
+});
+const titleFor = (text) =>
+  String(text || "Earlier conversation")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+const legacyId = (uid, workspaceId) => {
+  const h = createHash("sha256")
+    .update("shifty-legacy|" + uid + "|" + workspaceId)
+    .digest("hex");
+  return (
+    h.slice(0, 8) +
+    "-" +
+    h.slice(8, 12) +
+    "-4" +
+    h.slice(13, 16) +
+    "-8" +
+    h.slice(17, 20) +
+    "-" +
+    h.slice(20, 32)
+  );
+};
+const requestedChat = (req) => {
+  const value = req.query.chatId || req.get("X-Assistant-Chat-Id");
+  return value ? z.string().uuid().parse(value) : null;
+};
+function assertChat(t, workspaceId) {
+  if (t?.workspaceId && t.workspaceId !== workspaceId)
+    fail(404, "Chat not found in this workspace.");
+  if (t?.deleted) fail(410, "This chat was deleted. Start a new chat.");
+}
+function indexChat(p, t) {
+  p.assistantChatIndex ||= [];
+  if (t.deleted)
+    p.assistantChatIndex = p.assistantChatIndex.filter((c) => c.id !== t.id);
+  else if (t.messages?.length) {
+    p.assistantChatIndex = [
+      chatMeta(t),
+      ...p.assistantChatIndex.filter((c) => c.id !== t.id),
+    ].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }
+}
 const cap = (value, length) => String(value || "").slice(0, length);
 function rank(items, question, extra = () => 0) {
   const words = [
@@ -319,6 +367,87 @@ export function installAssistantRoutes(
   app,
   { profiles, read, mutate, calendar, google, provider, brain, origin },
 ) {
+  const conversation = async (req, chatId) => {
+    if (!chatId)
+      return threadFor(await profiles.getProfile(req.uid), req.workspaceId);
+    const t = await profiles.getAssistantChat(req.uid, chatId);
+    assertChat(t, req.workspaceId);
+    return t;
+  };
+  const mutateConversation = (req, chatId, operation) =>
+    chatId
+      ? profiles.mutateAssistantChat(req.uid, chatId, (p, t) => {
+          assertChat(t, req.workspaceId);
+          const result = operation(p, t);
+          if (t.workspaceId) indexChat(p, t);
+          return result;
+        })
+      : profiles.mutateProfile(req.uid, (p) =>
+          operation(p, threadFor(p, req.workspaceId)),
+        );
+  async function migrateLegacy(req) {
+    const id = legacyId(req.uid, req.workspaceId);
+    if (
+      !threadFor(await profiles.getProfile(req.uid), req.workspaceId)?.messages
+        ?.length
+    )
+      return;
+    await profiles.mutateAssistantChat(req.uid, id, (p, t) => {
+      const previous = threadFor(p, req.workspaceId);
+      if (!previous?.messages?.length) return;
+      if (
+        (p.assistantPending?.workspaceId === req.workspaceId &&
+          !p.assistantPending.chatId &&
+          Date.now() - p.assistantPending.startedAt < 90000) ||
+        previous.messages.some((m) =>
+          m.actions?.some(
+            (a) =>
+              a.state === "executing" &&
+              Date.now() - Date.parse(a.executingAt) < 120000,
+          ),
+        )
+      )
+        return;
+      if (!t.deleted) {
+        if (!t.messages?.length)
+          Object.assign(t, {
+            id,
+            workspaceId: req.workspaceId,
+            title: titleFor(
+              previous.messages.find((m) => m.role === "user")?.text,
+            ),
+            createdAt: previous.messages[0]?.at || now(),
+            messages: [],
+          });
+        const known = new Set(t.messages.map((m) => m.id));
+        t.messages.push(
+          ...previous.messages
+            .filter((m) => !known.has(m.id))
+            .map((m) => ({
+              ...m,
+              actions: m.actions?.map((a) => ({ ...a, chatId: id })) || [],
+            })),
+        );
+        t.updatedAt =
+          previous.updatedAt || previous.messages.at(-1)?.at || now();
+        indexChat(p, t);
+      }
+      if (t.deleted) return;
+      p.assistantThreads = p.assistantThreads.filter(
+        (t) => t.workspaceId !== req.workspaceId,
+      );
+    });
+  }
+  app.get("/api/assistant/chats", async (req, res) => {
+    await migrateLegacy(req);
+    const p = await profiles.getProfile(req.uid);
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId);
+    res.json({
+      chats: (p.assistantChatIndex || [])
+        .filter((c) => c.workspaceId === req.workspaceId)
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    });
+  });
   app.get("/api/calendar/status", async (req, res) =>
     res.json(await calendar.status(req.uid)),
   );
@@ -344,22 +473,20 @@ export function installAssistantRoutes(
     res.json(await calendar.select(req.uid, ids));
   });
   app.get("/api/assistant/history", async (req, res) => {
-    const p = await profiles.getProfile(req.uid);
-    res.json({ messages: threadFor(p, req.workspaceId)?.messages || [] });
+    const t = await conversation(req, requestedChat(req));
+    authorize(await read(req.workspaceId), req.actor, req.workspaceId);
+    res.json({ messages: t?.messages || [], chat: t?.id ? chatMeta(t) : null });
   });
-  app.delete("/api/assistant/history", async (req, res) => {
-    await profiles.mutateProfile(req.uid, (p) => {
+  async function clearChat(req, res, chatId) {
+    await mutateConversation(req, chatId, (p, t) => {
       if (
         p.assistantPending?.workspaceId === req.workspaceId &&
+        (p.assistantPending.chatId || null) === chatId &&
         Date.now() - p.assistantPending.startedAt < 90000
       )
-        fail(
-          409,
-          "Wait for your assistant reply before clearing this conversation.",
-        );
-      const t = threadFor(p, req.workspaceId);
+        fail(409, "Wait for your assistant reply before deleting this chat.");
       if (
-        t?.messages.some((m) =>
+        t?.messages?.some((m) =>
           m.actions?.some(
             (a) =>
               a.state === "executing" &&
@@ -368,21 +495,47 @@ export function installAssistantRoutes(
         )
       )
         fail(409, "Wait for the current action to finish.");
-      p.assistantThreads = (p.assistantThreads || []).filter(
-        (t) => t.workspaceId !== req.workspaceId,
-      );
+      if (chatId) {
+        if (!t?.workspaceId) fail(404, "Chat not found.");
+        t.messages = [];
+        t.title = "";
+        t.deleted = true;
+        t.deletedAt = now();
+      } else
+        p.assistantThreads = (p.assistantThreads || []).filter(
+          (t) => t.workspaceId !== req.workspaceId,
+        );
     });
     res.json({ messages: [] });
-  });
+  }
+  app.delete("/api/assistant/history", async (req, res) =>
+    clearChat(req, res, requestedChat(req)),
+  );
+  app.delete("/api/assistant/chats/:chatId", async (req, res) =>
+    clearChat(req, res, z.string().uuid().parse(req.params.chatId)),
+  );
   app.post("/api/assistant/chat", async (req, res) => {
     const input = chatInput.parse(req.body),
+      chatId = input.chatId || null,
       fingerprint = createHash("sha256")
-        .update(input.question + "|" + input.timeZone)
+        .update(
+          input.question + "|" + input.timeZone + (chatId ? "|" + chatId : ""),
+        )
         .digest("hex");
-    const reservation = await profiles.mutateProfile(req.uid, (p) => {
-      const thread = threadFor(p, req.workspaceId),
-        cached = thread?.messages.find(
-          (m) => m.requestId === input.requestId && m.role === "assistant",
+    const reservation = await mutateConversation(req, chatId, (p, thread) => {
+      const cached = thread?.messages?.find(
+        (m) => m.requestId === input.requestId && m.role === "assistant",
+      );
+      if (chatId && (thread?.messages?.length || 0) >= 100 && !cached)
+        fail(409, "This chat is full. Start a new chat; your history is kept.");
+      if (
+        chatId &&
+        !thread?.messages?.length &&
+        (p.assistantChatIndex || []).length >= 200
+      )
+        fail(
+          409,
+          "You have 200 saved chats. Delete an older chat before starting another.",
         );
       if (cached) {
         if (cached.fingerprint !== fingerprint)
@@ -420,6 +573,7 @@ export function installAssistantRoutes(
       p.assistantPending = {
         requestId: input.requestId,
         workspaceId: req.workspaceId,
+        chatId,
         startedAt: Date.now(),
       };
       return { history: thread?.messages || [] };
@@ -475,7 +629,7 @@ export function installAssistantRoutes(
           context,
           input.question,
           req.role,
-        ),
+        ).map((a) => (chatId ? { ...a, chatId } : a)),
         at: now(),
         requestId: input.requestId,
         fingerprint,
@@ -488,17 +642,32 @@ export function installAssistantRoutes(
           selectedCount: events.selectedCount || 0,
         },
       };
-      await profiles.mutateProfile(req.uid, (p) => {
-        if (p.assistantPending?.requestId !== input.requestId)
+      const savedChat = await mutateConversation(req, chatId, (p, thread) => {
+        if (
+          p.assistantPending?.requestId !== input.requestId ||
+          p.assistantPending.workspaceId !== req.workspaceId ||
+          (p.assistantPending.chatId || null) !== chatId
+        )
           fail(
             409,
             "This conversation changed while your reply was being prepared. Try again.",
           );
-        p.assistantThreads ||= [];
-        let t = threadFor(p, req.workspaceId);
-        if (!t) {
-          t = { workspaceId: req.workspaceId, messages: [] };
-          p.assistantThreads.push(t);
+        let t = thread;
+        if (chatId) {
+          if (!t.workspaceId)
+            Object.assign(t, {
+              id: chatId,
+              workspaceId: req.workspaceId,
+              messages: [],
+              title: titleFor(input.question),
+              createdAt: now(),
+            });
+        } else {
+          p.assistantThreads ||= [];
+          if (!t) {
+            t = { workspaceId: req.workspaceId, messages: [] };
+            p.assistantThreads.push(t);
+          }
         }
         t.messages.push(
           {
@@ -509,26 +678,38 @@ export function installAssistantRoutes(
           },
           message,
         );
-        t.messages = t.messages.slice(-12);
         t.updatedAt = now();
-        p.assistantThreads = p.assistantThreads
-          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-          .slice(0, 5);
+        if (!chatId) {
+          t.messages = t.messages.slice(-12);
+          p.assistantThreads = p.assistantThreads
+            .sort((a, b) =>
+              String(b.updatedAt || "").localeCompare(
+                String(a.updatedAt || ""),
+              ),
+            )
+            .slice(0, 5);
+        }
         delete p.assistantPending;
+        return chatId ? chatMeta(t) : null;
       });
-      res.json({ message, cached: false });
+      res.json({ message, cached: false, chat: savedChat });
     } catch (e) {
       await profiles.mutateProfile(req.uid, (p) => {
-        if (p.assistantPending?.requestId === input.requestId)
+        if (
+          p.assistantPending?.requestId === input.requestId &&
+          p.assistantPending.workspaceId === req.workspaceId &&
+          (p.assistantPending.chatId || null) === chatId
+        )
           delete p.assistantPending;
       });
       throw e;
     }
   });
   app.post("/api/assistant/actions/:id/dismiss", async (req, res) => {
-    const id = z.string().uuid().parse(req.params.id);
-    await profiles.mutateProfile(req.uid, (p) => {
-      const a = getAction(p, req.workspaceId, id);
+    const id = z.string().uuid().parse(req.params.id),
+      chatId = requestedChat(req);
+    await mutateConversation(req, chatId, (p, thread) => {
+      const a = getThreadAction(thread, id);
       if (!a) fail(404, "Action not found in your conversation.");
       if (a.state !== "pending") fail(409, "This action is no longer pending.");
       a.state = "dismissed";
@@ -537,15 +718,12 @@ export function installAssistantRoutes(
   });
   app.post("/api/assistant/actions/:id/recap-result", async (req, res) => {
     const id = z.string().uuid().parse(req.params.id),
+      chatId = requestedChat(req),
       { requestId } = z
         .object({ requestId: z.string().uuid() })
         .strict()
         .parse(req.body);
-    const before = getAction(
-      await profiles.getProfile(req.uid),
-      req.workspaceId,
-      id,
-    );
+    const before = getThreadAction(await conversation(req, chatId), id);
     if (!before || before.kind !== "email_recap")
       fail(404, "Email proposal not found.");
     const data = await read(req.workspaceId);
@@ -563,8 +741,8 @@ export function installAssistantRoutes(
         409,
         "An accepted email send could not be matched to this proposal.",
       );
-    const action = await profiles.mutateProfile(req.uid, (p) => {
-      const a = getAction(p, req.workspaceId, id);
+    const action = await mutateConversation(req, chatId, (p, thread) => {
+      const a = getThreadAction(thread, id);
       if (!a) fail(404, "Email proposal not found.");
       a.state = "done";
       a.result = {
@@ -577,13 +755,10 @@ export function installAssistantRoutes(
   });
   app.post("/api/assistant/actions/:id/approve", async (req, res) => {
     const id = z.string().uuid().parse(req.params.id),
+      chatId = requestedChat(req),
       input = approvalInput.parse(req.body);
     // Validate edits before reserving; the resource IDs always come from the server's proposal.
-    const before = getAction(
-      await profiles.getProfile(req.uid),
-      req.workspaceId,
-      id,
-    );
+    const before = getThreadAction(await conversation(req, chatId), id);
     if (!before) fail(404, "Action not found in your conversation.");
     if (before.kind === "email_recap")
       fail(400, "Open the email preview and choose recipients before sending.");
@@ -594,8 +769,8 @@ export function installAssistantRoutes(
       input.schedule
     )
       fail(400, "Review the task status and deadline before confirming.");
-    const action = await profiles.mutateProfile(req.uid, (p) => {
-      const a = getAction(p, req.workspaceId, id);
+    const action = await mutateConversation(req, chatId, (p, thread) => {
+      const a = getThreadAction(thread, id);
       if (!a) fail(404, "Action not found in your conversation.");
       if (a.state === "done") return structuredClone(a);
       if (a.state !== "pending")
@@ -663,8 +838,8 @@ export function installAssistantRoutes(
           verify,
         );
       }
-      const done = await profiles.mutateProfile(req.uid, (p) => {
-        const a = getAction(p, req.workspaceId, id);
+      const done = await mutateConversation(req, chatId, (p, thread) => {
+        const a = getThreadAction(thread, id);
         if (a) {
           a.state = "done";
           a.result = result;
@@ -675,8 +850,8 @@ export function installAssistantRoutes(
       res.json({ action: done, cached: false });
     } catch (e) {
       // Safe validation/conflict errors may be edited and retried; ambiguous external outcomes may not.
-      await profiles.mutateProfile(req.uid, (p) => {
-        const a = getAction(p, req.workspaceId, id);
+      await mutateConversation(req, chatId, (p, thread) => {
+        const a = getThreadAction(thread, id);
         if (a?.state === "executing") {
           a.state = [400, 403, 404, 409, 410, 422].includes(e.status)
             ? "pending"

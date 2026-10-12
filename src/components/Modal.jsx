@@ -3,11 +3,12 @@ import { X } from "./Icons.jsx";
 let openDialogs = 0;
 let restoreScroll;
 const stack = [];
-export default function Modal({ title, children, onClose }) {
+export default function Modal({ title, children, onClose, className = "" }) {
   const ref = useRef(null);
   const titleId = useId();
   useEffect(() => {
     const d = ref.current;
+    const opener = document.activeElement;
     if (openDialogs++ === 0) {
       const root = document.documentElement;
       const body = document.body;
@@ -25,13 +26,20 @@ export default function Modal({ title, children, onClose }) {
       const index = stack.indexOf(d);
       if (index >= 0) stack.splice(index, 1);
       d.close();
+      queueMicrotask(() => {
+        if (
+          opener?.isConnected &&
+          (!stack.length || stack.at(-1).contains(opener))
+        )
+          opener.focus({ preventScroll: true });
+      });
       if (--openDialogs === 0) restoreScroll?.();
     };
   }, []);
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={"modal " + className}
       aria-labelledby={titleId}
       onKeyDown={(e) => {
         if (

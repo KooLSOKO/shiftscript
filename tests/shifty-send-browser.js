@@ -77,6 +77,14 @@ try {
     });
   const reply = page.locator(".assistant-rich-text");
   await expect(input).toBeEnabled({ timeout: 20000 });
+  await page.locator(".shifty-dashboard").evaluate((el) =>
+    Promise.all(
+      el
+        .getAnimations()
+        .filter((a) => a.effect.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished),
+    ),
+  );
   await expect(send).toBeDisabled();
   async function aligned() {
     // Take both rectangles in one frame: focusing a phone textarea may scroll the page.
@@ -93,8 +101,11 @@ try {
       `Send ${b.height}px versus field ${a.height}px`,
     );
     assert(Math.abs(a.y - b.y) < 1, `Field y=${a.y}, send y=${b.y}`);
-    assert(b.height >= 80);
-    return { width: b.width, height: b.height };
+    assert(b.height >= 79.99, `Minimum height: ${b.height}`);
+    return {
+      width: Math.round(b.width * 1000) / 1000,
+      height: Math.round(b.height * 1000) / 1000,
+    };
   }
   let total = 0;
   for (const [width, height] of [

@@ -125,6 +125,30 @@ export class LocalStore {
       .filter(([, p]) => p.preferences?.emailReminders)
       .map(([uid, profile]) => ({ ...profile, uid }));
   }
+  async getAssistantChat(uid, chatId) {
+    await this.queue;
+    return (await this.readDatabase()).assistantChats?.[uid]?.[chatId] || null;
+  }
+  async mutateAssistantChat(uid, chatId, operation) {
+    const run = this.queue.then(async () => {
+      const db = await this.readDatabase();
+      db.profiles ||= {};
+      db.assistantChats ||= {};
+      db.assistantChats[uid] ||= {};
+      const profile = (db.profiles[uid] ||= {});
+      const chat = db.assistantChats[uid][chatId] || {};
+      const result = operation(profile, chat);
+      if (Object.keys(chat).length) db.assistantChats[uid][chatId] = chat;
+      await mkdir(dirname(this.path), { recursive: true });
+      await writeFile(this.path + ".tmp", JSON.stringify(db, null, 2), {
+        mode: 0o600,
+      });
+      await rename(this.path + ".tmp", this.path);
+      return structuredClone(result);
+    });
+    this.queue = run.catch(() => {});
+    return run;
+  }
 }
 export class FirebaseStore {
   constructor(services = firebase) {
@@ -260,5 +284,31 @@ export class FirebaseStore {
         .limit(100)
         .get()
     ).docs.map((doc) => ({ ...doc.data(), uid: doc.id }));
+  }
+  async getAssistantChat(uid, chatId) {
+    return (
+      (
+        await this.services()
+          .db.collection("privateProfiles")
+          .doc(uid)
+          .collection("assistantChats")
+          .doc(chatId)
+          .get()
+      ).data() || null
+    );
+  }
+  async mutateAssistantChat(uid, chatId, operation) {
+    const profileRef = this.services()
+      .db.collection("privateProfiles")
+      .doc(uid);
+    const chatRef = profileRef.collection("assistantChats").doc(chatId);
+    return this.services().db.runTransaction(async (tx) => {
+      const profile = (await tx.get(profileRef)).data() || {};
+      const chat = (await tx.get(chatRef)).data() || {};
+      const result = operation(profile, chat);
+      tx.set(profileRef, profile);
+      if (Object.keys(chat).length) tx.set(chatRef, chat);
+      return result;
+    });
   }
 }

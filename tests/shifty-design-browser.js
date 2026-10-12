@@ -178,6 +178,14 @@ try {
   await page.reload();
   await expect(page.locator(".auth-transition")).toHaveCount(0);
   await shifty.click();
+  await page.getByRole("button", { name: "Toggle chat history" }).click();
+  await page.locator(".shifty-history-select").first().click();
+  if (
+    (await page
+      .getByRole("button", { name: "Toggle chat history" })
+      .getAttribute("aria-expanded")) === "true"
+  )
+    await page.getByRole("button", { name: "Toggle chat history" }).click();
   await expect(page.locator(".assistant-rich-text strong").first()).toHaveText(
     "two tasks",
   );

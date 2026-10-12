@@ -93,11 +93,11 @@ No real Google OAuth, Gmail account, Gemini API or Zoho SMTP credentials were us
 
 `npm run test:ui`: **all four browser suites passed** with actual React/Vite and Node APIs:
 
-| Suite | Main checks |
-| --- | --- |
-| `browser-smoke.js` | Sample meeting, evidence, edits, approval/rejection, status/notes persistence, board, mobile navigation and mocked voice upload/transcription/source |
-| `accounts-browser.js` | Simulated signup, name prefill, password mismatch, workspace setup/rename, account isolation, reset, invalid password and mobile layout |
-| `integrations-browser.js` | Mocked Meet artifacts and Docs-link import, source labels, pending proposals, approval, recap preview/send, collapsed filters, mobile task cards, dialog bounds and keyboard navigation |
+| Suite                      | Main checks                                                                                                                                                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `browser-smoke.js`         | Sample meeting, evidence, edits, approval/rejection, status/notes persistence, board, mobile navigation and mocked voice upload/transcription/source                                                                                              |
+| `accounts-browser.js`      | Simulated signup, name prefill, password mismatch, workspace setup/rename, account isolation, reset, invalid password and mobile layout                                                                                                           |
+| `integrations-browser.js`  | Mocked Meet artifacts and Docs-link import, source labels, pending proposals, approval, recap preview/send, collapsed filters, mobile task cards, dialog bounds and keyboard navigation                                                           |
 | `collaboration-browser.js` | Projects, draft recovery after reload, bulk edits/approval, manual tasks/checklists/notes, combined filters, PDF/CSV downloads, clipboard invitation links, verified join, Member edits, Viewer access and multiple workspace switching/isolation |
 
 The collaboration suite also checks that adding a progress note from a stale task editor does not let it overwrite another member's status change. A 409 response in this test is expected.
@@ -140,7 +140,6 @@ My tasks matches full/first/last name for name-only owners, with explicit accoun
 ## v2.4 Calendar scheduling
 
 Calendar unit tests validate explicit dates/times, DST gaps and UTC conversion. Account browser tests check scheduling a task with no date, a pre-filled due date, mobile fitting at 320px, correct event parameters and fallback links. Browser navigation is intercepted; no live Google event is created.
-
 
 ## v3.0 productivity checks
 
@@ -203,3 +202,11 @@ The browser smoke suite checks four directional choices, keyboard focus, all mou
 After `npm run build`, run `node tests/meet-layout-browser.js` with Playwright Chromium installed. The suite uses fictional local data and mocked Google sources. It verifies side/inline placement, loading/empty/error states, selection changes, preview actions, narrow embedded layouts, horizontal scroll bounds, diagonal touch scrolling, and page scroll restoration. The test is included in `npm run test:ui`.
 
 The v3.1.5 Meet layout suite also asserts the import-review heading is within the viewport/dialog bounds and receives focus after source selection. It covers both normal smooth scrolling and reduced-motion immediate scrolling.
+
+## v3.1.13: Shifty sessions and chat history
+
+138 unit/API tests and the production build pass. New session coverage tests separate model history, retry idempotency, empty-chat omission, account/workspace isolation, archived action headers, task approval, legacy migration, pending legacy turns, deletion tombstones, preserved task data, quota unlock on model failure and message/catalog caps. Storage tests check serialized memory mutations, local reload persistence and private Firestore subcollection transactions with rollback and reads-before-writes.
+
+Five relevant browser suites pass: `shifty-chats-browser`, `assistant-browser`, `shifty-design-browser`, `shifty-send-browser` and `ux-controls-browser`. The chat suite covers fresh sessions after leaving/reloading, retained full turns when reopened, a reply finishing after leaving, searchable titles, deletion, drawer selection, Escape/focus restoration, full viewport drawer bounds, reduced motion, composer alignment and horizontal overflow at 320/390/768/1024/1200/1440px. Existing suites cover source navigation, approved task changes, reviewed Calendar blocks, recap sending, error recovery, safe reply formatting, gradient states, field/send resizing and nested dialog Escape behavior. Minimum-height comparisons allow floating-point rounding at subpixel precision.
+
+Exact successful logs are in `check-results.txt`. These checks use fictional adapters, not live accounts or services. Original reference captures remain from earlier requested releases; new browser captures are used only for internal visual QA. Physical-device Safari and deployed Firebase latency remain acceptance checks.

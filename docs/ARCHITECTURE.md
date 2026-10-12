@@ -12,17 +12,17 @@ Gemini uses the existing Interactions adapter, configurable `GEMINI_MODEL`, stri
 
 `workspaces/{workspaceId}` stores `workspace` metadata and a shared daily `quota`. Existing personal workspaces keep their Firebase UID path. Additional workspaces use random `w_` IDs.
 
-| Field / subcollection | Contents |
-| --- | --- |
-| `workspace` | ID, name, owner UID/name/email, timestamps, members and pending invitations |
-| `workspace.members` | UID, name, email, role, joined timestamp; one immutable owner in this release |
-| `workspace.memberUids` | Membership index for catalog discovery |
-| `workspace.invites` | Random invitation ID, email, Member/Viewer role, inviter UID and timestamp |
-| `workspace.inviteEmails` | Email index for verified invitation discovery |
-| `meetings` | Transcript/source, type/date, project ID, summary, decisions, follow-ups and proposals |
-| `tasks` | Editable task fields, owner UID/name, project, checklist, status, notes and source meeting/proposal/evidence |
-| `projects` | Name, description, accent colour, status, creator and timestamps |
-| `drafts` | One document per user UID, private input, owner UID, version and timestamp |
+| Field / subcollection    | Contents                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `workspace`              | ID, name, owner UID/name/email, timestamps, members and pending invitations                                  |
+| `workspace.members`      | UID, name, email, role, joined timestamp; one immutable owner in this release                                |
+| `workspace.memberUids`   | Membership index for catalog discovery                                                                       |
+| `workspace.invites`      | Random invitation ID, email, Member/Viewer role, inviter UID and timestamp                                   |
+| `workspace.inviteEmails` | Email index for verified invitation discovery                                                                |
+| `meetings`               | Transcript/source, type/date, project ID, summary, decisions, follow-ups and proposals                       |
+| `tasks`                  | Editable task fields, owner UID/name, project, checklist, status, notes and source meeting/proposal/evidence |
+| `projects`               | Name, description, accent colour, status, creator and timestamps                                             |
+| `drafts`                 | One document per user UID, private input, owner UID, version and timestamp                                   |
 
 Legacy metadata is hydrated/persisted in place. Tasks without a project/checklist/owner UID still render. Local JSON upgrades from a flat record into a `schemaVersion:2` workspace map on first mutation. No meetings/tasks move. Historical names remain after member removal.
 
@@ -54,21 +54,20 @@ PDF/CSV export runs in the browser for only the selected workspace/current filte
 
 ## Main modules
 
-| Module | Purpose |
-| --- | --- |
-| `src/App.jsx` | Auth/catalog, switching, dashboard, navigation and tracker/board |
-| `src/components/Account.jsx` | Signup/sign-in/reset and personal workspace setup/settings |
-| `src/components/Workspaces.jsx` | Invitations, verification, roles and workspace creation |
-| `src/components/Projects.jsx` | Project cards, status and edits |
-| `src/components/NewMeeting.jsx` | Private draft recovery/autosave and text/voice processing |
-| `src/components/MeetingDetail.jsx` | Notes, individual/bulk review and reports |
-| `src/components/TaskEditor.jsx` | Manual/meeting tasks, assignees, checklists and updates |
-| `src/features/` | Pure task filtering and export/report helpers |
-| `server/collaboration.js` | Membership, permissions, project and assignee checks |
-| `server/app.js`, `schema.js` | Authenticated APIs, validation, quota and guarded mutations |
-| `server/store.js` | Firestore/local persistence, catalog and migration |
-| `api/index.js`, `vercel.json` | Node function and Vercel API/asset routing |
-
+| Module                             | Purpose                                                          |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `src/App.jsx`                      | Auth/catalog, switching, dashboard, navigation and tracker/board |
+| `src/components/Account.jsx`       | Signup/sign-in/reset and personal workspace setup/settings       |
+| `src/components/Workspaces.jsx`    | Invitations, verification, roles and workspace creation          |
+| `src/components/Projects.jsx`      | Project cards, status and edits                                  |
+| `src/components/NewMeeting.jsx`    | Private draft recovery/autosave and text/voice processing        |
+| `src/components/MeetingDetail.jsx` | Notes, individual/bulk review and reports                        |
+| `src/components/TaskEditor.jsx`    | Manual/meeting tasks, assignees, checklists and updates          |
+| `src/features/`                    | Pure task filtering and export/report helpers                    |
+| `server/collaboration.js`          | Membership, permissions, project and assignee checks             |
+| `server/app.js`, `schema.js`       | Authenticated APIs, validation, quota and guarded mutations      |
+| `server/store.js`                  | Firestore/local persistence, catalog and migration               |
+| `api/index.js`, `vercel.json`      | Node function and Vercel API/asset routing                       |
 
 ## v2.1 integration boundaries
 
@@ -85,7 +84,6 @@ Google imports are user initiated. There are no Meet bots, background polling, w
 `server/invitation-email.js` builds an escaped Earny invitation with a canonical join link, role and expiry. `/members/invitations/:id/email` is owner-only and accepts only an idempotency UUID. A transaction reserves the send and quota before SMTP, checks membership and invitation again before sending, and records accepted/rejected/uncertain status. A failed send keeps the invitation. Resends have a 60-second cooldown, 20 attempts per invitation and 20 sends per workspace/day (UTC), independent of the AI-request quota. SMTP acceptance is not inbox delivery. Revocation during SMTP never revives the invitation.
 
 `NewMeeting.jsx` keeps its text/voice draft when users switch between text/voice, recent Google Meet sources and saved meeting transcripts. Embedded `GoogleMeet.jsx` loads accessible recent records, supports search/pagination, preview and trusted import, and marks imported artifacts. Opening a saved meeting saves the local text draft first. Reusing a transcript keeps its source date for relative deadline accuracy. Unchanged transcript/date reopens the saved meeting with reviews and tasks intact; new discussion text/date enters processing and review. Empty drafts created while opening the modal are cleared after a successful Google import, while unrelated text drafts are kept.
-
 
 ## v3 personal and productivity data
 
@@ -114,7 +112,6 @@ Old root invitation and Google callback query strings redirect to `/app` with al
 ## Homepage styling revision (v3.0.3)
 
 The static home entry and lazy workspace routing remain unchanged. The home uses local Manrope fonts and four original clay illustrations; web delivery uses alpha-preserving WebP files in `public/art/clay`, with original PNGs included. `public/art/workspace-preview.png` copies an automated demo-workspace screenshot. The landing style remains scoped to `.ss-home`. No provider, account, schema, SMTP or cron behaviour changes.
-
 
 ## Workspace assistant and connected Calendar (v3.1.0)
 
@@ -158,13 +155,11 @@ Workspace responses include a SHA-256 `deletionVersion` derived from canonical m
 
 `tutorialVersion` is a private personal-profile field; completion is independent of workspace membership. Global shortcuts are suppressed during composition, repeats, dialogs, loading, menu focus traps and ordinary text entry. AuthTransition mounts on workspace entry and uses existing bounded/motion-aware animation behavior.
 
-
 ## v3.1.8 keyboard preference and cached-page opening
 
 Private profiles expose `singleKeyShortcuts` (boolean, default true). PATCH /api/profile validates it strictly and stores it under the authenticated UID. The client offers an optimistic toggle with rollback and an account guard; tutorial and shortcut responses merge only their own profile field. `shortcutAction` respects both the preference and `defaultPrevented`, while modifier and board keyboard controls remain independent.
 
 AuthTransition uses a fullscreen native modal dialog so the paint animation can appear above existing modal editors. Persisted pageshow replays the transition without clearing UI state. Existing editor/tutorial components remain mounted, and focus returns to the previous connected control. Ready-state changes promote the overlay above dialogs that become available during loading. Escape/Tab remain within the transition, and reduced motion skips it.
-
 
 ## v3.1.9 optimistic board and responsive controls
 
@@ -172,12 +167,22 @@ AuthTransition uses a fullscreen native modal dialog so the paint animation can 
 
 The topmost Modal handles Escape and prevents background handlers from receiving it. NewMeeting stores local draft text before closing and serializes cloud saves by account/workspace with own-save version tracking and an auth-account guard. Mobile/tablet help uses touch guidance; desktop source selection uses a direct two-column button grid while the dial remains on touch layouts.
 
-
 ## v3.1.10: shared member profiles
 
 `GET /api/members/:uid/profile` requires current shared membership for requester and target. It checks again after asynchronous Firebase identity lookup, returns only name/bio/avatar, workspace role/email/join date and current-workspace task counts, and suppresses the verification badge unless Firebase confirms the matching email. Pending invitations are excluded. Personal profile PATCH accepts a bounded bio; verification is read-only and derived from identity. Member modal requests pin their workspace and ignore replies after unmount. Own profile verification refresh reloads Auth and forces token refresh. The desktop dial uses mouse-specific dead-zone and direction hysteresis while keeping touch gestures. No new storage collections or rules are needed.
 
-
 ## v3.1.11: navigation fit and assistant presentation
 
 Desktop navigation is a height-constrained grid, with decorative content removed on shorter screens and an accessible scrolling fallback below 641px. Mobile touch targets retain their original sizing. `message-format.js` parses a bounded subset into text-only blocks/tokens; `AssistantMessage.jsx` renders escaped React children rather than HTML. This affects only presentation of assistant replies, including stored history. User text, source navigation and proposal confirmation stay unchanged. Shifty gradient animations are CSS-only and stop for reduced-motion preferences. No new provider requests or dependencies are introduced.
+
+## v3.1.13: private assistant sessions (supersedes the single workspace thread)
+
+Each Assistant mount gets a fresh UUID. No active chat identifier is retained in browser storage; leaving the feature, refreshing or reopening starts a blank conversation. Selecting a saved chat supplies its identifier explicitly. Workspace/account keys unmount the old component; generation guards prevent stale replies from entering another chat.
+
+Assistant data in the private profile is limited to `assistantChatIndex` metadata plus shared per-account quota/pending reservations. Full messages live in `privateProfiles/{uid}/assistantChats/{chatId}`, accessed only through the authenticated Admin API. Memory/local adapters provide equivalent atomic profile+chat mutations. Firebase transactions read the profile and chat before writing either; the current default-deny Firestore rules already cover the subcollection. Authorization checks bind every chat/action to both the UID and current workspace.
+
+Successful replies atomically append the pair, update the index and clear the reservation. Failed requests save no empty chat. New chats cap at 100 messages; the model continues using its existing last-eight-message window and freshly authorized workspace/calendar context. The account catalog caps at 200 chats. Legacy retained threads are copied atomically into a deterministic saved chat, with proposal chat IDs preserved; migration waits for legacy reply/action execution. Messages are not silently truncated in the new UI.
+
+History reads/lists and deletion use explicit chat IDs. Action review APIs carry `X-Assistant-Chat-Id`; email recap confirmation retains the originating chat ID across its preview dialog. Deletion clears content and removes the catalog entry, retaining a metadata tombstone to prevent an in-flight retry from recreating the chat. Active replies/actions block deletion. Existing task version/dependency checks, review permissions and uncertain Calendar result safeguards remain.
+
+The history rail uses a drawer at 1150px and below; the smaller desktop two-column arrangement places calendar settings below the chat. The native modal keeps focus, Escape, scroll locking and focus restoration. Workspace context remains mandatory; the plus button creates a new conversation rather than pretending to attach files.

@@ -6694,3 +6694,292 @@ textarea {
     background 180ms ease,
     border-color 180ms ease;
 }
+
+/* Private Shifty sessions: a saved-chat rail on desktop and an accessible phone drawer. */
+.shifty-chat-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px 0;
+  color: #223b6b;
+}
+.shifty-chat-toolbar > strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.shifty-chat-toolbar .icon-button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: #eff3ff;
+  border: 1px solid #d5dff9;
+  color: #2458e8;
+}
+.shifty-history {
+  padding: 18px 12px;
+  min-width: 0;
+  position: sticky;
+  top: 20px;
+}
+.shifty-history > h2 {
+  font-size: 17px;
+  margin: 0 8px 16px;
+}
+.shifty-history-content {
+  min-width: 0;
+}
+.shifty-history-new {
+  width: 100%;
+  justify-content: center;
+  border-radius: 24px;
+}
+.shifty-history-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  border: 1px solid #c6d4ee;
+  border-radius: 22px;
+  background: white;
+  padding: 0 12px;
+  color: #365581;
+}
+.shifty-history-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14px;
+}
+.shifty-history-private {
+  font-size: 12px;
+  color: #4b5c79;
+  margin: 12px 6px;
+  line-height: 1.5;
+}
+.shifty-history-list {
+  max-height: 65dvh;
+  overflow: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.shifty-history-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  margin-bottom: 6px;
+}
+.shifty-history-row.selected {
+  border-color: #2458e8;
+  background: #edf2ff;
+}
+.shifty-history-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 12px 8px;
+  border: 0;
+  background: transparent;
+  color: #263e66;
+  border-radius: 16px;
+  cursor: pointer;
+}
+.shifty-history-select > svg {
+  flex-shrink: 0;
+  color: #2458e8;
+}
+.shifty-history-select > span {
+  min-width: 0;
+}
+.shifty-history-select strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shifty-history-select small {
+  display: block;
+  color: #51627e;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.shifty-history-row .icon-button {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  color: #425a7c;
+}
+.shifty-history-select:hover:not(:disabled) {
+  background: #e6edff;
+}
+.shifty-history-drawer.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  margin: 0;
+  width: min(88vw, 360px);
+  max-width: 360px;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0 24px 24px 0;
+  padding: 24px 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  animation: shifty-drawer-enter 220ms ease-out both;
+}
+.shifty-history-drawer .modal-heading h2 {
+  font-size: 19px;
+}
+.shifty-history-drawer .shifty-history-list {
+  max-height: calc(100dvh - 250px);
+}
+.shifty-history-drawer .icon-button,
+.shifty-history-drawer .button {
+  min-height: 44px;
+}
+.shifty-workspace-chip {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid #d4dff6;
+  border-radius: 18px;
+  padding: 7px 12px;
+  background: #eff4ff;
+  color: #304b7e;
+  font-size: 12px;
+  font-weight: 700;
+}
+.shifty-workspace-chip svg {
+  flex-shrink: 0;
+  color: #2458e8;
+}
+.shifty-workspace-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shifty-input-shell {
+  min-width: 0;
+  position: relative;
+  display: flex;
+}
+.shifty-dashboard .assistant-compose .shifty-input-shell textarea {
+  width: 100%;
+  padding-left: 58px;
+  margin: 0;
+}
+.shifty-compose-new {
+  position: absolute;
+  left: 7px;
+  bottom: 10px;
+  width: 44px;
+  height: 44px;
+  color: #2458e8;
+  border-radius: 50%;
+}
+.shifty-compose-new:hover:not(:disabled) {
+  background: #dfe8ff;
+}
+.shifty-dashboard .assistant-prompts {
+  grid-template-columns: 1fr;
+  max-width: 480px;
+  margin: 22px auto 0;
+}
+.shifty-dashboard .assistant-prompts .button {
+  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 2px 12px;
+  align-items: center;
+  border-radius: 30px;
+  padding: 14px 22px;
+  text-align: left;
+  min-height: 72px;
+}
+.shifty-dashboard .assistant-prompts svg {
+  grid-row: 1/3;
+}
+.shifty-dashboard .assistant-prompts strong,
+.shifty-dashboard .assistant-prompts small {
+  grid-column: 2;
+}
+@media (min-width: 1151px) {
+  .assistant-layout.shifty-history-open {
+    grid-template-columns: 220px minmax(0, 1fr) 260px;
+    gap: 16px;
+  }
+}
+@media (min-width: 1151px) and (max-width: 1350px) {
+  .assistant-layout.shifty-history-open {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .shifty-history-open .assistant-sidebar {
+    grid-column: 2;
+  }
+}
+@media (max-width: 600px) {
+  .shifty-chat-toolbar {
+    padding: 10px 12px 0;
+  }
+  .shifty-dashboard .assistant-prompts .button {
+    padding: 12px 16px;
+    border-radius: 24px;
+  }
+  .shifty-dashboard .assistant-prompts small {
+    display: block;
+    font-size: 12px;
+  }
+  .shifty-dashboard .assistant-compose {
+    padding: 14px 12px;
+  }
+  .shifty-dashboard .assistant-compose .shifty-input-shell textarea {
+    font-size: 16px;
+    padding-left: 56px;
+  }
+}
+@keyframes shifty-drawer-enter {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shifty-history-drawer.modal {
+    animation: none;
+  }
+}
+.shifty-dashboard .assistant-prompts .button {
+  display: grid;
+  justify-content: stretch;
+}
+.shifty-dashboard .shifty-avatar-welcome {
+  width: 112px;
+  height: 112px;
+}
+@media (max-width: 600px) {
+  .shifty-dashboard .shifty-avatar-welcome {
+    width: 96px;
+    height: 96px;
+  }
+}
+/* Keep all three starters visible without an inner scrollbar in a new chat. */
+.shifty-dashboard .assistant-messages:has(.assistant-empty) {
+  max-height: none;
+}
