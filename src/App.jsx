@@ -1,3 +1,6 @@
+import TaskBoard from "./components/TaskBoard.jsx";
+import ShortcutsTour, { KeyboardIcon } from "./components/ShortcutsTour.jsx";
+import { shortcutAction, isTypingTarget } from "./features/shortcuts.js";
 import AuthTransition from "./components/AuthTransition.jsx";
 import { hasGoogleReturn, clearGoogleReturn } from "./auth-flow.js";
 import {
@@ -79,6 +82,21 @@ const emptyData = () => ({
   workspace: null,
   role: "owner",
 });
+function focusWorkspaceHeading() {
+  const heading = document.querySelector(
+    ".auth-content .page-heading h1, .auth-content .login-form h2",
+  );
+  if (!heading) return;
+  const hadTabIndex = heading.hasAttribute("tabindex");
+  if (!hadTabIndex) heading.setAttribute("tabindex", "-1");
+  heading.focus({ preventScroll: true });
+  if (!hadTabIndex)
+    heading.addEventListener(
+      "blur",
+      () => heading.removeAttribute("tabindex"),
+      { once: true },
+    );
+}
 export default function App() {
   const [config, setConfig] = useState(null),
     [user, setUser] = useState(undefined),
@@ -118,32 +136,72 @@ export default function App() {
     [preparedAgenda, setPreparedAgenda] = useState(null),
     [undo, setUndo] = useState(null),
     [undoBusy, setUndoBusy] = useState(false);
-  const [authTransition, setAuthTransition] = useState(null);
+  const [authTransition, setAuthTransition] = useState({ id: 0 });
+  const [tutorial, setTutorial] = useState(null);
+  const [tutorialBusy, setTutorialBusy] = useState(false);
+  const [tutorialError, setTutorialError] = useState("");
+  const [shortcutBusy, setShortcutBusy] = useState(false);
+  const [shortcutError, setShortcutError] = useState("");
+  const tutorialSeen = useRef(new Set());
   const [googleReturning, setGoogleReturning] = useState(hasGoogleReturn);
   const [assistantRecap, setAssistantRecap] = useState(null);
   const [assistantRevision, setAssistantRevision] = useState(0);
   const authSequence = useRef(0);
+  const transitionFocus = useRef(null);
+  const focusAfterLoad = useRef(false);
+  const restoreTransitionFocus = useRef(false);
+  const latestLoading = useRef(loading);
+  latestLoading.current = loading;
   function beginAuthTransition() {
-    setAuthTransition({ id: ++authSequence.current });
+    transitionFocus.current = document.activeElement;
+    setAuthTransition((previous) => previous || { id: ++authSequence.current });
   }
   const finishAuthTransition = useCallback(() => {
+    focusAfterLoad.current = latestLoading.current;
+    restoreTransitionFocus.current = true;
     setAuthTransition(null);
-    requestAnimationFrame(() => {
-      const heading = document.querySelector(
-        ".auth-content .page-heading h1, .auth-content .login-form h2",
-      );
-      if (!heading) return;
-      const hadTabIndex = heading.hasAttribute("tabindex");
-      if (!hadTabIndex) heading.setAttribute("tabindex", "-1");
-      heading.focus({ preventScroll: true });
-      if (!hadTabIndex)
-        heading.addEventListener(
-          "blur",
-          () => heading.removeAttribute("tabindex"),
-          { once: true },
-        );
-    });
   }, []);
+  useEffect(() => {
+    if (authTransition || !restoreTransitionFocus.current) return;
+    restoreTransitionFocus.current = false;
+    const frame = requestAnimationFrame(() => {
+      const previous = transitionFocus.current;
+      transitionFocus.current = null;
+      if (
+        previous?.isConnected &&
+        previous !== document.body &&
+        previous !== document.documentElement
+      ) {
+        previous.focus({ preventScroll: true });
+        if (document.activeElement === previous) {
+          focusAfterLoad.current = false;
+          return;
+        }
+      }
+      const modal = [...document.querySelectorAll("dialog[open]")].at(-1);
+      if (modal) {
+        focusAfterLoad.current = false;
+        if (!modal.contains(document.activeElement))
+          modal
+            .querySelector("button:not(:disabled), input, textarea, select")
+            ?.focus({ preventScroll: true });
+        return;
+      }
+      focusWorkspaceHeading();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [authTransition]);
+  useEffect(() => {
+    if (!focusAfterLoad.current || loading || authTransition) return;
+    focusAfterLoad.current = false;
+    // The loading heading may have disappeared after the bounded transition.
+    // Reannounce the ready workspace only when the user has not focused a control.
+    if (
+      document.activeElement === document.body &&
+      !document.querySelector("dialog[open]")
+    )
+      focusWorkspaceHeading();
+  }, [loading, authTransition]);
   const current = useRef({ uid: null, workspaceId: null }),
     generation = useRef(0);
   useEffect(() => {
@@ -386,7 +444,11 @@ export default function App() {
         });
     }
     function restored(event) {
-      if (event.persisted && hasGoogleReturn()) window.location.reload();
+      if (!event.persisted) return;
+      if (hasGoogleReturn()) window.location.reload();
+      else {
+        beginAuthTransition();
+      }
     }
     window.addEventListener("pageshow", restored);
     if (!auth) {
@@ -429,6 +491,7 @@ export default function App() {
       setEmailMeetingId(null);
       setSettings(false);
       setMenu(false);
+      setTutorial(null);
       setToast("");
       return;
     }
@@ -440,34 +503,147 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [toast]);
   useEffect(() => {
+    if (
+      config?.authRequired &&
+      data.workspace &&
+      personal &&
+      !personal.tutorialVersion &&
+      !loading &&
+      !authTransition &&
+      !tutorial &&
+      !menu &&
+      !document.querySelector('dialog[open], [role="dialog"]') &&
+      !tutorialSeen.current.has(actor.uid)
+    ) {
+      tutorialSeen.current.add(actor.uid);
+      setTutorial("tour");
+    }
+  }, [
+    config?.authRequired,
+    data.workspace,
+    personal,
+    loading,
+    authTransition,
+    tutorial,
+    menu,
+    actor.uid,
+  ]);
+  useEffect(() => {
     function key(event) {
-      if (
-        !workspaceId ||
-        loading ||
-        document.querySelector('dialog[open], [role="dialog"]')
-      )
-        return;
-      const typing =
-        /^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName) ||
-        event.target?.isContentEditable;
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setSearchOpen(true);
-      } else if (
-        !typing &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey &&
-        event.key.toLowerCase() === "n" &&
-        data.role !== "viewer"
-      ) {
-        event.preventDefault();
-        setNewMeeting(true);
+      const action = shortcutAction(event, {
+        typing: isTypingTarget(event.target),
+        blocked:
+          !workspaceId ||
+          !data.workspace ||
+          loading ||
+          !!authTransition ||
+          !!tutorial ||
+          menu ||
+          !!document.querySelector('dialog[open], [role="dialog"]'),
+        readOnly: data.role === "viewer",
+        hasUndo: !!undo && undo.expires > Date.now() && !undoBusy,
+        singleKeys: personal?.singleKeyShortcuts !== false,
+      });
+      if (!action) return;
+      event.preventDefault();
+      if (action === "search") setSearchOpen(true);
+      else if (action === "meeting") setNewMeeting(true);
+      else if (action === "task") setTaskId("new");
+      else if (action === "help") setTutorial("help");
+      else if (action === "undo") undoLastChange();
+      else if (action === "refresh")
+        reload()
+          .then(() => setToast("Workspace refreshed."))
+          .catch((error) => setError(error.message));
+      else {
+        setTab(action);
+        setMeetingId(null);
+        setMenu(false);
       }
     }
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
-  }, [workspaceId, loading, data.role]);
+  }, [
+    workspaceId,
+    loading,
+    data.workspace,
+    data.role,
+    authTransition,
+    tutorial,
+    menu,
+    undo,
+    undoBusy,
+    personal?.singleKeyShortcuts,
+  ]);
+  async function changeShortcutPreference(enabled) {
+    if (shortcutBusy) return;
+    const uid = actor.uid;
+    const previous = personal?.singleKeyShortcuts !== false;
+    setShortcutBusy(true);
+    setShortcutError("");
+    patchPersonal({ singleKeyShortcuts: enabled });
+    try {
+      const result = await api("/profile", {
+        workspace: false,
+        method: "PATCH",
+        body: JSON.stringify({ singleKeyShortcuts: enabled }),
+      });
+      if (current.current.uid === uid)
+        patchPersonal({
+          singleKeyShortcuts: result.profile.singleKeyShortcuts,
+        });
+    } catch (error) {
+      if (current.current.uid === uid) {
+        patchPersonal({ singleKeyShortcuts: previous });
+        setShortcutError(
+          "Your shortcut preference could not be saved. " + error.message,
+        );
+      }
+    } finally {
+      setShortcutBusy(false);
+    }
+  }
+  async function finishTutorial() {
+    if (tutorialBusy) return;
+    setTutorialBusy(true);
+    setTutorialError("");
+    const uid = actor.uid;
+    try {
+      const result = await api("/profile", {
+        workspace: false,
+        method: "PATCH",
+        body: JSON.stringify({ tutorialVersion: 1 }),
+      });
+      if (current.current.uid !== uid) return;
+      patchPersonal({ tutorialVersion: result.profile.tutorialVersion });
+      setTutorial(null);
+    } catch (error) {
+      setTutorialError(
+        "Your tutorial progress could not be saved. Please try again. " +
+          error.message,
+      );
+    } finally {
+      setTutorialBusy(false);
+    }
+  }
+  async function undoLastChange() {
+    if (!undo || undoBusy || undo.expires <= Date.now()) return;
+    setUndoBusy(true);
+    try {
+      await api("/undo/" + undo.token, {
+        workspace: undo.workspaceId,
+        method: "POST",
+      });
+      setUndo(null);
+      setTaskId(null);
+      await reload();
+      setToast("Changes undone.");
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setUndoBusy(false);
+    }
+  }
   useEffect(() => {
     if (!undo) return;
     const timer = setTimeout(
@@ -609,7 +785,7 @@ export default function App() {
       setPdfBusy(false);
     }
   }
-  const switcherView = switcher && !authTransition && (
+  const switcherView = switcher && (
     <WorkspaceSwitcher
       catalog={catalog}
       selected={workspaceId}
@@ -796,6 +972,17 @@ export default function App() {
             <div className="flex items-center gap-3">
               <button
                 className="icon-button"
+                aria-label="Shortcuts and tutorial"
+                title="Shortcuts and tutorial"
+                onClick={() => {
+                  setTutorialError("");
+                  setTutorial("help");
+                }}
+              >
+                <KeyboardIcon />
+              </button>
+              <button
+                className="icon-button"
                 aria-label="Search workspace"
                 onClick={() => setSearchOpen(true)}
               >
@@ -980,6 +1167,10 @@ export default function App() {
                         await reload();
                       }}
                       onSignOut={() => signOut(auth)}
+                      onTutorial={() => {
+                        setTutorialError("");
+                        setTutorial("tour");
+                      }}
                     />
                   )}
                   {tab === "dashboard" && (
@@ -1680,114 +1871,34 @@ export default function App() {
                           )}
                         </section>
                       ) : (
-                        <div className="kanban">
-                          {statuses.map((s, index) => (
-                            <section className="kanban-column" key={s}>
-                              <h2>
-                                <span className={"column-dot dot-" + index} />
-                                {s}
-                                <span className="badge">
-                                  {
-                                    filtered.filter((t) => t.status === s)
-                                      .length
-                                  }
-                                </span>
-                              </h2>
-                              {filtered
-                                .filter((t) => t.status === s)
-                                .map((t) => (
-                                  <article
-                                    className={
-                                      "task-card" +
-                                      (t.status === "Completed"
-                                        ? " task-card-completed"
-                                        : "")
-                                    }
-                                    key={t.id}
-                                  >
-                                    {!readOnly && (
-                                      <label className="check-option">
-                                        <input
-                                          type="checkbox"
-                                          aria-label={"Select " + t.title}
-                                          checked={selectedIds.includes(t.id)}
-                                          onChange={() => toggleSelected(t.id)}
-                                        />
-                                        <span className="task-select-label">
-                                          Select
-                                        </span>
-                                      </label>
-                                    )}
-                                    {t.status !== "Completed" &&
-                                      waitingOn(t, data.tasks).length > 0 && (
-                                        <span className="badge dependency-badge">
-                                          Waiting on{" "}
-                                          {waitingOn(t, data.tasks).length}{" "}
-                                          task(s)
-                                        </span>
-                                      )}
-                                    {t.status !== "Completed" && (
-                                      <Priority value={t.priority} />
-                                    )}
-                                    <button
-                                      className="card-title"
-                                      onClick={() => setTaskId(t.id)}
-                                    >
-                                      {t.title}
-                                    </button>
-                                    {t.status !== "Completed" && (
-                                      <>
-                                        <p className="hint">
-                                          {data.projects.find(
-                                            (p) => p.id === t.projectId,
-                                          )?.name || "No project"}
-                                        </p>
-                                        <div className="task-card-foot">
-                                          <span>{t.owner}</span>
-                                          <span
-                                            className={overdue(t) ? "late" : ""}
-                                          >
-                                            {formatDate(t.dueDate)}
-                                            {!t.schedule && (
-                                              <small className="saved-schedule">
-                                                Not scheduled
-                                              </small>
-                                            )}
-                                            {t.schedule && (
-                                              <small className="saved-schedule">
-                                                Scheduled {t.schedule.date} ·{" "}
-                                                {t.schedule.time}
-                                              </small>
-                                            )}
-                                          </span>
-                                        </div>
-                                      </>
-                                    )}
-                                    <select
-                                      aria-label={"Status for " + t.title}
-                                      disabled={readOnly}
-                                      value={t.status}
-                                      onChange={(e) =>
-                                        changeStatus(t, e.target.value)
-                                      }
-                                    >
-                                      {statuses.map((s) => (
-                                        <option
-                                          key={s}
-                                          disabled={
-                                            s === "Completed" &&
-                                            waitingOn(t, data.tasks).length > 0
-                                          }
-                                        >
-                                          {s}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </article>
-                                ))}
-                            </section>
-                          ))}
-                        </div>
+                        <TaskBoard
+                          tasks={filtered}
+                          allTasks={data.tasks}
+                          projects={data.projects}
+                          readOnly={readOnly}
+                          selectedIds={selectedIds}
+                          onSelect={toggleSelected}
+                          onOpen={setTaskId}
+                          onMove={async (task, destination) => {
+                            const result = await api(
+                              "/tasks/" + task.id + "/move",
+                              {
+                                method: "POST",
+                                body: JSON.stringify({
+                                  ...destination,
+                                  expectedUpdatedAt: task.updatedAt,
+                                }),
+                              },
+                            );
+                            try {
+                              await taskSaved(result);
+                            } catch (error) {
+                              setError(
+                                "Task moved, but the board could not refresh. Refresh the workspace to load its saved position.",
+                              );
+                            }
+                          }}
+                        />
                       )}
                     </>
                   )}
@@ -2080,23 +2191,7 @@ export default function App() {
             <button
               className="button small"
               disabled={undoBusy}
-              onClick={async () => {
-                setUndoBusy(true);
-                try {
-                  await api("/undo/" + undo.token, {
-                    workspace: undo.workspaceId,
-                    method: "POST",
-                  });
-                  setUndo(null);
-                  setTaskId(null);
-                  await reload();
-                  setToast("Changes undone.");
-                } catch (error) {
-                  setError(error.message);
-                } finally {
-                  setUndoBusy(false);
-                }
-              }}
+              onClick={undoLastChange}
             >
               Undo
             </button>
@@ -2108,6 +2203,28 @@ export default function App() {
               <Icons.X size={16} />
             </button>
           </div>
+        )}
+        {tutorial && (
+          <ShortcutsTour
+            key={tutorial}
+            mode={tutorial}
+            readOnly={readOnly}
+            busy={tutorialBusy}
+            error={tutorialError}
+            singleKeys={personal?.singleKeyShortcuts !== false}
+            shortcutBusy={shortcutBusy}
+            shortcutError={shortcutError}
+            onShortcutChange={changeShortcutPreference}
+            onClose={
+              tutorial === "help" ? () => setTutorial(null) : finishTutorial
+            }
+            onFinish={finishTutorial}
+            onDismiss={() => setTutorial(null)}
+            onRestart={() => {
+              setTutorialError("");
+              setTutorial("tour");
+            }}
+          />
         )}
         {switcherView}
       </div>
@@ -2122,7 +2239,11 @@ export default function App() {
         <AuthTransition
           key={authTransition.id}
           ready={
-            !registering && !loading && (loadedFor === user?.uid || !!error)
+            !!config &&
+            !registering &&
+            !loading &&
+            !googleReturning &&
+            (!config.authRequired || user !== undefined)
           }
           onFinished={finishAuthTransition}
         />

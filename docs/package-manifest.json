@@ -1,11 +1,12 @@
 {
-  "version": "3.1.6",
-  "root": "ShiftScript-v3.1.6",
+  "version": "3.1.8",
+  "root": "ShiftScript-v3.1.8",
   "verification": {
-    "unitApiTests": 110,
+    "unitApiTests": 118,
     "productionBuild": "passed",
     "browserSuitesPassed": [
-      "deletion-browser"
+      "board-shortcuts-browser",
+      "accounts-browser"
     ],
     "viewports": [
       320,
@@ -13,7 +14,12 @@
       768,
       1440
     ],
-    "externalServices": "isolated local / simulated"
+    "landscape": [
+      844,
+      390
+    ],
+    "externalServices": "isolated local / simulated",
+    "deviceAcceptance": "Physical-device Safari, deployed Firebase and browser-managed cache behavior remain owner acceptance checks"
   },
   "files": [
     {
@@ -38,7 +44,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "9fee0cd080096e027ad30b8bea07ab8c1e65690f72554d851325f02c2717787d"
+      "sha256": "ee283cfd138c0f1cefbc34edbc99e7e0964b6ff14fbcda83dc74f1e58d6183e9"
     },
     {
       "path": "api/index.js",
@@ -50,7 +56,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "5640e498c5d48c460b0d467efd9a46f60cb185da0b0b7232dfbe973d28bd3bee"
+      "sha256": "80b736a49dea42ca9d49f857ed7e8d1bcbe2485420acb6f33345fa3b29e26708"
     },
     {
       "path": "docs/ARTWORK-v2.3.json",
@@ -86,7 +92,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "4c23a626c84055d9bc19d83dcccedecd746a129033ddfc233c919358eb593dc5"
+      "sha256": "55e18bd94093ea29b2625afd81d7d8c032685c59e4c231954694630c2b6e7f99"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -189,12 +195,20 @@
       "sha256": "20c4c756eb8295ec6e21bfc5e3b687af9077cf14086f89f0130b8951ff2696be"
     },
     {
+      "path": "docs/UPDATE-v3.1.7.md",
+      "sha256": "5e9f72a6a544f991db321e4f107ba83a7efc5c34910cbddbef5f76b59461df6f"
+    },
+    {
+      "path": "docs/UPDATE-v3.1.8.md",
+      "sha256": "91383907d1a73d81ba51475a81b6e92cfc121f9f932a3d5161789f8fd3f47811"
+    },
+    {
       "path": "docs/UPDATE-v3.md",
       "sha256": "d6643a52797504f22cf9b905aa7d1ff1ff207fffbe54507345683a9bc2988ca0"
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "18afd0224313061eae6377ff49f7ee90daf34be57aafcb8d1e46bbb7fe132130"
+      "sha256": "3ba763217f99c60cba707cd71e452f88500c1e595778884b25a1d55bb156406c"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -578,11 +592,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "584707fed0af34c43d6a3bc8850e920f22a8046e15d7c6dc62c2ac03c70aaf6e"
+      "sha256": "8e4573f3e92b1ad0958b21cc21692d7577eb531076d62d80f682447f318a47b1"
     },
     {
       "path": "package.json",
-      "sha256": "339fda278f7089677adb237bafca4d996e73ee51c418409539c35b449bd4e936"
+      "sha256": "59ec9bc1d768464fb030b4bdf49889e4d216c1f5dbedab693a64abcc82907a35"
     },
     {
       "path": "public/about/index.html",
@@ -1018,7 +1032,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "e0e083a05c2c22ff0ad1ae9582048088c91697fff26b8a9186c252090f712e46"
+      "sha256": "e62125cc213a386fed79c1ec262bf8fb03c76793cb0cf5ac0b2d8ed86a31ec21"
     },
     {
       "path": "server/assistant.js",
@@ -1027,6 +1041,10 @@
     {
       "path": "server/audio.js",
       "sha256": "0f9005ae453b41f6885b1c942c99b2ea60b79161fe6c61d053dd51e92a8323d0"
+    },
+    {
+      "path": "server/board.js",
+      "sha256": "4e9f46ca88b30f739965ce92cbea2bacb75f5aeda7167bcfb3a3fb2e52649e0b"
     },
     {
       "path": "server/calendar.js",
@@ -1070,7 +1088,7 @@
     },
     {
       "path": "server/productivity.js",
-      "sha256": "cec97bfb64433ab7dca93917f0577395f7ba541731cc56ca8168c170d4ea6356"
+      "sha256": "e3b5d9b66ccc4cf9d39f05efbee78aceb5149d4d77e6a6ccfbcb6eab0796735e"
     },
     {
       "path": "server/recap-email.js",
@@ -1083,6 +1101,10 @@
     {
       "path": "server/store.js",
       "sha256": "aa08cfae689fdc700d7836de73cf2bd08a1d76a7639132d35838db720f6ec3c7"
+    },
+    {
+      "path": "shared/board.js",
+      "sha256": "1690969bdea0799af230f2e5f4fac35782f82972e2cce5520a2f48b405c6c372"
     },
     {
       "path": "shared/identity.js",
@@ -1106,7 +1128,7 @@
     },
     {
       "path": "src/App.jsx",
-      "sha256": "3eab5b6f5bc293e95a7663a510eefa0c3442606de818ce657ba0bbc8e6ee5be6"
+      "sha256": "20152135a2b4d385f0e6781921d9b829405a0404b3615a618604489acce428ea"
     },
     {
       "path": "src/app-entry.jsx",
@@ -1130,7 +1152,7 @@
     },
     {
       "path": "src/components/AuthTransition.jsx",
-      "sha256": "4e0379e4def847f68a6b562b0101e1bd0d063fcc332e1696602ddd730e3c41ef"
+      "sha256": "a2529eb8c1f3ac545381dc808305402093671aba499a660453c1aecc85e2b6a2"
     },
     {
       "path": "src/components/CalendarBatch.jsx",
@@ -1202,7 +1224,7 @@
     },
     {
       "path": "src/components/Profile.jsx",
-      "sha256": "1c6d70e2c3d18b35eb6555a9a2381b9ff08b960a4b034db9e16a7e0d89115dc6"
+      "sha256": "3121012e50c4916c0cf92b27669241b6c70e68aff67e4524d49bec937234e159"
     },
     {
       "path": "src/components/ProfileSettings.jsx",
@@ -1225,8 +1247,16 @@
       "sha256": "9f2157055c0e323e0d7ca1add3270a1fde301a5f45b7bf6403c4fcaee698f959"
     },
     {
+      "path": "src/components/ShortcutsTour.jsx",
+      "sha256": "7dc866e6dd99b2670b2ff57be08d64c48872f81269c284dd51f1d9a235420a56"
+    },
+    {
       "path": "src/components/TabArtwork.jsx",
       "sha256": "2bd39b84f8dbc3605654b6ca0fcb2737453cbddea04e5217a48d6e3610b89fb4"
+    },
+    {
+      "path": "src/components/TaskBoard.jsx",
+      "sha256": "5fa9b0e09b34eb4fd72517d1c23deb76d5cd015c3c84bed6b4fc07522ed205c7"
     },
     {
       "path": "src/components/TaskBulkActions.jsx",
@@ -1261,6 +1291,10 @@
       "sha256": "6506f06c97a2816399148120523a1de44fa3940598d7e3ce54f680bcaf147eff"
     },
     {
+      "path": "src/features/shortcuts.js",
+      "sha256": "2124bd36925ccb86697c8401ed43e2c66818d319b8aec0f6b5d0e7e174487c95"
+    },
+    {
       "path": "src/features/task-filters.js",
       "sha256": "d99cf9a8148addc8e887d27fdfd66022a2cdc437390ef840df54ca9c72a24e1b"
     },
@@ -1278,11 +1312,11 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "1513dc293e55f23fa1326686584e9b4c4ff926158e00e3ef346fe1b3bcc458db"
+      "sha256": "69157e6e1cb666e25690e8fb3527ebafdbc483e2945e371f775d54e1bc3e435a"
     },
     {
       "path": "tests/accounts-browser.js",
-      "sha256": "2ef31379a3ee87021156d020585878de8f8c9d1d2cbe0c113ac7897dce734fe7"
+      "sha256": "1ca3afc3ea42a4b4a1957f9270ee643762c28b19e816828411db1fd5bf5de11c"
     },
     {
       "path": "tests/accounts.test.js",
@@ -1299,6 +1333,14 @@
     {
       "path": "tests/auth-flow.test.js",
       "sha256": "112118d01e82c5962bd44d1dc554a4d88176b71e87c1ca8d04a3a3eb02deb17d"
+    },
+    {
+      "path": "tests/board-shortcuts-browser.js",
+      "sha256": "db59f3a126efc71df0c359426ee2e304cfc5376bb353d3b7ae1f40c67946d7e8"
+    },
+    {
+      "path": "tests/board-shortcuts.test.js",
+      "sha256": "4b8b27c95b4d72784e22dd7d5a35f705131bd87afcdd9ddabe40b584d1460420"
     },
     {
       "path": "tests/browser-smoke.js",
@@ -1335,6 +1377,10 @@
     {
       "path": "tests/exports-filters.test.js",
       "sha256": "0f8584bc2e8260d28498f01b1903ceff42e060adda478edc6ed3ef18587d57c5"
+    },
+    {
+      "path": "tests/fixtures/auth-shim.js",
+      "sha256": "0fdca94be9b85d3e135ffefa89180831dc4ddbe4480e881b81a8048b08d46fd0"
     },
     {
       "path": "tests/gemini-audio.test.js",

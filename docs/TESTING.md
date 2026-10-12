@@ -1,3 +1,21 @@
+# Latest verification: ShiftScript v3.1.8
+
+118 unit/API tests pass. The final production build passes (with the existing large-bundle warning). The complete board/shortcut browser suite passes at 320, 390, 768 and 1440 pixels, including signup/practice onboarding, mouse and native touch movement, saved order, keyboard controls, shortcut opt-out persistence, modifier controls, save failure/retry, editor values/focus, preserved tutorial steps and mobile menu restoration. The account browser suite also passes email/Google sign-in, simulated same-tab iPhone/Android Google returns, cancellation/timeout recovery, signup/name/workspace preservation, overflow, focus/inert/scroll cleanup, Escape, slow/error recovery and reduced motion, including landscape.
+
+No live provider operations were performed.
+
+See [UPDATE-v3.1.8.md](UPDATE-v3.1.8.md) for installation, scope and deployed acceptance checks.
+
+---
+
+# Latest verification: ShiftScript v3.1.7
+
+116 unit/API tests pass; the final production build passes. The new board/shortcut browser coverage uses the actual React app and Node API with simulated Firebase Auth. It covers first signup and workspace creation, practice-only onboarding, private saved tutorial progress, Mac/Windows keyboard controls, mouse status movement and reordering, keyboard movement/cancellation, Undo, persisted board order, opening replay and typing safeguards. Phone/tablet checks at 320, 390 and 768 pixels cover help/tutorial bounds, native CDP touch dragging, edge scrolling and reduced-motion launch. Mobile header controls retain touch targets and wrap to prevent document overflow.
+
+The deletion regression browser suite passes at 320, 390, 768 and 1440 pixels. API coverage includes permissions, workspace isolation, stale source/anchor versions, dependency completion, rank rebalancing, preserved task fields, Undo and private tutorial persistence. No live Google, Gemini, Zoho or Firebase services are contacted. Physical-device Safari and deployed Firebase acceptance remain owner checks. See [UPDATE-v3.1.7.md](UPDATE-v3.1.7.md).
+
+---
+
 # Latest verification: ShiftScript v3.1.6
 
 110 unit/API tests pass; the production build passes. The isolated browser suite passes at 320, 390, 768 and 1440 pixels, covering task cancellation/deletion/undo, meeting cancellation/cascade deletion, keyboard focus, 44px minimum touch targets, automatic history refresh and modal viewport bounds. API tests cover stale meeting/task changes, permission/workspace isolation, explicit confirmation, sending-email conflicts, persisted deletion, source/dependency cleanup and undo invalidation.

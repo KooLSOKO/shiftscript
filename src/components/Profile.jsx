@@ -12,6 +12,7 @@ export default function Profile({
   onWorkspaces,
   onMyWork,
   onSignOut,
+  onTutorial,
   personal,
   remindersReady,
   onProfileSaved,
@@ -104,6 +105,16 @@ export default function Profile({
           </div>
           <button className="button primary" onClick={onMyWork}>
             View my tasks
+          </button>
+        </section>
+        <section className="panel profile-section">
+          <h2>Make yourself at home</h2>
+          <p className="muted">
+            Replay the walkthrough, practice board controls and learn the Mac
+            and Windows shortcuts.
+          </p>
+          <button className="button" onClick={onTutorial}>
+            Replay workspace tutorial
           </button>
         </section>
         <section className="panel profile-section">

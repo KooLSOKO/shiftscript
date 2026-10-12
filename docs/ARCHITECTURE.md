@@ -151,3 +151,16 @@ GoogleMeet keeps the selected meeting separate from its fetched artifacts, so lo
 ## Meeting deletion (v3.1.6)
 
 Workspace responses include a SHA-256 `deletionVersion` derived from canonical meeting content and all linked tasks. `DELETE /api/meetings/:id` requires `{ confirm: true, expectedVersion }`. The transaction rechecks write permission, email reservations and the current revision, removes the meeting and linked tasks, prunes dependent-task/source references, invalidates relevant undo groups and records activity. No external files or calendar events are deleted. Task deletion retains its existing version guard, dependency block and five-minute undo.
+
+## Saved board controls and onboarding (v3.1.7)
+
+`POST /api/tasks/:id/move` requires a source task version plus a destination status and placement. Relative positions require the anchor ID/version. Within the workspace transaction, the route verifies access, versions and completion dependencies, calculates a numeric board rank (rebalancing only if floating-point spacing is exhausted), stamps changed tasks and uses existing activity/Undo tracking. Legacy tasks sort by creation time until ranked. Pointer capture, an activation threshold, edge scrolling, live announcements and keyboard pick/move/drop support desktop and touch without another dependency.
+
+`tutorialVersion` is a private personal-profile field; completion is independent of workspace membership. Global shortcuts are suppressed during composition, repeats, dialogs, loading, menu focus traps and ordinary text entry. AuthTransition mounts on workspace entry and uses existing bounded/motion-aware animation behavior.
+
+
+## v3.1.8 keyboard preference and cached-page opening
+
+Private profiles expose `singleKeyShortcuts` (boolean, default true). PATCH /api/profile validates it strictly and stores it under the authenticated UID. The client offers an optimistic toggle with rollback and an account guard; tutorial and shortcut responses merge only their own profile field. `shortcutAction` respects both the preference and `defaultPrevented`, while modifier and board keyboard controls remain independent.
+
+AuthTransition uses a fullscreen native modal dialog so the paint animation can appear above existing modal editors. Persisted pageshow replays the transition without clearing UI state. Existing editor/tutorial components remain mounted, and focus returns to the previous connected control. Ready-state changes promote the overlay above dialogs that become available during loading. Escape/Tab remain within the transition, and reduced motion skips it.

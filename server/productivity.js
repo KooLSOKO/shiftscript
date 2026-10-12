@@ -69,10 +69,14 @@ const profilePatch = z
     aliases: z.array(z.string().trim().min(2).max(80)).max(8).optional(),
     avatar: avatar.optional(),
     preferences: preferencesSchema.optional(),
+    tutorialVersion: z.number().int().min(0).max(1).optional(),
+    singleKeyShortcuts: z.boolean().optional(),
   })
   .strict();
 export function profileView(profile, actor) {
   return {
+    tutorialVersion: profile.tutorialVersion || 0,
+    singleKeyShortcuts: profile.singleKeyShortcuts !== false,
     name: profile.name || actor.name,
     customName: Boolean(profile.name),
     aliases: profile.aliases || [],

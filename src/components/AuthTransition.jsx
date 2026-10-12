@@ -3,17 +3,23 @@ import { useEffect, useRef, useState } from "react";
 export default function AuthTransition({ ready, onFinished }) {
   const [phase, setPhase] = useState("cover");
   const skip = useRef(null);
+  const dialog = useRef(null);
   const completed = useRef(false);
   const finish = () => {
     if (completed.current) return;
     completed.current = true;
+    // Close the native top-layer dialog before App restores focus. A later
+    // cleanup close could otherwise replace that focus with the old body node.
+    dialog.current?.close();
     onFinished();
   };
   useEffect(() => {
+    const overlay = dialog.current;
+    overlay.showModal();
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (media.matches) {
       finish();
-      return;
+      return () => overlay.close();
     }
     const priorOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -30,8 +36,18 @@ export default function AuthTransition({ ready, onFinished }) {
       clearTimeout(maximumHold);
       media.removeEventListener("change", motionChanged);
       document.body.style.overflow = priorOverflow;
+      overlay.close();
     };
   }, [onFinished]);
+  useEffect(() => {
+    // A dialog can become available when the workspace finishes loading. Keep
+    // the transition above it without unmounting that dialog or its draft.
+    const overlay = dialog.current;
+    if (!overlay?.open || completed.current) return;
+    overlay.close();
+    overlay.showModal();
+    skip.current?.focus({ preventScroll: true });
+  }, [ready]);
   useEffect(() => {
     if (phase !== "hold" || !ready) return;
     const timer = setTimeout(() => setPhase("reveal"), 80);
@@ -43,19 +59,26 @@ export default function AuthTransition({ ready, onFinished }) {
     return () => clearTimeout(timer);
   }, [phase, onFinished]);
   return (
-    <div
+    <dialog
+      ref={dialog}
       className="auth-transition"
       data-phase={phase}
       role="dialog"
       aria-modal="true"
       aria-label="Opening ShiftScript"
+      onCancel={(event) => {
+        event.preventDefault();
+        finish();
+      }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
+          event.stopPropagation();
           finish();
         }
         if (event.key === "Tab") {
           event.preventDefault();
+          event.stopPropagation();
           skip.current?.focus();
         }
       }}
@@ -75,7 +98,7 @@ export default function AuthTransition({ ready, onFinished }) {
       <div className="auth-transition-brand">
         <img src="/favicon.svg" alt="" />
         <strong>ShiftScript</strong>
-        <p role="status">Signed in. Opening your workspace…</p>
+        <p role="status">Opening ShiftScript…</p>
       </div>
       <button
         ref={skip}
@@ -85,6 +108,6 @@ export default function AuthTransition({ ready, onFinished }) {
       >
         Skip animation
       </button>
-    </div>
+    </dialog>
   );
 }

@@ -4,6 +4,7 @@ import { createServer } from "vite";
 import { mkdir } from "node:fs/promises";
 import { strict as assert } from "node:assert";
 import { createApp } from "../server/app.js";
+import { MemoryProfiles } from "../server/productivity.js";
 const users = new Map();
 const store = {
   async list(uid) {
@@ -18,7 +19,13 @@ const store = {
     return result;
   },
 };
+const profileStore = new MemoryProfiles();
+for (const uid of ["soko", "kopano", "google-new", "transition-new"])
+  await profileStore.mutateProfile(uid, (p) => {
+    p.tutorialVersion = 1;
+  });
 const server = createApp({
+  profileStore,
   storage: "firebase",
   provider: "sample",
   signupEnabled: true,
@@ -645,6 +652,11 @@ try {
       );
       throw error;
     }
+    await next.locator(".auth-transition").waitFor({ state: "detached" });
+    // Count the explicit authentication handoff separately from opening the app.
+    await next.evaluate(() => {
+      window.authTransitionStarts = 0;
+    });
     return { context, page: next };
   }
   async function enterLogin(next) {
@@ -744,6 +756,9 @@ try {
     assert.equal(await next.evaluate(() => window.authTransitionStarts), 1);
     assert(!(await next.locator(".auth-content").evaluate((el) => el.inert)));
     assert.equal(await next.evaluate(() => document.body.style.overflow), "");
+    await next.waitForFunction(() =>
+      ["H1", "H2"].includes(document.activeElement?.tagName),
+    );
     assert(
       await next.evaluate(
         () =>
@@ -752,14 +767,18 @@ try {
       ),
     );
     await next.reload();
+    await opening(next).waitFor({ state: "detached" });
     await next
       .getByRole("heading", { name: "Less follow-up. More follow-through." })
       .waitFor();
     assert.equal(
       await next.evaluate(() => window.authTransitionStarts),
-      0,
-      "Restored session replayed the auth transition",
+      1,
+      "Restored session should play one opening transition",
     );
+    await next.evaluate(() => {
+      window.authTransitionStarts = 0;
+    });
     if (viewport.width === 390 || viewport.width === 1440) {
       if (viewport.width === 390)
         await next
