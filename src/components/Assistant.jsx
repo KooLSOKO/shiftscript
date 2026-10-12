@@ -5,7 +5,6 @@ import {
   CalendarDays,
   CheckCircle2,
   RefreshCw,
-  Send,
   Trash,
   FileText,
   ListTodo,
@@ -15,6 +14,7 @@ import { calendarDurations } from "../../shared/scheduling.js";
 import ProcessingLoader from "./ProcessingLoader.jsx";
 import ShiftyAvatar from "./ShiftyAvatar.jsx";
 import AssistantMessage from "./AssistantMessage.jsx";
+import ShiftySendButton from "./ShiftySendButton.jsx";
 
 const prompts = [
   {
@@ -726,16 +726,12 @@ export default function Assistant({
               }
             }}
           />
-          <button
-            className="button primary"
+          <ShiftySendButton
+            busy={busy}
             disabled={
               disabled || !config.assistantReady || question.trim().length < 2
             }
-            aria-label="Send assistant question"
-          >
-            <Send size={20} />
-            <span>Ask</span>
-          </button>
+          />
           <p className="assistant-compose-note">
             Uses this workspace and your selected calendars. You review actions
             before anything changes.

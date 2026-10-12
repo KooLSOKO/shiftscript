@@ -6522,3 +6522,175 @@ textarea {
     outline-offset: -3px;
   }
 }
+
+/* Shifty's full-height send button: a blue orbit while the actual reply is pending. */
+.shifty-dashboard .assistant-compose {
+  align-items: stretch;
+}
+.shifty-dashboard .assistant-compose textarea {
+  min-height: 80px;
+}
+.shifty-dashboard .assistant-compose .shifty-send {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  align-self: stretch;
+  height: 100%;
+  min-height: 80px;
+  min-width: 156px;
+  width: 156px;
+  padding: 12px 18px;
+  border-radius: 20px;
+  gap: 10px;
+  box-shadow: none;
+  border: 1px solid #315ddd;
+  background: linear-gradient(
+    120deg,
+    #2458e8,
+    #3e62d9,
+    #6655cb,
+    #246e9f,
+    #2458e8
+  );
+  background-size: 300% 300%;
+  color: white;
+  font-weight: 800;
+}
+.shifty-dashboard .assistant-compose .shifty-send:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+.shifty-send > svg,
+.shifty-send > span {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.shifty-dashboard .assistant-compose .shifty-send span {
+  display: flex;
+}
+.shifty-dashboard .assistant-compose .shifty-send[data-loading] {
+  animation: shifty-send-flow 3s linear infinite;
+  opacity: 1;
+  cursor: progress;
+}
+.shifty-send[data-loading]::after {
+  content: "";
+  position: absolute;
+  inset: -70% -60%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    #ffffff1c 50%,
+    transparent 60%
+  );
+  animation: shifty-send-sweep 2.4s ease-in-out infinite;
+}
+.shifty-orbit {
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+}
+.shifty-orbit-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #ffffff30;
+  border-top-color: #fff;
+  border-right-color: #beeaff;
+  border-radius: 50%;
+  animation: shifty-orbit-turn 1.3s linear infinite;
+}
+.shifty-orbit-ring::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 12px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: white;
+}
+.shifty-orbit-ring-inner {
+  inset: 6px;
+  border-width: 1px;
+  border-top-color: transparent;
+  border-bottom-color: #fff;
+  animation-direction: reverse;
+  animation-duration: 1.9s;
+}
+.shifty-orbit-ring-inner::after {
+  display: none;
+}
+.shifty-orbit-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: #fff;
+  transform: rotate(45deg);
+  animation: shifty-orbit-breathe 1.6s ease-in-out infinite;
+}
+@keyframes shifty-send-flow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes shifty-send-sweep {
+  from {
+    transform: translateX(-40%);
+  }
+  to {
+    transform: translateX(40%);
+  }
+}
+@keyframes shifty-orbit-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes shifty-orbit-breathe {
+  0%,
+  100% {
+    opacity: 1;
+    transform: rotate(45deg) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: rotate(45deg) scale(0.7);
+  }
+}
+@media (max-width: 650px) {
+  .shifty-dashboard .assistant-compose .shifty-send {
+    min-width: 64px;
+    width: 64px;
+    padding: 10px;
+    border-radius: 18px;
+  }
+  .shifty-dashboard .assistant-compose .shifty-send .shifty-send-label {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shifty-dashboard .assistant-compose .shifty-send[data-loading],
+  .shifty-orbit-ring,
+  .shifty-orbit-core {
+    animation: none;
+  }
+  .shifty-send[data-loading]::after {
+    display: none;
+    animation: none;
+  }
+}
+/* The send control stays aligned while pressed or disabled. */
+.shifty-dashboard .assistant-compose .shifty-send,
+.shifty-dashboard .assistant-compose .shifty-send:active:not(:disabled) {
+  transform: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}

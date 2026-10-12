@@ -1,14 +1,12 @@
 {
-  "version": "3.1.11",
-  "root": "ShiftScript-v3.1.11",
+  "version": "3.1.12",
+  "root": "ShiftScript-v3.1.12",
   "verification": {
     "unitApiTests": 130,
     "productionBuild": "passed",
     "browserSuitesPassed": [
-      "shifty-design-browser",
-      "assistant-browser",
-      "profiles-browser",
-      "ux-controls-browser"
+      "shifty-send-browser",
+      "assistant-browser"
     ],
     "viewports": [
       320,
@@ -16,7 +14,7 @@
       768,
       1440
     ],
-    "externalServices": "isolated local / simulated",
+    "externalServices": "fictional / simulated",
     "deviceAcceptance": "Physical-device Safari and deployed Firebase/network round trip remain owner acceptance checks"
   },
   "files": [
@@ -42,7 +40,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "50f401784095f7f40ffc5ff4ed61d1532d1d8ac7bbfdd3c296fb691292f97587"
+      "sha256": "ec8f2817c161c35d477aaaab33a10af3ce635cf53ccced55cda18ea3f7109c6f"
     },
     {
       "path": "api/index.js",
@@ -90,7 +88,7 @@
     },
     {
       "path": "docs/TESTING.md",
-      "sha256": "9b6fb694d76d458cf8f55e4a5daff4d6307e9fda25997e67fe910e65778962e7"
+      "sha256": "b84d40e3a80c2c303dbd06dd59c81a1c7f31f97df3933ae240f3d6831404030d"
     },
     {
       "path": "docs/UPDATE-v2.1.1.md",
@@ -181,6 +179,10 @@
       "sha256": "8df2fed0c793b9bcc88c268c387a56cab1dafeb1fe634e36bbec22e1a92cc285"
     },
     {
+      "path": "docs/UPDATE-v3.1.12.md",
+      "sha256": "b5f4f1ef3fc4eb459d4cae530fd76fe3d0a0749d2ed19fd77bade4bf63d493fe"
+    },
+    {
       "path": "docs/UPDATE-v3.1.2.md",
       "sha256": "f594ae532a952ce9d6b445566a35a0c8f5d22fc0113e81226cdc1651fc34a38d"
     },
@@ -218,7 +220,7 @@
     },
     {
       "path": "docs/check-results.txt",
-      "sha256": "25f3290cfc922ea7464bc2965daa1d01916725730470d63d9a936a0d0fe8708b"
+      "sha256": "528353a07411d47f18a9a9e05ffab8e7a7af57c0eddeb560230f06b2ea2c9ff8"
     },
     {
       "path": "docs/gemini-error-check-results.txt",
@@ -602,11 +604,11 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "cf9912ce63f717ff149a9c58141f086e376da5a6b022f33805cea08b16f8f9a7"
+      "sha256": "ed8f6b45acfebd5f99b20df5f83ae0782b6f122bc2b7cb83cf04791ff5aa75ce"
     },
     {
       "path": "package.json",
-      "sha256": "06be5890cf4786629ff8596916b91c995ae42121de52ad062c0d6c8df39b1116"
+      "sha256": "eb27fee5cfa3624433dd2a64439aedba569a04610d51e59ef4780040e07e8461"
     },
     {
       "path": "public/about/index.html",
@@ -1042,7 +1044,7 @@
     },
     {
       "path": "server/app.js",
-      "sha256": "790a2096e12d323f151cb5a83dc5bf839cd60a36c1c1d28768a08fc57290fb87"
+      "sha256": "a1115951f080be11f6ecd0f740a204859ba22a17725f846779f1d5d32087984e"
     },
     {
       "path": "server/assistant.js",
@@ -1158,7 +1160,7 @@
     },
     {
       "path": "src/components/Assistant.jsx",
-      "sha256": "4a9f0f1c157b421644ba0637c313f389c04c90e31dca5aecec5e712d9395cab0"
+      "sha256": "46544793195ee9a17e93ff12d9501b825c1ed984c76d87f3b1a42fa5cb3fbfb5"
     },
     {
       "path": "src/components/AssistantMessage.jsx",
@@ -1273,6 +1275,10 @@
       "sha256": "9f2157055c0e323e0d7ca1add3270a1fde301a5f45b7bf6403c4fcaee698f959"
     },
     {
+      "path": "src/components/ShiftySendButton.jsx",
+      "sha256": "425e93bf95f6c6954d27796fe648a81fb1191ddee1b9c954b88abfb5234f19cd"
+    },
+    {
       "path": "src/components/ShortcutsTour.jsx",
       "sha256": "768a4d20a04cf8657613469ac605eed1e7d9276e0f91e3a6c8892ea1f0a89485"
     },
@@ -1354,7 +1360,7 @@
     },
     {
       "path": "src/styles.css",
-      "sha256": "e77952e13ca5ded68d8aad595a7f392dd112263e51f4eec6ae0393245cff5309"
+      "sha256": "2779b7e41bd25e27da41978e051e1bee66a5b34b63d3b5851bb22609af797954"
     },
     {
       "path": "tests/accounts-browser.js",
@@ -1499,6 +1505,10 @@
     {
       "path": "tests/shifty-design-browser.js",
       "sha256": "e3b7ad4bae45b31cdead7fe2fb5b7fa4f5b5c9d4f9bec8d4fe8d42b30028de3d"
+    },
+    {
+      "path": "tests/shifty-send-browser.js",
+      "sha256": "630a01c48c360a2ce0d781d79efd6fe6700e8aded2da7630d8cc79036067f9cf"
     },
     {
       "path": "tests/ux-controls-browser.js",
