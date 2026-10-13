@@ -196,3 +196,9 @@ The top-level Meet tab holds a maximum-three-source queue in component memory; t
 Failed items can be retried without replaying successful rows. Authentication/rate-limit errors pause remaining work. A stop flag applies between sources; unmount guards prevent starting another request after leaving or switching workspaces. Existing source discovery and batch processing share a busy gate so selection, disconnection, editing and mode changes cannot race the processing snapshot.
 
 The Shifty per-account default and workspace analysis/transcription default are now 50 requests per UTC day. Existing configured environment values still take precedence; Shifty's per-minute safeguard is unchanged. The stored workspace meeting count cap remains unchanged.
+
+## v3.1.15: lower-read storage and synchronization
+
+Firestore membership checks use a root-only snapshot. Common transactions declare their required collections and append history entries without repeated full scans; periodic transactional compaction keeps the visible history bounded. Every committed workspace/collection change writes dataRevision atomically, while quota-only updates leave it unchanged. The two-minute browser poll sends its last full snapshot revision and skips collection reads when unchanged. Full refresh is still forced on initial load, manual refresh and hourly safety checks. Task save responses carry version-aware patches so React need not reload the entire workspace after those changes. Repeated reads are reused only within a request, with fresh membership and revision checks, never across accounts or server instances.
+
+Read-savings tests cover optimistic transaction retries, revocation, scope guards, metadata-only reads, compaction, unchanged sync and patch races. Cross-record meeting deletion retains a complete transaction. Search, dashboard totals, exports and Shifty source context retain their complete relevant record sets. See READ-SAVINGS.md and UPDATE-v3.1.15.md.

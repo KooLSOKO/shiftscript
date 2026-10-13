@@ -3,14 +3,14 @@ import { GoogleGenAI } from "@google/genai";
 export const defaultModel = "gemini-3.5-flash-lite";
 export async function geminiJson(
   {
-  input,
-  schema,
-  instruction,
-  maxTokens = 6000,
-  model,
-  timeout = 45000,
-  thinkingLevel,
-},
+    input,
+    schema,
+    instruction,
+    maxTokens = 6000,
+    model,
+    timeout = 45000,
+    thinkingLevel,
+  },
   clientOverride,
 ) {
   if (!clientOverride && !process.env.GEMINI_API_KEY)
@@ -30,9 +30,9 @@ export async function geminiJson(
         input,
         system_instruction: instruction,
         generation_config: {
-  max_output_tokens: maxTokens,
-  ...(thinkingLevel ? { thinking_level: thinkingLevel } : {}),
-},
+          max_output_tokens: maxTokens,
+          ...(thinkingLevel ? { thinking_level: thinkingLevel } : {}),
+        },
         response_format: {
           type: "text",
           mime_type: "application/json",
@@ -41,13 +41,20 @@ export async function geminiJson(
       },
       { timeout, maxRetries: 0 },
     );
-    if (response.status !== "completed") {
-  console.warn("Gemini response diagnostic:", {
-    model: process.env.GEMINI_MODEL,
-    status: response.status,
-    usage: response.usage,
-  });
-}
+    if (response.status && response.status !== "completed") {
+      console.warn("Gemini response diagnostic:", {
+        status: response.status,
+        usage: response.usage,
+      });
+      throw Object.assign(
+        new Error(
+          response.status === "incomplete"
+            ? "Gemini stopped before finishing its reply. Please retry; the response allowance may need adjusting."
+            : "Gemini did not finish this request. Please try again.",
+        ),
+        { status: 502 },
+      );
+    }
     // Support SDK output_text and the raw text output representation.
     const text =
       response.output_text ||

@@ -1,7 +1,9 @@
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
 import { firebase } from "./firebase.js";
 import { invitationExpired } from "./invitation-email.js";
+import { collectionReads, invalidateReads } from "./read-scope.js";
 export const collections = [
   "meetings",
   "tasks",
@@ -12,6 +14,38 @@ export const collections = [
   "agendas",
   "notes",
 ];
+function selectedCollections(options = {}) {
+  const selected = options.collections ?? collections;
+  if (
+    !Array.isArray(selected) ||
+    selected.some((name) => !collections.includes(name))
+  )
+    throw new Error("Unknown workspace collection in read plan");
+  return [...new Set(selected)];
+}
+function sortRecords(name, records) {
+  return name === "activity"
+    ? records.sort(
+        (a, b) =>
+          (a.createdAt || "").localeCompare(b.createdAt || "") ||
+          a.id.localeCompare(b.id),
+      )
+    : name === "undoRecords"
+      ? records.sort(
+          (a, b) => a.expires - b.expires || a.id.localeCompare(b.id),
+        )
+      : records;
+}
+function localRevision(record) {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        workspace: record.workspace,
+        ...Object.fromEntries(collections.map((name) => [name, record[name]])),
+      }),
+    )
+    .digest("hex");
+}
 export function hydrate(record = {}, id) {
   const s = { ...record, quota: record.quota || {} };
   for (const key of collections) s[key] = record[key] || [];
@@ -88,9 +122,19 @@ export class LocalStore {
     this.queue = run.catch(() => {});
     return run;
   }
-  async list(id = "local-demo") {
+  async list(id = "local-demo", options = {}) {
     await this.queue;
-    return hydrate((await this.readDatabase()).workspaces[id], id);
+    const record = hydrate((await this.readDatabase()).workspaces[id], id);
+    const selected = selectedCollections(options);
+    return {
+      ...record,
+      ...Object.fromEntries(
+        collections
+          .filter((name) => !selected.includes(name))
+          .map((name) => [name, []]),
+      ),
+      _revision: localRevision(record),
+    };
   }
   async catalog(actor) {
     await this.queue;
@@ -163,38 +207,69 @@ export class FirebaseStore {
       ),
     };
   }
-  async list(id) {
+  async list(id, options = {}) {
     const r = this.refs(id),
-      [root, ...snapshots] = await Promise.all([
-        r.root.get(),
-        ...collections.map((name) => r[name].get()),
-      ]);
+      selected = selectedCollections(options);
+    // Always fetch current membership/revision. Collection snapshots are reused
+    // only within this request and only while that durable revision is unchanged.
+    const root = await r.root.get(),
+      revision = root.data()?.dataRevision || null;
+    const reads = collectionReads(this, id, revision, options.fresh);
+    const records = await Promise.all(
+      selected.map(async (name) => {
+        if (!reads.has(name)) {
+          const query =
+            name === "activity" && r[name].orderBy
+              ? r[name].orderBy("createdAt", "desc").limit(200)
+              : r[name];
+          reads.set(
+            name,
+            query.get().then((snapshot) =>
+              sortRecords(
+                name,
+                snapshot.docs.map((doc) => doc.data()),
+              ),
+            ),
+          );
+        }
+        return [name, structuredClone(await reads.get(name))];
+      }),
+    );
     return hydrate(
       {
         workspace: root.data()?.workspace,
         quota: root.data()?.quota,
-        ...Object.fromEntries(
-          collections.map((name, i) => [
-            name,
-            snapshots[i].docs.map((d) => d.data()),
-          ]),
-        ),
+        _revision: revision,
+        ...Object.fromEntries(records),
       },
       id,
     );
+  }
+  async ensureRevision(id) {
+    const root = this.refs(id).root;
+    await this.services().db.runTransaction(async (tx) => {
+      const data = (await tx.get(root)).data();
+      if (data?.workspace && !data.dataRevision)
+        tx.set(root, { dataRevision: randomUUID() }, { merge: true });
+    });
+    invalidateReads(this, id);
   }
   async catalog(actor) {
     const db = this.services().db,
       personal = await db.collection("workspaces").doc(actor.uid).get();
     // Lazily add membership metadata to the existing UID path; never move documents.
     if (personal.data()?.workspace && !personal.data().workspace.memberUids) {
-      await this.mutate(actor.uid, (s) => {
-        const owner = s.workspace.members.find((m) => m.uid === actor.uid);
-        if (owner) {
-          owner.email = actor.email;
-          owner.name = actor.name || owner.name;
-        }
-      });
+      await this.mutate(
+        actor.uid,
+        (s) => {
+          const owner = s.workspace.members.find((m) => m.uid === actor.uid);
+          if (owner) {
+            owner.email = actor.email;
+            owner.name = actor.name || owner.name;
+          }
+        },
+        { collections: [] },
+      );
     }
     const [joined, invited] = await Promise.all([
       db
@@ -215,22 +290,43 @@ export class FirebaseStore {
     );
     return catalogFrom(records, actor);
   }
-  async mutate(id, operation) {
-    const r = this.refs(id);
-    return this.services().db.runTransaction(async (tx) => {
-      const [root, ...snapshots] = await Promise.all([
-        tx.get(r.root),
-        ...collections.map((name) => tx.get(r[name])),
-      ]);
+  async mutate(id, operation, options = {}) {
+    const r = this.refs(id),
+      selected = selectedCollections(options);
+    const appendOnly = options.appendOnly || [];
+    if (
+      appendOnly.some(
+        (name) =>
+          !["activity", "undoRecords"].includes(name) ||
+          !selected.includes(name),
+      )
+    )
+      throw new Error("Only activity and undo records support append reads");
+    const result = await this.services().db.runTransaction(async (tx) => {
+      const root = await tx.get(r.root);
+      // Append logs without rereading their histories on every save. Periodic
+      // transactional compaction retains the same latest-200/active-100 bounds.
+      const compact =
+        appendOnly.length &&
+        Date.now() - (root.data()?.logsCompactedAt || 0) >= 15 * 60000;
+      const readCollections = selected.filter(
+        (name) => compact || !appendOnly.includes(name),
+      );
+      const snapshots = await Promise.all(
+        readCollections.map((name) => tx.get(r[name])),
+      );
       const rawWorkspace = root.data()?.workspace || null;
       const s = hydrate(
         {
           workspace: rawWorkspace,
           quota: root.data()?.quota,
           ...Object.fromEntries(
-            collections.map((name, i) => [
+            readCollections.map((name, i) => [
               name,
-              snapshots[i].docs.map((d) => d.data()),
+              sortRecords(
+                name,
+                snapshots[i].docs.map((d) => d.data()),
+              ),
             ]),
           ),
         },
@@ -238,27 +334,48 @@ export class FirebaseStore {
       );
       const before = structuredClone(s),
         result = operation(s);
+      // A scoped operation cannot accidentally overwrite an unread collection.
+      for (const name of collections.filter(
+        (name) => !selected.includes(name),
+      )) {
+        if (JSON.stringify(s[name]) !== JSON.stringify(before[name]))
+          throw new Error(`Mutation changed unread collection: ${name}`);
+      }
       if (s.workspace) {
         s.workspace = hydrate(s, id).workspace;
         s.workspace.memberUids = s.workspace.members.map((m) => m.uid);
         s.workspace.inviteEmails = s.workspace.invites.map((i) => i.email);
       }
-      for (const name of collections) {
+      let dataChanged = false;
+      for (const name of selected) {
         const old = new Map(before[name].map((i) => [i.id, JSON.stringify(i)])),
           ids = new Set(s[name].map((i) => i.id));
         for (const i of s[name])
-          if (old.get(i.id) !== JSON.stringify(i)) tx.set(r[name].doc(i.id), i);
+          if (old.get(i.id) !== JSON.stringify(i)) {
+            dataChanged = true;
+            tx.set(r[name].doc(i.id), i);
+          }
         for (const i of before[name])
-          if (!ids.has(i.id)) tx.delete(r[name].doc(i.id));
+          if (!ids.has(i.id)) {
+            dataChanged = true;
+            tx.delete(r[name].doc(i.id));
+          }
       }
       const patch = {};
       if (JSON.stringify(before.quota) !== JSON.stringify(s.quota))
         patch.quota = s.quota;
-      if (JSON.stringify(rawWorkspace) !== JSON.stringify(s.workspace))
+      if (JSON.stringify(rawWorkspace) !== JSON.stringify(s.workspace)) {
         patch.workspace = s.workspace;
+        dataChanged = true;
+      }
+      if (dataChanged || !root.data()?.dataRevision)
+        patch.dataRevision = randomUUID();
+      if (compact) patch.logsCompactedAt = Date.now();
       if (Object.keys(patch).length) tx.set(r.root, patch, { merge: true });
       return result;
     });
+    invalidateReads(this, id);
+    return result;
   }
   async getProfile(uid) {
     return (

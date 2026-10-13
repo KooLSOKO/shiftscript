@@ -12,6 +12,9 @@ import {
   INVITATION_DAYS,
 } from "./invitation-email.js";
 import { LocalStore, FirebaseStore, hydrate } from "./store.js";
+import { runReadScope } from "./read-scope.js";
+import { mutationReadPlan } from "./read-plan.js";
+import { committedTaskPatch } from "./task-sync.js";
 import { ownerCandidates } from "../shared/identity.js";
 import { firebase } from "./firebase.js";
 import { analyze, sampleTranscript } from "./analyze.js";
@@ -93,6 +96,7 @@ export function createApp({
     (typeof repo.getProfile === "function" ? repo : new MemoryProfiles());
   const remindersReady = Boolean(cronSecret && publicOrigin && mailer.ready);
   app.disable("x-powered-by");
+  app.use((_req, _res, next) => runReadScope(next));
   app.use(express.json({ limit: "3.5mb" }));
   app.use("/api", (_req, res, next) => {
     res.set("Cache-Control", "no-store");
@@ -212,6 +216,7 @@ export function createApp({
       }
       req.uid = req.actor.uid;
       const personal = await profiles.getProfile(req.uid);
+      req.personalProfile = personal;
       req.actor.name = personal.name || req.actor.name;
       req.actor.aliases = personal.aliases || [];
       next();
@@ -219,24 +224,35 @@ export function createApp({
       next(e);
     }
   });
-  const read = async (workspaceId) =>
-    hydrate(await repo.list(workspaceId), workspaceId);
+  const read = async (workspaceId, options) =>
+    hydrate(await repo.list(workspaceId, options), workspaceId);
   const mutate = (req, operation, permission = "write", options = {}) =>
-    repo.mutate(req.workspaceId, (raw) => {
-      // Check permissions again within the transaction so revocation cannot race a write.
-      const s = hydrate(raw, req.workspaceId);
-      authorize(s, req.actor, req.workspaceId, permission);
-      const before = structuredClone(s);
-      const result = operation(s);
-      req.undoToken = recordChanges(
-        s,
-        before,
-        req.actor,
-        options.undo !== false,
-      );
-      Object.assign(raw, s);
-      return result;
-    });
+    repo.mutate(
+      req.workspaceId,
+      (raw) => {
+        // Check permissions again within the transaction so revocation cannot race a write.
+        const s = hydrate(raw, req.workspaceId);
+        authorize(s, req.actor, req.workspaceId, permission);
+        const before = structuredClone(s);
+        const result = operation(s);
+        req.undoToken = recordChanges(
+          s,
+          before,
+          req.actor,
+          options.undo !== false,
+        );
+        if (
+          (options.readPlan || mutationReadPlan(req)).collections?.includes(
+            "tasks",
+          )
+        ) {
+          req.taskPatch = committedTaskPatch(before, s, req.workspaceId);
+        }
+        Object.assign(raw, s);
+        return result;
+      },
+      options.readPlan || mutationReadPlan(req),
+    );
   async function catalog(actor) {
     if (repo.catalog) return repo.catalog(actor);
     const own = await read(actor.uid);
@@ -265,17 +281,21 @@ export function createApp({
   });
   app.post("/api/workspace", async (req, res) => {
     const input = workspaceInput.parse(req.body);
-    const workspace = await repo.mutate(req.uid, (raw) => {
-      const s = hydrate(raw, req.uid);
-      if (s.workspace)
-        fail(
-          409,
-          "You already have a workspace. Open workspace settings to rename it.",
-        );
-      s.workspace = newWorkspace(req.uid, input, req.actor);
-      Object.assign(raw, s);
-      return s.workspace;
-    });
+    const workspace = await repo.mutate(
+      req.uid,
+      (raw) => {
+        const s = hydrate(raw, req.uid);
+        if (s.workspace)
+          fail(
+            409,
+            "You already have a workspace. Open workspace settings to rename it.",
+          );
+        s.workspace = newWorkspace(req.uid, input, req.actor);
+        Object.assign(raw, s);
+        return s.workspace;
+      },
+      { collections: [] },
+    );
     res.status(201).json({ workspace });
   });
   app.post("/api/workspaces", async (req, res) => {
@@ -284,10 +304,14 @@ export function createApp({
     if (c.workspaces.length >= 20)
       fail(409, "You can belong to at most 20 workspaces.");
     const workspaceId = id("w_");
-    const workspace = await repo.mutate(workspaceId, (s) => {
-      s.workspace = newWorkspace(workspaceId, input, req.actor);
-      return s.workspace;
-    });
+    const workspace = await repo.mutate(
+      workspaceId,
+      (s) => {
+        s.workspace = newWorkspace(workspaceId, input, req.actor);
+        return s.workspace;
+      },
+      { collections: [] },
+    );
     res.status(201).json({ workspace });
   });
   app.post(
@@ -306,50 +330,58 @@ export function createApp({
         !c.workspaces.some((w) => w.id === req.params.workspaceId)
       )
         fail(409, "You can belong to at most 20 workspaces.");
-      const workspace = await repo.mutate(req.params.workspaceId, (raw) => {
-        const s = hydrate(raw, req.params.workspaceId),
-          w = s.workspace;
-        if (!w) fail(404, "Invitation not found or no longer available.");
-        const invitation = w.invites.find(
-          (i) => i.id === req.params.inviteId && i.email === req.actor.email,
-        );
-        if (!invitation)
-          fail(404, "Invitation not found or no longer available.");
-        if (invitationExpired(invitation))
-          fail(
-            410,
-            "This invitation expired. Ask the workspace owner for a new one.",
+      const workspace = await repo.mutate(
+        req.params.workspaceId,
+        (raw) => {
+          const s = hydrate(raw, req.params.workspaceId),
+            w = s.workspace;
+          if (!w) fail(404, "Invitation not found or no longer available.");
+          const invitation = w.invites.find(
+            (i) => i.id === req.params.inviteId && i.email === req.actor.email,
           );
-        if (w.members.length >= 20 && !w.members.some((m) => m.uid === req.uid))
-          fail(409, "This workspace has reached its 20-member limit.");
-        if (!w.members.some((m) => m.uid === req.uid))
-          w.members.push({
-            uid: req.uid,
-            name: req.actor.name,
-            aliases: req.actor.aliases || [],
-            email: req.actor.email,
-            role: invitation.role,
-            joinedAt: now(),
-          });
-        w.invites = w.invites.filter((i) => i.id !== invitation.id);
-        w.memberUids = w.members.map((m) => m.uid);
-        w.inviteEmails = w.invites.map((i) => i.email);
-        w.updatedAt = now();
-        Object.assign(raw, s);
-        return {
-          id: w.id,
-          name: w.name,
-          role: w.members.find((m) => m.uid === req.uid).role,
-        };
-      });
+          if (!invitation)
+            fail(404, "Invitation not found or no longer available.");
+          if (invitationExpired(invitation))
+            fail(
+              410,
+              "This invitation expired. Ask the workspace owner for a new one.",
+            );
+          if (
+            w.members.length >= 20 &&
+            !w.members.some((m) => m.uid === req.uid)
+          )
+            fail(409, "This workspace has reached its 20-member limit.");
+          if (!w.members.some((m) => m.uid === req.uid))
+            w.members.push({
+              uid: req.uid,
+              name: req.actor.name,
+              aliases: req.actor.aliases || [],
+              email: req.actor.email,
+              role: invitation.role,
+              joinedAt: now(),
+            });
+          w.invites = w.invites.filter((i) => i.id !== invitation.id);
+          w.memberUids = w.members.map((m) => m.uid);
+          w.inviteEmails = w.invites.map((i) => i.email);
+          w.updatedAt = now();
+          Object.assign(raw, s);
+          return {
+            id: w.id,
+            name: w.name,
+            role: w.members.find((m) => m.uid === req.uid).role,
+          };
+        },
+        { collections: [] },
+      );
       res.json({ workspace });
     },
   );
   app.use("/api", async (req, _res, next) => {
     try {
       req.workspaceId = key.parse(req.get("X-Workspace-Id") || req.uid);
-      const s = await read(req.workspaceId);
+      const s = await read(req.workspaceId, { collections: [] });
       req.role = authorize(s, req.actor, req.workspaceId);
+      req.workspaceMetadata = s;
       next();
     } catch (e) {
       next(e);
@@ -366,7 +398,31 @@ export function createApp({
     origin: publicOrigin,
   });
   app.get("/api/workspace", async (req, res) => {
-    const d = await read(req.workspaceId),
+    if (!req.workspaceMetadata._revision && repo.ensureRevision) {
+      await repo.ensureRevision(req.workspaceId);
+      req.workspaceMetadata = await read(req.workspaceId, { collections: [] });
+      authorize(req.workspaceMetadata, req.actor, req.workspaceId);
+    }
+    if (
+      typeof req.query.since === "string" &&
+      req.workspaceMetadata._revision &&
+      req.query.since === req.workspaceMetadata._revision
+    )
+      return res.json({
+        unchanged: true,
+        revision: req.workspaceMetadata._revision,
+      });
+    const d = await read(req.workspaceId, {
+        collections: [
+          "meetings",
+          "tasks",
+          "projects",
+          "drafts",
+          "activity",
+          "agendas",
+          "notes",
+        ],
+      }),
       role = authorize(d, req.actor, req.workspaceId);
     const workspace = d.workspace && {
       ...d.workspace,
@@ -374,6 +430,7 @@ export function createApp({
       inviteEmails: role === "owner" ? d.workspace.inviteEmails : [],
     };
     res.json({
+      revision: d._revision || null,
       workspace,
       role,
       projects: d.projects,
@@ -543,18 +600,25 @@ export function createApp({
     if (reservation.previous)
       return res.json({ send: reservation.previous, cached: true });
     async function finish(outcome) {
-      return repo.mutate(req.workspaceId, (s) => {
-        const attempt = s.workspace?.invites
-          .find((i) => i.id === req.params.inviteId)
-          ?.emailSends?.find((v) => v.id === requestId);
-        // The owner may revoke the invitation, or its recipient may join, during SMTP.
-        if (attempt) Object.assign(attempt, outcome);
-        return { ...reservation.send, ...outcome };
-      });
+      return repo.mutate(
+        req.workspaceId,
+        (s) => {
+          const attempt = s.workspace?.invites
+            .find((i) => i.id === req.params.inviteId)
+            ?.emailSends?.find((v) => v.id === requestId);
+          // The owner may revoke the invitation, or its recipient may join, during SMTP.
+          if (attempt) Object.assign(attempt, outcome);
+          return { ...reservation.send, ...outcome };
+        },
+        { collections: [] },
+      );
     }
     let result;
     try {
-      const fresh = await read(req.workspaceId);
+      const fresh = await read(req.workspaceId, {
+        collections: [],
+        fresh: true,
+      });
       authorize(fresh, req.actor, req.workspaceId, "owner");
       if (!fresh.workspace.invites.some((i) => i.id === req.params.inviteId))
         fail(409, "Invitation was revoked.");
@@ -572,7 +636,12 @@ export function createApp({
         ? "accepted"
         : "rejected",
     });
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "owner");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "owner",
+    );
     res.json({ send, cached: false });
   });
   app.delete("/api/members/invitations/:inviteId", async (req, res) => {
@@ -691,16 +760,21 @@ export function createApp({
     res.json({ removed: true });
   });
   async function claimQuota(req) {
-    await mutate(req, (s) => {
-      const date = now().slice(0, 10),
-        count = s.quota.date === date ? s.quota.count : 0;
-      if (count >= Number(process.env.MAX_ANALYSES_PER_DAY || 50))
-        fail(
-          429,
-          "Daily workspace AI-request limit reached. Try again tomorrow (UTC).",
-        );
-      s.quota = { ...s.quota, date, count: count + 1 };
-    });
+    await mutate(
+      req,
+      (s) => {
+        const date = now().slice(0, 10),
+          count = s.quota.date === date ? s.quota.count : 0;
+        if (count >= Number(process.env.MAX_ANALYSES_PER_DAY || 50))
+          fail(
+            429,
+            "Daily workspace AI-request limit reached. Try again tomorrow (UTC).",
+          );
+        s.quota = { ...s.quota, date, count: count + 1 };
+      },
+      "write",
+      { undo: false, readPlan: { collections: [] } },
+    );
   }
   app.post("/api/transcribe", async (req, res) => {
     const audio = validateAudio(req.body);
@@ -712,7 +786,12 @@ export function createApp({
     await claimQuota(req);
     const transcript = await transcriber(audio, provider);
     // Recheck access after an external request; don't return private results after revocation.
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     res.json({
       transcript,
       source: { kind: "audio", name: audio.name },
@@ -722,7 +801,9 @@ export function createApp({
   async function processMeeting(req, res, body, trustedSource) {
     const input = meetingInput.parse(body),
       meetingKey = meetingId(input, trustedSource),
-      data = await read(req.workspaceId);
+      data = await read(req.workspaceId, {
+        collections: ["meetings", "projects", "notes", "agendas"],
+      });
     // Compute from saved snapshots too: pre-upgrade IDs included title/project.
     // Preserve those IDs and all existing task/source links without a migration.
     const findExisting = (s) =>
@@ -844,19 +925,34 @@ export function createApp({
     res.json(await googleClient.artifacts(req.uid, req.query.name)),
   );
   app.post("/api/google/preview", async (req, res) => {
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     const result = await googleClient.preview(
       req.uid,
       req.workspaceId,
       req.body,
     );
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     res.json(result);
   });
   app.post("/api/google/import", async (req, res) => {
     if (provider !== "gemini")
       fail(422, "Google imports require live Gemini analysis.");
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     const { previewId, ...fields } = meetingInput
       .omit({ transcript: true, source: true })
       .extend({ previewId: z.string().min(20).max(100) })
@@ -875,7 +971,9 @@ export function createApp({
     );
   });
   app.get("/api/meetings/:id/email-preview", async (req, res) => {
-    const data = await read(req.workspaceId);
+    const data = await read(req.workspaceId, {
+      collections: ["meetings", "tasks"],
+    });
     authorize(data, req.actor, req.workspaceId, "write");
     const { html, subject, ...preview } = recap(data, req.params.id);
     res.json(preview);
@@ -937,39 +1035,52 @@ export function createApp({
     let result;
     try {
       authorize(
-        await read(req.workspaceId),
+        await read(req.workspaceId, { collections: [] }),
         req.actor,
         req.workspaceId,
         "write",
       );
       result = await mailer.send(recipients, reservation.message);
     } catch {
-      await repo.mutate(req.workspaceId, (s) => {
-        s.meetings
-          .find((v) => v.id === req.params.id)
-          .emailSends.find((v) => v.id === input.requestId).status =
-          "uncertain";
-      });
+      await repo.mutate(
+        req.workspaceId,
+        (s) => {
+          s.meetings
+            .find((v) => v.id === req.params.id)
+            .emailSends.find((v) => v.id === input.requestId).status =
+            "uncertain";
+        },
+        { collections: ["meetings"] },
+      );
       fail(
         502,
         "Email sending could not be confirmed. Check Zoho Sent mail before retrying to avoid duplicates.",
       );
     }
     // Record the external outcome even if membership changed during SMTP sending.
-    const send = await repo.mutate(req.workspaceId, (raw) => {
-      const m = raw.meetings.find((v) => v.id === req.params.id),
-        send = m.emailSends.find((v) => v.id === input.requestId);
-      Object.assign(send, {
-        status: result.rejected.length
-          ? result.accepted.length
-            ? "partial"
-            : "rejected"
-          : "accepted",
-        ...result,
-      });
-      return send;
-    });
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    const send = await repo.mutate(
+      req.workspaceId,
+      (raw) => {
+        const m = raw.meetings.find((v) => v.id === req.params.id),
+          send = m.emailSends.find((v) => v.id === input.requestId);
+        Object.assign(send, {
+          status: result.rejected.length
+            ? result.accepted.length
+              ? "partial"
+              : "rejected"
+            : "accepted",
+          ...result,
+        });
+        return send;
+      },
+      { collections: ["meetings"] },
+    );
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     res.json({ send, cached: false });
   });
   app.patch("/api/meetings/:id/project", async (req, res) => {
@@ -1104,7 +1215,7 @@ export function createApp({
       assertCompletion(task, s.tasks);
       return task;
     });
-    res.status(201).json({ task });
+    res.status(201).json({ task, taskPatch: req.taskPatch });
   });
   app.patch("/api/tasks/:id", async (req, res) => {
     const input = taskPatch.parse(req.body);
@@ -1130,7 +1241,7 @@ export function createApp({
       assertCompletion(t, s.tasks, previous);
       return t;
     });
-    res.json({ task, undoToken: req.undoToken });
+    res.json({ task, undoToken: req.undoToken, taskPatch: req.taskPatch });
   });
   app.post("/api/tasks/:id/notes", async (req, res) => {
     const note = noteInput.parse(req.body);
@@ -1149,31 +1260,38 @@ export function createApp({
       t.updatedAt = stamp(t.updatedAt);
       return t;
     });
-    res.status(201).json({ task, undoToken: req.undoToken });
+    res
+      .status(201)
+      .json({ task, undoToken: req.undoToken, taskPatch: req.taskPatch });
   });
   app.use("/api", (_req, res) =>
     res.status(404).json({ error: "API route not found." }),
   );
   app.use((e, _req, res, _next) => {
-    const status =
-      e instanceof z.ZodError
+    const quotaExceeded =
+      Number(e.code) === 8 || e.code === "RESOURCE_EXHAUSTED";
+    const status = quotaExceeded
+      ? 503
+      : e instanceof z.ZodError
         ? 400
         : e.status >= 400 && e.status < 600
           ? e.status
           : 500;
-    const message =
-      e instanceof z.ZodError
+    const message = quotaExceeded
+      ? "The workspace database has reached a usage limit. Your saved data is retained. Ask the workspace administrator to check Firebase usage and retry after quota is available."
+      : e instanceof z.ZodError
         ? e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")
         : status === 500
           ? "The server could not complete this request. Check the server setup and try again."
           : e.message;
-console.error("API error:", {
-  status,
-  route: _req.path,
-  name: e.name,
-  code: e.code ?? null,
-  message: String(e.message || "").slice(0, 500),
-});    res.status(status).json({ error: message });
+    if (quotaExceeded) res.set("Retry-After", "300");
+    console.error("API error:", {
+      status,
+      route: _req.path,
+      name: e.name,
+      code: e.code ?? null,
+    });
+    res.status(status).json({ error: message });
   });
   return app;
 }

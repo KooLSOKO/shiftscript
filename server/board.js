@@ -66,6 +66,7 @@ export function installBoardRoutes(app, { mutate }) {
       ...result,
       activity: result.activity.slice(-200),
       undoToken: req.undoToken,
+      taskPatch: req.taskPatch,
     });
   });
 }

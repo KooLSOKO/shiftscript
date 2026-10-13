@@ -1,6 +1,6 @@
 {
   "name": "shiftscript",
-  "version": "3.1.14",
+  "version": "3.1.15",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,8 +13,9 @@
     "start": "node server/index.js",
     "test": "node --test tests/*.test.js",
     "check": "npm test && npm run build",
-    "test:ui": "node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js && node tests/productivity-browser.js && node tests/public-pages-browser.js && node tests/landing-browser.js && node tests/dashboard-browser.js && node tests/experience-browser.js && node tests/assistant-browser.js && node tests/notes-browser.js && node tests/meet-layout-browser.js && node tests/deletion-browser.js && node tests/board-shortcuts-browser.js && node tests/ux-controls-browser.js && node tests/profiles-browser.js && node tests/shifty-design-browser.js && node tests/shifty-send-browser.js && node tests/shifty-chats-browser.js && node tests/meet-batch-browser.js",
-    "format": "prettier --write src server shared api tests"
+    "test:ui": "node tests/browser-smoke.js && node tests/accounts-browser.js && node tests/collaboration-browser.js && node tests/integrations-browser.js && node tests/productivity-browser.js && node tests/public-pages-browser.js && node tests/landing-browser.js && node tests/dashboard-browser.js && node tests/experience-browser.js && node tests/assistant-browser.js && node tests/notes-browser.js && node tests/meet-layout-browser.js && node tests/deletion-browser.js && node tests/board-shortcuts-browser.js && node tests/ux-controls-browser.js && node tests/profiles-browser.js && node tests/shifty-design-browser.js && node tests/shifty-send-browser.js && node tests/shifty-chats-browser.js && node tests/meet-batch-browser.js && node tests/database-reads-browser.js",
+    "format": "prettier --write src server shared api tests",
+    "test:reads": "node --test tests/database-reads.test.js && node tests/database-reads-browser.js"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

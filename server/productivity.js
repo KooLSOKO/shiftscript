@@ -319,7 +319,10 @@ export function installPersonalRoutes(
 ) {
   app.get("/api/profile", async (req, res) =>
     res.json({
-      profile: profileView(await profiles.getProfile(req.uid), req.actor),
+      profile: profileView(
+        req.personalProfile ?? (await profiles.getProfile(req.uid)),
+        req.actor,
+      ),
       remindersReady,
     }),
   );
@@ -345,18 +348,22 @@ export function installPersonalRoutes(
       const c = await catalog(req.actor);
       for (const workspace of c.workspaces) {
         try {
-          await repo.mutate(workspace.id, (s) => {
-            authorize(s, req.actor, workspace.id);
-            const member = s.workspace?.members.find(
-              (member) => member.uid === req.uid,
-            );
-            if (member) {
-              member.name = profile.name;
-              member.aliases = profile.aliases;
-              if (s.workspace.ownerUid === req.uid)
-                s.workspace.ownerName = profile.name;
-            }
-          });
+          await repo.mutate(
+            workspace.id,
+            (s) => {
+              authorize(s, req.actor, workspace.id);
+              const member = s.workspace?.members.find(
+                (member) => member.uid === req.uid,
+              );
+              if (member) {
+                member.name = profile.name;
+                member.aliases = profile.aliases;
+                if (s.workspace.ownerUid === req.uid)
+                  s.workspace.ownerName = profile.name;
+              }
+            },
+            { collections: [] },
+          );
         } catch (error) {
           if (error.status !== 403) throw error;
         }
@@ -427,7 +434,7 @@ export function installWorkspaceRoutes(app, { read, mutate, profiles }) {
       })
       .strict()
       .parse(req.body);
-    const s = await read(req.workspaceId);
+    const s = await read(req.workspaceId, { collections: ["tasks"] });
     if (!s.tasks.some((task) => task.id === input.taskId))
       fail(404, "Task not found.");
     const calendarMarks = await profiles.mutateProfile(req.uid, (p) => {
@@ -519,7 +526,11 @@ export function installWorkspaceRoutes(app, { read, mutate, profiles }) {
         });
       }
     });
-    res.json({ updated: input.tasks.length, undoToken: req.undoToken });
+    res.json({
+      updated: input.tasks.length,
+      undoToken: req.undoToken,
+      taskPatch: req.taskPatch,
+    });
   });
   app.post("/api/tasks/bulk", async (req, res) => {
     const input = z
@@ -572,7 +583,11 @@ export function installWorkspaceRoutes(app, { read, mutate, profiles }) {
           before.find((item) => item.id === task.id),
         );
     });
-    res.json({ updated: input.tasks.length, undoToken: req.undoToken });
+    res.json({
+      updated: input.tasks.length,
+      undoToken: req.undoToken,
+      taskPatch: req.taskPatch,
+    });
   });
   app.delete("/api/tasks/:id", async (req, res) => {
     const { expectedUpdatedAt } = z
@@ -595,7 +610,11 @@ export function installWorkspaceRoutes(app, { read, mutate, profiles }) {
         ?.proposals.find((proposal) => proposal.id === task.proposalId);
       if (proposal) proposal.taskId = null;
     });
-    res.json({ deleted: true, undoToken: req.undoToken });
+    res.json({
+      deleted: true,
+      undoToken: req.undoToken,
+      taskPatch: req.taskPatch,
+    });
   });
   app.post("/api/undo/:token", async (req, res) => {
     await mutate(
@@ -736,7 +755,9 @@ export function installReminderRoute(
         const catalog = await repo.catalog(actor),
           lines = [];
         for (const workspace of catalog.workspaces) {
-          const s = await repo.list(workspace.id);
+          const s = await repo.list(workspace.id, {
+            collections: ["tasks", "activity"],
+          });
           try {
             authorize(s, actor, workspace.id);
           } catch {

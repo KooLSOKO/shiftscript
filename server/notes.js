@@ -130,7 +130,12 @@ export function installNotesRoutes(
   },
 ) {
   app.post("/api/notes/scan", async (req, res) => {
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     const image = validateNoteImage(req.body);
     if (provider !== "gemini")
       fail(
@@ -142,7 +147,12 @@ export function installNotesRoutes(
     const result = extraction.parse(raw);
     if (!result.text.trim())
       fail(422, "No readable writing was found. Try another photo.");
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId, "write");
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+      "write",
+    );
     res.json({
       ...result,
       photo: {
@@ -255,7 +265,7 @@ export function installNotesRoutes(
       })
       .strict()
       .parse(req.body);
-    const data = await read(req.workspaceId);
+    const data = await read(req.workspaceId, { collections: ["notes"] });
     authorize(data, req.actor, req.workspaceId, "write");
     const note = data.notes.find((n) => n.id === req.params.id);
     if (!note) fail(404, "Note not found.");

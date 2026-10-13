@@ -1,4 +1,5 @@
 import TaskBoard from "./components/TaskBoard.jsx";
+import { applyTaskPatch } from "./features/workspace-sync.js";
 import {
   previewBoardMove,
   overlayBoardMove,
@@ -214,7 +215,9 @@ export default function App() {
       focusWorkspaceHeading();
   }, [loading, authTransition]);
   const current = useRef({ uid: null, workspaceId: null }),
-    generation = useRef(0);
+    generation = useRef(0),
+    snapshotRevision = useRef(null),
+    lastFullRefresh = useRef(0);
   useEffect(() => {
     if (!menu || !window.matchMedia("(max-width: 850px)").matches) return;
     const drawer = document.getElementById("workspace-navigation"),
@@ -286,15 +289,27 @@ export default function App() {
   async function reload(
     id = current.current.workspaceId,
     expectedBoardRevision,
+    conditional = false,
   ) {
     const uid = current.current.uid;
-    const result = await api("/workspace", { workspace: id });
+    // Force a full check at least hourly too, covering edits made
+    // outside ShiftScript (e.g. directly in Firebase Console) without a revision.
+    const since =
+      conditional &&
+      snapshotRevision.current &&
+      Date.now() - lastFullRefresh.current < 3600000
+        ? "?since=" + encodeURIComponent(snapshotRevision.current)
+        : "";
+    const result = await api("/workspace" + since, { workspace: id });
     if (
       current.current.uid === uid &&
       current.current.workspaceId === id &&
       (expectedBoardRevision === undefined ||
         expectedBoardRevision === boardRevision.current)
     ) {
+      if (result.unchanged) return result;
+      snapshotRevision.current = result.revision || null;
+      lastFullRefresh.current = Date.now();
       const pending = boardPending.current;
       setData(
         pending?.uid === uid && pending.workspaceId === id
@@ -310,6 +325,8 @@ export default function App() {
     return result;
   }
   async function selectWorkspace(id) {
+    snapshotRevision.current = null;
+    lastFullRefresh.current = 0;
     current.current.workspaceId = id;
     setApiWorkspace(id);
     setWorkspaceId(id);
@@ -694,7 +711,7 @@ export default function App() {
         document.visibilityState === "visible" &&
         !document.querySelector('dialog[open], [role="dialog"]')
       )
-        reload().catch(() => {});
+        reload(undefined, boardRevision.current, true).catch(() => {});
     }, 120000);
     return () => clearInterval(timer);
   }, [workspaceId, Boolean(data.workspace)]);
@@ -703,7 +720,9 @@ export default function App() {
       uid = actor.uid;
     if (current.current.uid !== uid || current.current.workspaceId !== id)
       return;
-    await reload(id);
+    if (result?.taskPatch?.workspaceId === id)
+      setData((previous) => applyTaskPatch(previous, result.taskPatch, id));
+    else await reload(id);
     if (current.current.workspaceId !== id) return;
     if (result?.undoToken)
       setUndo({
@@ -751,7 +770,7 @@ export default function App() {
           ]),
         );
         return {
-          ...previous,
+          ...applyTaskPatch(previous, result.taskPatch, workspace),
           tasks: mergeSavedBoardTasks(
             previous.tasks,
             result.tasks || [result.task],

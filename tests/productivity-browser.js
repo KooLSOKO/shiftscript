@@ -327,6 +327,9 @@ try {
   await dialog()
     .getByRole("button", { name: "Load sample", exact: true })
     .click();
+  // Loading the sample deliberately restores its original date. This is a
+  // distinct follow-up meeting, not a reprocessing of the prior transcript.
+  await dialog().locator('input[type="date"]').fill("2026-10-13");
   await dialog()
     .getByRole("button", { name: "Process transcript", exact: true })
     .click();

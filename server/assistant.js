@@ -252,8 +252,9 @@ const instruction = `You are Shifty, ShiftScript's female meeting and planning a
 export async function generateAssistant({ context, history, question }) {
   return geminiJson({
     model: assistantModel(),
-    timeout: 30000,
-    maxTokens: 2600,
+    timeout: 45000,
+    maxTokens: 6000,
+    thinkingLevel: "low",
     schema: z.toJSONSchema(assistantOutput),
     instruction,
     input: JSON.stringify({
@@ -441,7 +442,11 @@ export function installAssistantRoutes(
   app.get("/api/assistant/chats", async (req, res) => {
     await migrateLegacy(req);
     const p = await profiles.getProfile(req.uid);
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId);
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+    );
     res.json({
       chats: (p.assistantChatIndex || [])
         .filter((c) => c.workspaceId === req.workspaceId)
@@ -474,7 +479,11 @@ export function installAssistantRoutes(
   });
   app.get("/api/assistant/history", async (req, res) => {
     const t = await conversation(req, requestedChat(req));
-    authorize(await read(req.workspaceId), req.actor, req.workspaceId);
+    authorize(
+      await read(req.workspaceId, { collections: [] }),
+      req.actor,
+      req.workspaceId,
+    );
     res.json({ messages: t?.messages || [], chat: t?.id ? chatMeta(t) : null });
   });
   async function clearChat(req, res, chatId) {
@@ -581,7 +590,9 @@ export function installAssistantRoutes(
     if (reservation.cached)
       return res.json({ message: reservation.cached, cached: true });
     try {
-      const data = await read(req.workspaceId);
+      const data = await read(req.workspaceId, {
+        collections: ["tasks", "meetings", "notes"],
+      });
       authorize(data, req.actor, req.workspaceId);
       let events = {
         connected: false,
@@ -616,7 +627,11 @@ export function installAssistantRoutes(
           brain || (provider === "sample" ? sampleReply : generateAssistant)
         )({ context, history: reservation.history, question: input.question }),
       );
-      authorize(await read(req.workspaceId), req.actor, req.workspaceId);
+      authorize(
+        await read(req.workspaceId, { collections: [] }),
+        req.actor,
+        req.workspaceId,
+      );
       const sourceIds = new Set(output.sourceIds);
       const message = {
         id: randomUUID(),
@@ -726,7 +741,9 @@ export function installAssistantRoutes(
     const before = getThreadAction(await conversation(req, chatId), id);
     if (!before || before.kind !== "email_recap")
       fail(404, "Email proposal not found.");
-    const data = await read(req.workspaceId);
+    const data = await read(req.workspaceId, {
+      collections: ["tasks", "meetings", "notes"],
+    });
     authorize(data, req.actor, req.workspaceId, "write");
     const send = data.meetings
       .find((m) => m.id === before.meetingId)
@@ -806,7 +823,9 @@ export function installAssistantRoutes(
           return { taskId: t.id, status: t.status, dueDate: t.dueDate };
         });
       } else {
-        const data = await read(req.workspaceId);
+        const data = await read(req.workspaceId, {
+          collections: ["tasks", "meetings", "notes"],
+        });
         authorize(data, req.actor, req.workspaceId);
         const task = data.tasks.find((t) => t.id === action.taskId);
         if (
@@ -819,7 +838,10 @@ export function installAssistantRoutes(
             "This task changed or is completed. Ask for a fresh scheduling proposal.",
           );
         const verify = async () => {
-          const fresh = await read(req.workspaceId);
+          const fresh = await read(req.workspaceId, {
+            collections: ["tasks"],
+            fresh: true,
+          });
           authorize(fresh, req.actor, req.workspaceId);
           const t = fresh.tasks.find((t) => t.id === task.id);
           if (t?.updatedAt !== task.updatedAt)
@@ -846,7 +868,11 @@ export function installAssistantRoutes(
         }
         return a;
       });
-      authorize(await read(req.workspaceId), req.actor, req.workspaceId);
+      authorize(
+        await read(req.workspaceId, { collections: [] }),
+        req.actor,
+        req.workspaceId,
+      );
       res.json({ action: done, cached: false });
     } catch (e) {
       // Safe validation/conflict errors may be edited and retried; ambiguous external outcomes may not.

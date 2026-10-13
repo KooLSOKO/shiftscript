@@ -9,7 +9,7 @@ export function installMemberProfileRoutes(
 ) {
   app.get("/api/members/:uid/profile", async (req, res) => {
     const targetUid = uid.parse(req.params.uid);
-    const initial = await read(req.workspaceId);
+    const initial = await read(req.workspaceId, { collections: [] });
     authorize(initial, req.actor, req.workspaceId);
     if (!initial.workspace?.members.some((member) => member.uid === targetUid))
       fail(404, "This person is not a member of this workspace.");
@@ -23,7 +23,10 @@ export function installMemberProfileRoutes(
       }
     }
     // Check both memberships again after the asynchronous identity lookup.
-    const current = await read(req.workspaceId);
+    const current = await read(req.workspaceId, {
+      collections: ["tasks"],
+      fresh: true,
+    });
     authorize(current, req.actor, req.workspaceId);
     const member = current.workspace?.members.find(
       (item) => item.uid === targetUid,
